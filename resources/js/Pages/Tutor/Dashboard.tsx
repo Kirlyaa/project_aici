@@ -1,5 +1,6 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import FlashToast from '@/Components/FlashToast';
 
 export default function TutorDashboard() {
     const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
@@ -14,6 +15,7 @@ export default function TutorDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <FlashToast />
             <Head title="Dashboard Tutor" />
 
             {/* Navbar */}
@@ -34,12 +36,14 @@ export default function TutorDashboard() {
                                 <i className="bi bi-person-fill text-white" />
                             </div>
                             <span className="font-medium">Aiya Putri</span>
-                            <form method="POST" action="/logout">
-                                <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
-                                <button type="submit" className="text-gray-600 hover:text-red-600 transition-colors" title="Logout">
-                                    <i className="bi bi-box-arrow-right text-xl" />
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
+                                className="text-gray-600 hover:text-red-600 transition-colors"
+                                title="Logout"
+                            >
+                                <i className="bi bi-box-arrow-right text-xl" />
+                            </button>
                         </div>
                     </div>
                 </div>

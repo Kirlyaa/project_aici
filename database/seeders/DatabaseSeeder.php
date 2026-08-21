@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Call tutor seeder
-        $this->call(TutorSeeder::class);
+        $this->call([
+            TutorSeeder::class,
+            LearningSessionSeeder::class,
+        ]);
     }
 }

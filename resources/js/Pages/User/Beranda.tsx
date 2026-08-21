@@ -5,10 +5,14 @@ import ProgressBar from '@/Components/UI/ProgressBar';
 import SessionCard from '@/Components/SessionCard';
 import CalendarMonth from '@/Components/CalendarMonth';
 import CalendarYear from '@/Components/CalendarYear';
-import { sessions } from '@/data/sessions';
+import { SessionItem } from '@/types/session';
 
-export default function Beranda() {
-    const recentSessions = sessions.slice(5, 10);
+interface Props {
+    sessions: SessionItem[];
+}
+
+export default function Beranda({ sessions }: Props) {
+    const recentSessions = sessions.slice(0, 5); // Just take first 5 from database
     const [calendarView, setCalendarView] = useState<'bulanan' | 'tahunan'>('bulanan');
 
     return (

@@ -1,4 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import FlashToast from '@/Components/FlashToast';
 
 interface DashboardStats {
     totalUsers: number;
@@ -17,6 +18,7 @@ export default function SuperAdminDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <FlashToast />
             <Head title="Super Admin Dashboard" />
 
             {/* Navbar */}
@@ -36,6 +38,14 @@ export default function SuperAdminDashboard() {
                             <span className="text-sm text-gray-600">Selamat datang Super Admin</span>
                             <button className="w-10 h-10 rounded-lg bg-teal-600 text-white flex items-center justify-center hover:bg-teal-700">
                                 <i className="bi bi-person-circle text-lg" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
+                                className="w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors"
+                                title="Logout"
+                            >
+                                <i className="bi bi-box-arrow-right text-lg" />
                             </button>
                         </div>
                     </div>

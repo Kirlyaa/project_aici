@@ -8,9 +8,11 @@ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', '
 const monthsLong = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 export default function CalendarYear({ sessions }: Props) {
+    const currentYear = 2025; // As per the requirement/hardcoded view
     const getMonthStats = (monthIdx: number) => {
-        const monthName = monthsLong[monthIdx];
-        const monthSessions = sessions.filter(s => s.date.includes(monthName));
+        const monthStr = String(monthIdx + 1).padStart(2, '0');
+        const prefix = `${currentYear}-${monthStr}`;
+        const monthSessions = sessions.filter(s => s.date.startsWith(prefix));
 
         const completed = monthSessions.filter(s => ['hadir', 'absen', 'reschedule'].includes(s.status)).length;
         const pending = monthSessions.filter(s => s.status === 'akan-datang').length;

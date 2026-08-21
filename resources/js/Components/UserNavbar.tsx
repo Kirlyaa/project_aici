@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 interface UserNavbarProps {
     userName: string;
@@ -42,6 +42,14 @@ export default function UserNavbar({ userName }: UserNavbarProps) {
                                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
                                 </svg>
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
+                                className="w-10 h-10 rounded-full bg-gray-50 text-gray-500 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors"
+                                title="Logout"
+                            >
+                                <i className="bi bi-box-arrow-right" />
+                            </button>
                         </div>
                     </div>
                 </div>

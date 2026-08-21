@@ -1,7 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import UserLayout from '@/Layouts/UserLayout';
-import { sessions } from '@/data/sessions';
-import { SessionStatus } from '@/types/session';
+import { SessionStatus, SessionItem } from '@/types/session';
+
+interface Props {
+    session: SessionItem;
+}
 
 const statusConfig: Record<SessionStatus, { badge: string; icon: string; label: string }> = {
     hadir:         { badge: 'bg-white/20 text-white', icon: 'bi-check-circle-fill', label: 'Hadir' },
@@ -20,12 +23,7 @@ const toolIcons: Record<string, string> = {
     'Robot Proyek':    'bi-robot',
 };
 
-interface Props {
-    id: number;
-}
-
-export default function SessionDetail({ id }: Props) {
-    const session = sessions.find(s => s.id === Number(id)) ?? sessions[0];
+export default function SessionDetail({ session }: Props) {
     const cfg = statusConfig[session.status];
 
     return (
@@ -45,7 +43,7 @@ export default function SessionDetail({ id }: Props) {
                     </span>
                     <h1 className="text-2xl md:text-3xl font-bold mb-2">{session.title}</h1>
                     <p className="text-teal-100 flex items-center gap-1.5">
-                        <i className="bi bi-calendar3" /> {session.date}
+                        <i className="bi bi-calendar3" /> {(session as any).date_string ?? session.date}
                     </p>
                 </div>
 

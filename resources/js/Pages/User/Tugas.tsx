@@ -1,9 +1,12 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '@/Layouts/UserLayout';
 import SessionCard from '@/Components/SessionCard';
-import { sessions } from '@/data/sessions';
-import { SessionStatus } from '@/types/session';
+import { SessionStatus, SessionItem } from '@/types/session';
+
+interface Props {
+    sessions: SessionItem[];
+}
 
 type FilterKey = 'semua' | SessionStatus;
 
@@ -15,7 +18,8 @@ const filters: { key: FilterKey; label: string; icon: string }[] = [
     { key: 'reschedule',   label: 'Reschedule',  icon: 'bi-arrow-repeat' },
 ];
 
-export default function Tugas() {
+export default function Tugas({ sessions }: Props) {
+    const { auth } = usePage().props as any;
     const [filter, setFilter] = useState<FilterKey>('semua');
 
     const filtered = filter === 'semua'
@@ -32,7 +36,7 @@ export default function Tugas() {
                     <div>
                         <h1 className="text-2xl font-bold">Semua Sesi</h1>
                         <p className="text-teal-100 text-sm mt-1">
-                            Jadwal dan riwayat pembelajaran Faris Sukirman
+                            Jadwal dan riwayat pembelajaran {auth.user.name}
                         </p>
                     </div>
                     <span className="text-right">

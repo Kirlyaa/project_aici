@@ -16,8 +16,10 @@ export default function CalendarMonth({ sessions }: Props) {
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
     const getSessionStatus = (day: number) => {
-        const dateStr = `${day} ${months[currentMonth]} ${currentYear}`;
-        return sessions.find(s => s.date.includes(dateStr.split(' ')[0]) && s.date.includes(months[currentMonth]))?.status;
+        const monthStr = String(currentMonth + 1).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        const isoDate = `${currentYear}-${monthStr}-${dayStr}`;
+        return sessions.find(s => s.date.startsWith(isoDate))?.status;
     };
 
     const statusColors = {
