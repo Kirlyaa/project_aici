@@ -5,7 +5,7 @@ import FlashToast from '@/Components/FlashToast';
 import { usePage } from '@inertiajs/react';
 
 interface UserLayoutProps {
-    currentPage: 'home' | 'tugas' | 'profil';
+    currentPage?: 'home' | 'tugas' | 'profil' | 'jadwal' | 'notifications';
 }
 
 export default function UserLayout({ currentPage, children }: PropsWithChildren<UserLayoutProps>) {

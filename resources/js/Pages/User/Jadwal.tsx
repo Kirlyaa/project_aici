@@ -18,7 +18,7 @@ const filters: { key: FilterKey; label: string; icon: string }[] = [
     { key: 'reschedule',   label: 'Reschedule',  icon: 'bi-arrow-repeat' },
 ];
 
-export default function Tugas({ sessions }: Props) {
+export default function Jadwal({ sessions }: Props) {
     const { auth } = usePage().props as any;
     const [filter, setFilter] = useState<FilterKey>('semua');
 
@@ -27,14 +27,14 @@ export default function Tugas({ sessions }: Props) {
         : sessions.filter(s => s.status === filter);
 
     return (
-        <UserLayout currentPage="tugas">
-            <Head title="Semua Sesi" />
+        <UserLayout currentPage="jadwal">
+            <Head title="Jadwal" />
 
             {/* Hero Header */}
             <div className="bg-teal-600 text-white px-4 pt-6 pb-8">
                 <div className="max-w-7xl mx-auto flex justify-between items-start">
                     <div>
-                        <h1 className="text-2xl font-bold">Semua Sesi</h1>
+                        <h1 className="text-2xl font-bold">Jadwal Pembelajaran</h1>
                         <p className="text-teal-100 text-sm mt-1">
                             Jadwal dan riwayat pembelajaran {auth.user.name}
                         </p>
@@ -71,7 +71,7 @@ export default function Tugas({ sessions }: Props) {
                         <SessionCard
                             key={session.id}
                             session={session}
-                            href={`/tugas/${session.id}`}
+                            href={`/jadwal/${session.id}`}
                         />
                     ))}
                 </div>

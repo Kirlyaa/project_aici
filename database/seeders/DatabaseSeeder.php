@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TutorSeeder::class,
             LearningSessionSeeder::class,
+            AiraLearningSessionSeeder::class,
+            AiraGradeEntrySeeder::class,
+            AiraStudentCommentSeeder::class,
         ]);
     }
 }

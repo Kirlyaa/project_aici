@@ -18,7 +18,7 @@ class LearningSessionSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Create a Student
+        // 1. Create Students
         $student = User::firstOrCreate(
             ['email' => 'student@aici.id'],
             [
@@ -26,6 +26,18 @@ class LearningSessionSeeder extends Seeder
                 'email' => 'student@aici.id',
                 'password' => Hash::make('password123'),
                 'role' => 'user',
+                'status' => 'aktif',
+            ]
+        );
+
+        $aira = User::firstOrCreate(
+            ['email' => 'aira@aici.id'],
+            [
+                'name' => 'Aira Student',
+                'email' => 'aira@aici.id',
+                'password' => Hash::make('password123'),
+                'role' => 'user',
+                'status' => 'aktif',
             ]
         );
 
@@ -160,6 +172,7 @@ class LearningSessionSeeder extends Seeder
         ];
 
         foreach ($sessionsData as $data) {
+            // Create for student (Faris Student)
             $session = LearningSession::create([
                 'user_id' => $student->id,
                 'title' => $data['title'],
@@ -176,9 +189,33 @@ class LearningSessionSeeder extends Seeder
                     [
                         'format' => $moduleData['format'],
                         'size' => $moduleData['size'],
+                        'module_type' => 'general',
                     ]
                 );
                 $session->modules()->attach($module->id);
+            }
+
+            // Also create for Aira
+            $airaSession = LearningSession::create([
+                'user_id' => $aira->id,
+                'title' => $data['title'],
+                'date_string' => $data['date_string'],
+                'date' => $data['date'],
+                'status' => $data['status'],
+                'description' => $data['description'],
+                'tools' => $data['tools'],
+            ]);
+
+            foreach ($data['modules'] as $moduleData) {
+                $module = Module::firstOrCreate(
+                    ['name' => $moduleData['name']],
+                    [
+                        'format' => $moduleData['format'],
+                        'size' => $moduleData['size'],
+                        'module_type' => 'general',
+                    ]
+                );
+                $airaSession->modules()->attach($module->id);
             }
         }
     }

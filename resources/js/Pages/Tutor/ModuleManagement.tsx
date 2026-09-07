@@ -1,91 +1,84 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface Module {
     id: number;
     name: string;
-    image: string;
-    description: string;
+    image: string | null;
+    description: string | null;
+    type: string;
+    typeLabel: string;
     tools: string[];
-    hasRobotBuilding: boolean;
+    createdBy: string;
+    createdAt: string;
+}
+
+interface Paginated<T> {
+    data: T[];
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+}
+
+interface Props {
+    modules: Paginated<Module>;
+    search: string;
+    selectedType: string;
 }
 
 export default function ModuleManagement() {
-    const [modules, setModules] = useState<Module[]>([
-        { 
-            id: 1, 
-            name: 'Fantasy Zoo', 
-            image: '🦁', 
-            description: 'Pembelajaran robotika dasar dengan tema hewan',
-            tools: ['LEGO Mindstorms', 'Laptop', 'Kabel USB'],
-            hasRobotBuilding: true
-        },
-        { 
-            id: 2, 
-            name: 'Advanced Coding', 
-            image: '💻', 
-            description: 'Pembelajaran coding lanjutan tanpa robot',
-            tools: ['Laptop', 'IDE Setup'],
-            hasRobotBuilding: false
-        },
-    ]);
+    const { modules, search, selectedType } = usePage().props as unknown as Props;
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [imagePreview, setImagePreview] = useState<string>('');
-    const [newModule, setNewModule] = useState({ name: '', image: '', description: '', tools: [] as string[], newTool: '', hasRobotBuilding: true });
+    const [newModule, setNewModule] = useState({ name: '', image: '', description: '', tools: [] as string[], newTool: '', type: 'robot' });
+    const [searchTerm, setSearchTerm] = useState(search);
+    const [selectedTypeFilter, setSelectedTypeFilter] = useState(selectedType);
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && file.size <= 2097152) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setNewModule({ ...newModule, image: result });
-                setImagePreview(result);
-            };
-            reader.readAsDataURL(file);
-        }
+    const applyFilters = (term: string, type: string) => {
+        router.get('/tutor/modules', { search: term, type }, { preserveState: true });
     };
 
-    const addModule = () => {
-        if (!newModule.name.trim() || !newModule.image.trim()) return;
+    const handleSubmit = () => {
+        if (!newModule.name.trim()) return;
+
+        const payload = {
+            name: newModule.name,
+            description: newModule.description || null,
+            image: newModule.image || null,
+            type: newModule.type,
+            tools: newModule.tools.length > 0 ? newModule.tools : null,
+        };
+
         if (editingId) {
-            setModules(modules.map(m => m.id === editingId ? { 
-                id: editingId, 
-                name: newModule.name, 
-                image: newModule.image, 
-                description: newModule.description,
-                tools: newModule.tools,
-                hasRobotBuilding: newModule.hasRobotBuilding
-            } : m));
-            setEditingId(null);
+            router.put(`/tutor/modules/${editingId}`, payload, {
+                onSuccess: () => resetForm(),
+            });
         } else {
-            setModules([...modules, { 
-                id: Math.max(...modules.map(m => m.id), 0) + 1, 
-                name: newModule.name,
-                image: newModule.image,
-                description: newModule.description,
-                tools: newModule.tools,
-                hasRobotBuilding: newModule.hasRobotBuilding
-            }]);
+            router.post('/tutor/modules', payload, {
+                onSuccess: () => resetForm(),
+            });
         }
-        resetForm();
     };
 
     const editModule = (m: Module) => {
-        setNewModule({ ...m, newTool: '' });
-        setImagePreview(m.image.startsWith('data:') ? m.image : '');
+        setNewModule({
+            name: m.name,
+            image: m.image ?? '',
+            description: m.description ?? '',
+            tools: m.tools ?? [],
+            newTool: '',
+            type: m.type,
+        });
         setEditingId(m.id);
         setShowForm(true);
     };
 
     const deleteModule = (id: number) => {
-        setModules(modules.filter(m => m.id !== id));
+        if (window.confirm('Yakin ingin menghapus modul ini?')) {
+            router.delete(`/tutor/modules/${id}`);
+        }
     };
 
     const resetForm = () => {
-        setNewModule({ name: '', image: '', description: '', tools: [], newTool: '', hasRobotBuilding: true });
-        setImagePreview('');
+        setNewModule({ name: '', image: '', description: '', tools: [], newTool: '', type: 'robot' });
         setShowForm(false);
         setEditingId(null);
     };
@@ -142,6 +135,30 @@ export default function ModuleManagement() {
                     </button>
                 </div>
 
+                {/* Search & Filter */}
+                <div className="flex gap-4 mb-6">
+                    <form onSubmit={e => { e.preventDefault(); applyFilters(searchTerm, selectedTypeFilter); }} className="flex-1 relative">
+                        <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Cari modul..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                    </form>
+                    <select
+                        value={selectedTypeFilter}
+                        onChange={e => { setSelectedTypeFilter(e.target.value); applyFilters(searchTerm, e.target.value); }}
+                        className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                        <option value="">Semua Tipe</option>
+                        <option value="robot">Robot Building</option>
+                        <option value="coding">Coding</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+
                 {/* Form Modal */}
                 {showForm && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -164,44 +181,36 @@ export default function ModuleManagement() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Gambar/Emoji</label>
-                                    
-                                    {/* Image Preview */}
-                                    {imagePreview && (
-                                        <div className="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-center">
-                                            <img src={imagePreview} alt="Preview" className="max-w-full max-h-32 rounded" />
-                                        </div>
-                                    )}
-
-                                    {/* File Upload */}
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">URL Gambar</label>
                                     <input
-                                        type="file"
-                                        accept="image/png,image/jpeg,.png,.jpg,.jpeg"
-                                        onChange={handleImageUpload}
+                                        type="url"
+                                        value={newModule.image}
+                                        onChange={e => setNewModule({ ...newModule, image: e.target.value })}
+                                        placeholder="https://contoh.com/gambar.png"
                                         className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG (Max 2MB)</p>
+                                </div>
 
-                                    <div className="flex items-center gap-2 my-3">
-                                        <div className="flex-1 h-px bg-gray-300" />
-                                        <span className="text-xs text-gray-500">ATAU</span>
-                                        <div className="flex-1 h-px bg-gray-300" />
-                                    </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Tipe Modul</label>
+                                    <select
+                                        value={newModule.type}
+                                        onChange={e => setNewModule({ ...newModule, type: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    >
+                                        <option value="robot">Robot Building</option>
+                                        <option value="coding">Coding</option>
+                                        <option value="general">General</option>
+                                    </select>
+                                </div>
 
-                                    {/* Emoji Input */}
-                                    <input
-                                        type="text"
-                                        value={newModule.image && !imagePreview ? newModule.image : ''}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            if (val.length <= 2 && !val.startsWith('data:')) {
-                                                setNewModule({ ...newModule, image: val });
-                                                setImagePreview('');
-                                            }
-                                        }}
-                                        placeholder="Atau ketik emoji (cth: 🦁)"
-                                        maxLength={2}
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-center text-2xl"
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Deskripsi</label>
+                                    <textarea
+                                        value={newModule.description}
+                                        onChange={e => setNewModule({ ...newModule, description: e.target.value })}
+                                        placeholder="Jelaskan modul ini..."
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none h-20"
                                     />
                                 </div>
 
@@ -245,7 +254,7 @@ export default function ModuleManagement() {
 
                                 <div className="flex gap-2 pt-4">
                                     <button
-                                        onClick={addModule}
+                                        onClick={handleSubmit}
                                         className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700"
                                     >
                                         {editingId ? 'Update' : 'Tambah'}
@@ -264,20 +273,20 @@ export default function ModuleManagement() {
 
                 {/* Modules Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {modules.length === 0 ? (
+                    {modules.data.length === 0 ? (
                         <div className="md:col-span-2 lg:col-span-3 bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
                             <i className="bi bi-inbox text-4xl text-gray-300 block mb-3" />
                             <p className="text-gray-600 text-lg">Belum ada modul. Tambahkan modul baru untuk memulai.</p>
                         </div>
                     ) : (
-                        modules.map(m => (
+                        modules.data.map(m => (
                             <div key={m.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                                 {/* Image Container */}
                                 <div className="h-40 bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center overflow-hidden">
-                                    {m.image.startsWith('data:') ? (
+                                    {m.image ? (
                                         <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
                                     ) : (
-                                        <span className="text-6xl">{m.image}</span>
+                                        <span className="text-6xl">📦</span>
                                     )}
                                 </div>
 
@@ -305,13 +314,13 @@ export default function ModuleManagement() {
 
                                     {/* Robot Building Badge */}
                                     <div className="mb-3 flex items-center gap-2">
-                                        {m.hasRobotBuilding ? (
+                                        {m.type === 'robot' ? (
                                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-                                                <i className="bi bi-robot" /> Type 5 (Robot Building)
+                                                <i className="bi bi-robot" /> {m.typeLabel}
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">
-                                                <i className="bi bi-code-square" /> Type 4 (Coding)
+                                                <i className="bi bi-code-square" /> {m.typeLabel}
                                             </span>
                                         )}
                                     </div>

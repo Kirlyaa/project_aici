@@ -61,19 +61,19 @@ export default function Beranda({ sessions }: Props) {
                 <div>
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold">Sesi Terbaru</h2>
-                        <a href="/tugas" className="text-teal-600 text-sm font-medium flex items-center gap-1">
+                        <a href="/jadwal" className="text-teal-600 text-sm font-medium flex items-center gap-1">
                             Lihat semua <i className="bi bi-arrow-right" />
                         </a>
                     </div>
 
-                    <ProgressBar value={8} max={sessions.length} label="Progress Semester" />
+                    <ProgressBar value={sessions.filter(s => s.status === 'hadir').length} max={sessions.length} label="Progress Semester" />
 
                     <div className="mt-4 grid gap-3">
                         {recentSessions.map(session => (
                             <SessionCard
                                 key={session.id}
                                 session={session}
-                                href={`/tugas/${session.id}`}
+                                href={`/jadwal/${session.id}`}
                             />
                         ))}
                     </div>

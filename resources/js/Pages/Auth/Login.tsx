@@ -1,6 +1,9 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
+// Demo account hanya boleh terlihat pada dev build.
+const showDemoAccounts = import.meta.env.DEV;
+
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
@@ -122,25 +125,27 @@ export default function Login() {
 
                 {/* Footer Info */}
                 <div className="mt-8 text-center space-y-3">
-                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                        <p className="text-blue-900 text-xs font-semibold mb-2">📝 Demo Accounts:</p>
-                        <div className="space-y-1.5 text-left">
-                            <p className="text-blue-800 text-xs">
-                                <span className="font-semibold">Super Admin:</span><br/>
-                                admin@aici.id / admin123
-                            </p>
-                            <p className="text-blue-800 text-xs">
-                                <span className="font-semibold">Tutor:</span><br/>
-                                aiya@aici.id / password123
-                            </p>
-                            <p className="text-blue-800 text-xs">
-                                <span className="font-semibold">Student:</span><br/>
-                                user@email.com / password123
-                            </p>
+                    {showDemoAccounts && (
+                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                            <p className="text-blue-900 text-xs font-semibold mb-2">📝 Demo Accounts:</p>
+                            <div className="space-y-1.5 text-left">
+                                <p className="text-blue-800 text-xs">
+                                    <span className="font-semibold">Super Admin:</span><br/>
+                                    admin@aici.id / admin123
+                                </p>
+                                <p className="text-blue-800 text-xs">
+                                    <span className="font-semibold">Tutor:</span><br/>
+                                    aiya@aici.id / password123
+                                </p>
+                                <p className="text-blue-800 text-xs">
+                                    <span className="font-semibold">Student:</span><br/>
+                                    user@email.com / password123
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                    )}
                     <p className="text-gray-500 text-xs">
-                        © 2025 AICI. All rights reserved.
+                        © {new Date().getFullYear()} AICI. All rights reserved.
                     </p>
                 </div>
             </div>

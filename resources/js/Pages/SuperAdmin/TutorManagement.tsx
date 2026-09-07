@@ -1,42 +1,30 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface Tutor {
     id: number;
     name: string;
     email: string;
-    role: string;
-    status: 'Aktif' | 'Nonaktif';
-    createdAt: string;
+    peran: string;
+    status: string;
+    terdaftar: string;
+    students_count: number;
+    sessions_count: number;
+}
+
+interface Paginated<T> {
+    data: T[];
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+}
+
+interface Props {
+    users: Paginated<Tutor>;
+    search: string;
+    filterStatus: string;
 }
 
 export default function TutorManagement() {
-    const [tutors, setTutors] = useState<Tutor[]>([
-        {
-            id: 1,
-            name: 'Aiya Putri',
-            email: 'aiya@aici.id',
-            role: 'Tutor',
-            status: 'Aktif',
-            createdAt: '2025-01-01'
-        },
-        {
-            id: 2,
-            name: 'Budi Santoso',
-            email: 'budi@aici.id',
-            role: 'Tutor',
-            status: 'Aktif',
-            createdAt: '2025-01-05'
-        },
-        {
-            id: 3,
-            name: 'Siti Nurhaliza',
-            email: 'siti@aici.id',
-            role: 'Tutor',
-            status: 'Nonaktif',
-            createdAt: '2025-01-10'
-        }
-    ]);
+    const { users, search, filterStatus: initialFilterStatus } = usePage().props as unknown as Props;
 
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -44,75 +32,61 @@ export default function TutorManagement() {
         name: '',
         email: '',
         password: '',
+        status: 'aktif',
     });
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'Semua' | 'Aktif' | 'Nonaktif'>('Semua');
+    const [searchTerm, setSearchTerm] = useState(search);
+    const [filterStatus, setFilterStatus] = useState(initialFilterStatus);
 
-    const filteredTutors = tutors.filter(tutor => {
-        const matchSearch = tutor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          tutor.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchStatus = filterStatus === 'Semua' || tutor.status === filterStatus;
-        return matchSearch && matchStatus;
-    });
+    const applyFilters = (term: string, status: string) => {
+        router.get('/superadmin/tutors', { search: term, filter_status: status }, { preserveState: true });
+    };
 
     const openModal = (tutor?: Tutor) => {
         if (tutor) {
             setEditingId(tutor.id);
-            setFormData({ name: tutor.name, email: tutor.email, password: '' });
+            setFormData({ name: tutor.name, email: tutor.email, password: '', status: tutor.status });
         } else {
             setEditingId(null);
-            setFormData({ name: '', email: '', password: '' });
+            setFormData({ name: '', email: '', password: '', status: 'aktif' });
         }
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', password: '', status: 'aktif' });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (!formData.name || !formData.email || (!editingId && !formData.password)) {
-            alert('Semua field harus diisi');
-            return;
-        }
+
+        const payload = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password || undefined,
+            password_confirmation: formData.password || undefined,
+            status: formData.status,
+        };
 
         if (editingId) {
-            // Update tutor
-            setTutors(tutors.map(t => 
-                t.id === editingId 
-                    ? { ...t, name: formData.name, email: formData.email }
-                    : t
-            ));
+            router.put(`/superadmin/tutors/${editingId}`, payload, {
+                onSuccess: () => closeModal(),
+            });
         } else {
-            // Add new tutor
-            const newTutor: Tutor = {
-                id: Math.max(...tutors.map(t => t.id), 0) + 1,
-                name: formData.name,
-                email: formData.email,
-                role: 'Tutor',
-                status: 'Aktif',
-                createdAt: new Date().toISOString().split('T')[0],
-            };
-            setTutors([...tutors, newTutor]);
+            router.post('/superadmin/tutors', payload, {
+                onSuccess: () => closeModal(),
+            });
         }
-        closeModal();
     };
 
     const deleteTutor = (id: number) => {
         if (window.confirm('Yakin ingin menghapus tutor ini?')) {
-            setTutors(tutors.filter(t => t.id !== id));
+            router.delete(`/superadmin/tutors/${id}`);
         }
     };
 
     const toggleStatus = (id: number) => {
-        setTutors(tutors.map(t => 
-            t.id === id 
-                ? { ...t, status: t.status === 'Aktif' ? 'Nonaktif' : 'Aktif' }
-                : t
-        ));
+        router.patch(`/superadmin/tutors/${id}/toggle-status`);
     };
 
     return (
@@ -149,16 +123,18 @@ export default function TutorManagement() {
                         {/* Search */}
                         <div className="md:col-span-2">
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Cari Tutor</label>
-                            <div className="relative">
-                                <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Cari nama atau email..."
-                                    value={searchTerm}
-                                    onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
-                            </div>
+                            <form onSubmit={e => { e.preventDefault(); applyFilters(searchTerm, filterStatus); }}>
+                                <div className="relative">
+                                    <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Cari nama atau email..."
+                                        value={searchTerm}
+                                        onChange={e => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </div>
+                            </form>
                         </div>
 
                         {/* Filter Status */}
@@ -166,12 +142,12 @@ export default function TutorManagement() {
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
                             <select
                                 value={filterStatus}
-                                onChange={e => setFilterStatus(e.target.value as any)}
+                                onChange={e => { setFilterStatus(e.target.value); applyFilters(searchTerm, e.target.value); }}
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                             >
                                 <option>Semua</option>
-                                <option>Aktif</option>
-                                <option>Nonaktif</option>
+                                <option>aktif</option>
+                                <option>nonaktif</option>
                             </select>
                         </div>
                     </div>
@@ -202,7 +178,7 @@ export default function TutorManagement() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredTutors.length === 0 ? (
+                                {users.data.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-8 text-center">
                                             <i className="bi bi-inbox text-4xl text-gray-300 block mb-3" />
@@ -210,7 +186,7 @@ export default function TutorManagement() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredTutors.map(tutor => (
+                                    users.data.map(tutor => (
                                         <tr key={tutor.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <p className="font-semibold text-gray-900">{tutor.name}</p>
@@ -220,23 +196,23 @@ export default function TutorManagement() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                                    {tutor.role}
+                                                    {tutor.peran}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <button
                                                     onClick={() => toggleStatus(tutor.id)}
                                                     className={`px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
-                                                        tutor.status === 'Aktif'
+                                                        tutor.status === 'aktif'
                                                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                                                     }`}
                                                 >
-                                                    {tutor.status}
+                                                    {tutor.status === 'aktif' ? 'Aktif' : tutor.status === 'pending' ? 'Pending' : 'Nonaktif'}
                                                 </button>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <p className="text-gray-600 text-sm">{tutor.createdAt}</p>
+                                                <p className="text-gray-600 text-sm">{tutor.terdaftar}</p>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-center gap-2">
@@ -262,6 +238,21 @@ export default function TutorManagement() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    {users.links.length > 3 && (
+                        <div className="px-6 py-4 border-t border-gray-100 flex flex-wrap gap-2">
+                            {users.links.map((link, i) => (
+                                <button
+                                    key={i}
+                                    disabled={!link.url}
+                                    onClick={() => link.url && router.visit(link.url)}
+                                    className={`px-3 py-1.5 text-sm rounded-lg ${link.active ? 'bg-teal-600 text-white' : link.url ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Back Button */}
@@ -306,6 +297,20 @@ export default function TutorManagement() {
                                     placeholder="Contoh: aiya@aici.id"
                                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                                 />
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                                <select
+                                    value={formData.status}
+                                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="aktif">Aktif</option>
+                                    <option value="nonaktif">Nonaktif</option>
+                                    <option value="pending">Pending</option>
+                                </select>
                             </div>
 
                             {/* Password (only for new tutor) */}

@@ -1,20 +1,47 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import FlashToast from '@/Components/FlashToast';
 
-interface DashboardStats {
-    totalUsers: number;
-    totalSuperAdmins: number;
-    totalTutors: number;
-    totalModules: number;
+interface Props {
+    stats: {
+        totalUsers: number;
+        totalStudents: number;
+        totalTutors: number;
+        totalSchools: number;
+        totalModules: number;
+        activeStudents: number;
+        pendingStudents: number;
+        activeTutors: number;
+        avgGrade: number;
+        totalGradeEntries: number;
+        totalSessions: number;
+    };
+    recentStudents: Array<{
+        id: number;
+        name: string;
+        email: string;
+        school: string;
+        tutor: string;
+        avgGrade: number;
+        status: string;
+    }>;
+    recentTutors: Array<{
+        id: number;
+        name: string;
+        email: string;
+        status: string;
+    }>;
+    recentModules: Array<{
+        id: number;
+        name: string;
+        type: string;
+        typeLabel: string;
+        image: string | null;
+    }>;
+    topSchools: Array<{ name: string; students_count: number; tutors_count: number }>;
 }
 
 export default function SuperAdminDashboard() {
-    const stats: DashboardStats = {
-        totalUsers: 3,
-        totalSuperAdmins: 1,
-        totalTutors: 1,
-        totalModules: 2,
-    };
+    const { stats, recentStudents, recentTutors, recentModules, topSchools } = usePage().props as unknown as Props;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -76,11 +103,11 @@ export default function SuperAdminDashboard() {
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                         <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-gray-600 text-sm font-medium">Super Admin</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalSuperAdmins}</p>
+                                <p className="text-gray-600 text-sm font-medium">Siswa</p>
+                                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalStudents}</p>
                             </div>
                             <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                                <i className="bi bi-shield-fill text-purple-600 text-xl" />
+                                <i className="bi bi-mortarboard-fill text-purple-600 text-xl" />
                             </div>
                         </div>
                     </div>
@@ -92,7 +119,7 @@ export default function SuperAdminDashboard() {
                                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalTutors}</p>
                             </div>
                             <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                                <i className="bi bi-mortarboard-fill text-green-600 text-xl" />
+                                <i className="bi bi-person-workspace text-green-600 text-xl" />
                             </div>
                         </div>
                     </div>
@@ -100,11 +127,11 @@ export default function SuperAdminDashboard() {
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                         <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-gray-600 text-sm font-medium">Modul Aktif</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalModules}</p>
+                                <p className="text-gray-600 text-sm font-medium">Sekolah</p>
+                                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalSchools}</p>
                             </div>
                             <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                                <i className="bi bi-collection-fill text-orange-600 text-xl" />
+                                <i className="bi bi-building text-orange-600 text-xl" />
                             </div>
                         </div>
                     </div>
@@ -131,28 +158,28 @@ export default function SuperAdminDashboard() {
                                 </div>
                                 <div className="bg-teal-50 rounded-lg p-3 text-center">
                                     <p className="text-xs text-teal-600 font-semibold">Aktif</p>
-                                    <p className="text-2xl font-bold text-teal-900">1</p>
+                                    <p className="text-2xl font-bold text-teal-900">{stats.activeTutors}</p>
                                 </div>
                             </div>
 
-                            {/* User List Sample */}
+                            {/* Recent Tutors */}
                             <div className="border-t pt-4">
                                 <h3 className="font-semibold text-gray-900 mb-3 text-sm">Daftar Tutor Terbaru</h3>
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-900">Aiya Putri</p>
-                                            <p className="text-xs text-gray-500">aiya@aici.id</p>
+                                    {recentTutors.map(t => (
+                                        <div key={t.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
+                                            <div>
+                                                <p className="font-medium text-sm text-gray-900">{t.name}</p>
+                                                <p className="text-xs text-gray-500">{t.email}</p>
+                                            </div>
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded ${t.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                {t.status === 'aktif' ? 'Aktif' : t.status === 'pending' ? 'Pending' : 'Nonaktif'}
+                                            </span>
                                         </div>
-                                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">Aktif</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-900">Budi Santoso</p>
-                                            <p className="text-xs text-gray-500">budi@aici.id</p>
-                                        </div>
-                                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">Aktif</span>
-                                    </div>
+                                    ))}
+                                    {recentTutors.length === 0 && (
+                                        <p className="text-sm text-gray-500">Belum ada data.</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -181,11 +208,11 @@ export default function SuperAdminDashboard() {
                             <div className="grid grid-cols-2 gap-3 mb-6">
                                 <div className="bg-blue-50 rounded-lg p-3 text-center">
                                     <p className="text-xs text-blue-600 font-semibold">Total Murid</p>
-                                    <p className="text-2xl font-bold text-blue-900">3</p>
+                                    <p className="text-2xl font-bold text-blue-900">{stats.totalStudents}</p>
                                 </div>
                                 <div className="bg-cyan-50 rounded-lg p-3 text-center">
                                     <p className="text-xs text-cyan-600 font-semibold">Aktif</p>
-                                    <p className="text-2xl font-bold text-cyan-900">2</p>
+                                    <p className="text-2xl font-bold text-cyan-900">{stats.activeStudents}</p>
                                 </div>
                             </div>
 
@@ -193,20 +220,20 @@ export default function SuperAdminDashboard() {
                             <div className="border-t pt-4">
                                 <h3 className="font-semibold text-gray-900 mb-3 text-sm">Daftar Murid Terbaru</h3>
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-900">Adi Wijaya</p>
-                                            <p className="text-xs text-gray-500">adi@school.id</p>
+                                    {recentStudents.slice(0, 2).map(s => (
+                                        <div key={s.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
+                                            <div>
+                                                <p className="font-medium text-sm text-gray-900">{s.name}</p>
+                                                <p className="text-xs text-gray-500">{s.school}</p>
+                                            </div>
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded ${s.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                {s.status === 'aktif' ? 'Aktif' : s.status === 'pending' ? 'Pending' : 'Nonaktif'}
+                                            </span>
                                         </div>
-                                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">Aktif</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-900">Binti Rahmah</p>
-                                            <p className="text-xs text-gray-500">binti@school.id</p>
-                                        </div>
-                                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">Aktif</span>
-                                    </div>
+                                    ))}
+                                    {recentStudents.length === 0 && (
+                                        <p className="text-sm text-gray-500">Belum ada data.</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -233,24 +260,22 @@ export default function SuperAdminDashboard() {
                         <div className="p-6 space-y-4">
                             {/* Module List */}
                             <div className="space-y-2">
-                                <div className="flex items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 mr-3">
-                                        <span className="text-xs font-bold text-blue-600">FZ</span>
+                                {recentModules.map(m => (
+                                    <div key={m.id} className="flex items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mr-3 ${m.type === 'robot' ? 'bg-blue-100' : 'bg-purple-100'}`}>
+                                            <span className={`text-xs font-bold ${m.type === 'robot' ? 'text-blue-600' : 'text-purple-600'}`}>
+                                                {m.name.substring(0, 2).toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-semibold text-sm text-gray-900">{m.name}</p>
+                                            <p className="text-xs text-gray-600 mt-0.5">{m.typeLabel}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-sm text-gray-900">Fantasy Zoo</p>
-                                        <p className="text-xs text-gray-600 mt-0.5">Kode: FZ-001 • Robotik Dasar</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0 mr-3">
-                                        <span className="text-xs font-bold text-purple-600">FT</span>
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-sm text-gray-900">Future Town</p>
-                                        <p className="text-xs text-gray-600 mt-0.5">Kode: FT-001 • Robotik Lanjut</p>
-                                    </div>
-                                </div>
+                                ))}
+                                {recentModules.length === 0 && (
+                                    <p className="text-sm text-gray-500">Belum ada modul.</p>
+                                )}
                             </div>
 
                             {/* Quick Stats */}
@@ -260,8 +285,8 @@ export default function SuperAdminDashboard() {
                                     <p className="text-2xl font-bold text-orange-900">{stats.totalModules}</p>
                                 </div>
                                 <div className="bg-red-50 rounded-lg p-3 text-center">
-                                    <p className="text-xs text-red-600 font-semibold">Aktif</p>
-                                    <p className="text-2xl font-bold text-red-900">2</p>
+                                    <p className="text-xs text-red-600 font-semibold">Total Sesi</p>
+                                    <p className="text-2xl font-bold text-red-900">{stats.totalSessions}</p>
                                 </div>
                             </div>
 

@@ -311,7 +311,7 @@ export default function Landing() {
                         </div>
                     </div>
                     <div className="border-t border-gray-800 pt-8 text-center">
-                        <p className="text-sm">&copy; 2025 AICI. Semua hak dilindungi.</p>
+                        <p className="text-sm">&copy; {new Date().getFullYear()} AICI. Semua hak dilindungi.</p>
                     </div>
                 </div>
             </footer>

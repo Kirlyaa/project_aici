@@ -1,17 +1,33 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface GradeEntry {
     id: number;
     meetingNumber: number;
     moduleName: string;
-    moduleType: 4 | 5;
-    grades: Record<string, number>;
+    moduleType: number;
+    moduleId: number | null;
+    grades: Record<string, number | null>;
     average: number;
-    date: string;
+    date: string | null;
+    notes: string | null;
 }
 
-const categoriesType5 = ['interaksi', 'fokus', 'robot-building', 'tools-management', 'coding'];
+interface Module {
+    id: number;
+    name: string;
+    module_type: string;
+}
+
+interface Props {
+    studentId: number;
+    student: { id: number; name: string; email: string };
+    gradeEntries: GradeEntry[];
+    modules: Module[];
+    averages: { overall: number; robot: number; coding: number; count: number };
+}
+
+const categoriesType5 = ['interaksi', 'fokus', 'robot-building', 'tools-management', 'koding'];
 const categoriesType4 = ['fokus', 'tools-management', 'interaksi', 'koding'];
 
 const getCategoryLabel = (cat: string): string => {
@@ -36,141 +52,72 @@ const getCategoryColor = (cat: string): string => {
     return colors[cat] || '#6b7280';
 };
 
-export default function GradesManager({ studentId }: { studentId: number }) {
-    const [gradeEntries, setGradeEntries] = useState<GradeEntry[]>([
-        {
-            id: 1,
-            meetingNumber: 1,
-            moduleName: 'Fantasy Zoo',
-            moduleType: 5,
-            grades: { interaksi: 4.4, fokus: 3.75, 'robot-building': 4.1, 'tools-management': 3.5, koding: 3.9 },
-            average: 3.95,
-            date: '2025-01-06'
-        },
-        {
-            id: 2,
-            meetingNumber: 2,
-            moduleName: 'Robot Builder',
-            moduleType: 4,
-            grades: { fokus: 4.2, 'tools-management': 4.0, interaksi: 4.3, koding: 4.1 },
-            average: 4.15,
-            date: '2025-01-13'
-        },
-        {
-            id: 3,
-            meetingNumber: 3,
-            moduleName: 'Fantasy Zoo',
-            moduleType: 5,
-            grades: { interaksi: 4.5, fokus: 4.0, 'robot-building': 4.3, 'tools-management': 3.8, koding: 4.2 },
-            average: 4.16,
-            date: '2025-01-20'
-        },
-        {
-            id: 4,
-            meetingNumber: 4,
-            moduleName: 'Advanced Coding',
-            moduleType: 5,
-            grades: { interaksi: 4.3, fokus: 4.2, 'robot-building': 4.0, 'tools-management': 4.1, koding: 4.4 },
-            average: 4.2,
-            date: '2025-01-27'
-        },
-        {
-            id: 5,
-            meetingNumber: 5,
-            moduleName: 'System Design',
-            moduleType: 4,
-            grades: { fokus: 4.4, 'tools-management': 4.3, interaksi: 4.2, koding: 4.5 },
-            average: 4.35,
-            date: '2025-02-03'
-        },
-        {
-            id: 6,
-            meetingNumber: 6,
-            moduleName: 'Robot Builder',
-            moduleType: 5,
-            grades: { interaksi: 4.6, fokus: 4.3, 'robot-building': 4.5, 'tools-management': 4.2, koding: 4.4 },
-            average: 4.4,
-            date: '2025-02-10'
-        },
-        {
-            id: 7,
-            meetingNumber: 7,
-            moduleName: 'Fantasy Zoo',
-            moduleType: 4,
-            grades: { fokus: 4.5, 'tools-management': 4.4, interaksi: 4.6, koding: 4.5 },
-            average: 4.5,
-            date: '2025-02-17'
-        },
-    ]);
-    const [moduleType, setModuleType] = useState<4 | 5>(5);
-    const [newModule, setNewModule] = useState('');
+export default function GradesManager() {
+    const { studentId, student, gradeEntries, modules, averages } = usePage().props as unknown as Props;
     const [showForm, setShowForm] = useState(false);
+    const [selectedModuleId, setSelectedModuleId] = useState('');
+    const [meetingNumber, setMeetingNumber] = useState('');
+    const [meetingDate, setMeetingDate] = useState('');
+    const [notes, setNotes] = useState('');
 
-    const availableModules = [
-        { name: 'Fantasy Zoo', type: 5 },
-        { name: 'Robot Builder', type: 4 },
-        { name: 'Advanced Coding', type: 5 },
-        { name: 'System Design', type: 4 },
-    ];
+    const selectedModule = modules.find(m => String(m.id) === selectedModuleId);
+    const moduleType = selectedModule?.module_type === 'robot' ? 5 : 4;
 
-    const getCategories = (type: 4 | 5) => type === 5 ? categoriesType5 : categoriesType4;
+    const getCategories = (type: number) => type === 5 ? categoriesType5 : categoriesType4;
 
     const updateGrade = (entryId: number, category: string, value: number) => {
-        const updated = gradeEntries.map(e => {
-            if (e.id === entryId) {
-                const newGrades = { ...e.grades, [category]: Math.max(0, Math.min(5, value)) };
-                const grades = Object.values(newGrades);
-                const newAverage = Math.round((grades.reduce((a, b) => a + b, 0) / grades.length) * 100) / 100;
-                return { ...e, grades: newGrades, average: newAverage };
-            }
-            return e;
+        const entry = gradeEntries.find(e => e.id === entryId);
+        if (!entry) return;
+        const grades = { ...entry.grades, [category]: Math.max(0, Math.min(5, value)) };
+        const values = Object.values(grades).filter((v): v is number => v !== null);
+        const average = values.length > 0 ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100 : 0;
+
+        router.put(`/tutor/grades/${entryId}`, {
+            student_id: studentId,
+            module_id: entry.moduleId,
+            meeting_number: entry.meetingNumber,
+            module_type: entry.moduleType === 5 ? 'robot' : 'coding',
+            meeting_date: entry.date,
+            fokus: grades['fokus'] ?? 0,
+            robot_building: grades['robot-building'] ?? 0,
+            tools_management: grades['tools-management'] ?? 0,
+            interaksi: grades['interaksi'] ?? 0,
+            coding: grades['koding'] ?? 0,
+            notes: entry.notes,
         });
-        setGradeEntries(updated);
     };
 
     const addGradeEntry = () => {
-        if (!newModule.trim()) return;
-        const module = availableModules.find(m => m.name === newModule);
-        if (!module) return;
+        if (!selectedModuleId) return;
 
-                const categories = getCategories(module.type as 4 | 5);
-        const newEntry: GradeEntry = {
-            id: Math.max(...gradeEntries.map(e => e.id), 0) + 1,
-            meetingNumber: Math.max(...gradeEntries.map(e => e.meetingNumber), 0) + 1,
-            moduleName: newModule,
-            moduleType: module.type as 4 | 5,
-            grades: Object.fromEntries(categories.map(c => [c, 0])),
-            average: 0,
-            date: new Date().toISOString().split('T')[0],
-        };
-        setGradeEntries([...gradeEntries, newEntry]);
-        setNewModule('');
-        setShowForm(false);
+        router.post('/tutor/grades', {
+            student_id: studentId,
+            module_id: Number(selectedModuleId),
+            meeting_number: meetingNumber ? Number(meetingNumber) : (gradeEntries.length > 0 ? Math.max(...gradeEntries.map(e => e.meetingNumber)) + 1 : 1),
+            module_type: moduleType === 5 ? 'robot' : 'coding',
+            meeting_date: meetingDate || null,
+            fokus: 0,
+            robot_building: 0,
+            tools_management: 0,
+            interaksi: 0,
+            coding: 0,
+            notes: notes || null,
+        }, {
+            onSuccess: () => {
+                setShowForm(false);
+                setSelectedModuleId('');
+                setMeetingNumber('');
+                setMeetingDate('');
+                setNotes('');
+            },
+        });
     };
 
     const deleteEntry = (id: number) => {
-        setGradeEntries(gradeEntries.filter(e => e.id !== id));
+        if (window.confirm('Yakin ingin menghapus data nilai ini?')) {
+            router.delete(`/tutor/grades/${id}`);
+        }
     };
-
-    // Calculate averages
-    const allAverages = gradeEntries.map(e => e.average);
-    const overallAverage = allAverages.length > 0 
-        ? Math.round((allAverages.reduce((a, b) => a + b, 0) / allAverages.length) * 100) / 100 
-        : 0;
-
-    const type4Averages = gradeEntries
-        .filter(e => e.moduleType === 4)
-        .map(e => e.average);
-    const type4Average = type4Averages.length > 0
-        ? Math.round((type4Averages.reduce((a, b) => a + b, 0) / type4Averages.length) * 100) / 100
-        : 0;
-
-    const type5Averages = gradeEntries
-        .filter(e => e.moduleType === 5)
-        .map(e => e.average);
-    const type5Average = type5Averages.length > 0
-        ? Math.round((type5Averages.reduce((a, b) => a + b, 0) / type5Averages.length) * 100) / 100
-        : 0;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -196,7 +143,7 @@ export default function GradesManager({ studentId }: { studentId: number }) {
             <div className="max-w-6xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Input Nilai Murid</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Input Nilai: {student.name}</h1>
                     <p className="text-gray-600">Input nilai per pertemuan dengan modul yang dipilih</p>
                 </div>
 
@@ -204,20 +151,18 @@ export default function GradesManager({ studentId }: { studentId: number }) {
                 <div className="grid md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl shadow-sm p-6">
                         <p className="text-blue-100 text-sm mb-1">Rata-rata Nilai Keseluruhan</p>
-                        <h2 className="text-4xl font-bold">{overallAverage.toFixed(2)}</h2>
-                        <p className="text-blue-100 text-xs mt-2">{gradeEntries.length} pertemuan</p>
+                        <h2 className="text-4xl font-bold">{averages.overall.toFixed(2)}</h2>
+                        <p className="text-blue-100 text-xs mt-2">{averages.count} pertemuan</p>
                     </div>
 
                     <div className="bg-gradient-to-br from-purple-600 to-purple-700 text-white rounded-xl shadow-sm p-6">
-                        <p className="text-purple-100 text-sm mb-1">Rata-rata Tipe 5 Nilai</p>
-                        <h2 className="text-4xl font-bold">{type5Average.toFixed(2)}</h2>
-                        <p className="text-purple-100 text-xs mt-2">{type5Averages.length} modul</p>
+                        <p className="text-purple-100 text-sm mb-1">Rata-rata Robot Building</p>
+                        <h2 className="text-4xl font-bold">{averages.robot.toFixed(2)}</h2>
                     </div>
 
                     <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white rounded-xl shadow-sm p-6">
-                        <p className="text-orange-100 text-sm mb-1">Rata-rata Tipe 4 Nilai</p>
-                        <h2 className="text-4xl font-bold">{type4Average.toFixed(2)}</h2>
-                        <p className="text-orange-100 text-xs mt-2">{type4Averages.length} modul</p>
+                        <p className="text-orange-100 text-sm mb-1">Rata-rata Coding</p>
+                        <h2 className="text-4xl font-bold">{averages.coding.toFixed(2)}</h2>
                     </div>
                 </div>
 
@@ -234,28 +179,55 @@ export default function GradesManager({ studentId }: { studentId: number }) {
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih Modul</label>
                                     <select
-                                        value={newModule}
-                                        onChange={e => {
-                                            setNewModule(e.target.value);
-                                            const mod = availableModules.find(m => m.name === e.target.value);
-                                            if (mod) setModuleType(mod.type as 4 | 5);
-                                        }}
+                                        value={selectedModuleId}
+                                        onChange={e => setSelectedModuleId(e.target.value)}
                                         className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     >
                                         <option value="">-- Pilih Modul --</option>
-                                        {availableModules.map(m => (
-                                            <option key={m.name} value={m.name}>
-                                                {m.name} (Tipe {m.type})
+                                        {modules.map(m => (
+                                            <option key={m.id} value={m.id}>
+                                                {m.name} ({m.module_type === 'robot' ? 'Robot Building' : 'Coding'})
                                             </option>
                                         ))}
                                     </select>
                                 </div>
 
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nomor Pertemuan</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={meetingNumber}
+                                        onChange={e => setMeetingNumber(e.target.value)}
+                                        placeholder={String(gradeEntries.length > 0 ? Math.max(...gradeEntries.map(e => e.meetingNumber)) + 1 : 1)}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Tanggal Pertemuan</label>
+                                    <input
+                                        type="date"
+                                        value={meetingDate}
+                                        onChange={e => setMeetingDate(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Catatan</label>
+                                    <textarea
+                                        value={notes}
+                                        onChange={e => setNotes(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none h-16"
+                                    />
+                                </div>
+
                                 <div className="p-3 bg-blue-50 rounded-lg">
                                     <p className="text-sm text-blue-700">
                                         <i className="bi bi-info-circle mr-1" />
-                                        Kategori: {moduleType === 5 
-                                            ? 'Fokus, Robot Building, Coding Tools, Interaksi' 
+                                        Kategori: {moduleType === 5
+                                            ? 'Fokus, Robot Building, Tools Mgmt, Interaksi, Koding'
                                             : 'Fokus, Tools Management, Interaksi, Koding'}
                                     </p>
                                 </div>
@@ -263,7 +235,8 @@ export default function GradesManager({ studentId }: { studentId: number }) {
                                 <div className="flex gap-2 pt-4">
                                     <button
                                         onClick={addGradeEntry}
-                                        className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700"
+                                        disabled={!selectedModuleId}
+                                        className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Lanjut Input Nilai
                                     </button>
@@ -294,7 +267,7 @@ export default function GradesManager({ studentId }: { studentId: number }) {
                                         <th className="text-left px-6 py-4 font-semibold text-gray-700">Pertemuan</th>
                                         <th className="text-left px-6 py-4 font-semibold text-gray-700">Modul</th>
                                         <th className="text-center px-3 py-4 font-semibold text-gray-700 text-sm">Tipe</th>
-                                        {getCategories(moduleType).map(cat => (
+                                        {categoriesType5.map(cat => (
                                             <th key={cat} className="text-center px-3 py-4 font-semibold text-gray-700 text-sm">
                                                 {getCategoryLabel(cat)}
                                             </th>
@@ -321,19 +294,26 @@ export default function GradesManager({ studentId }: { studentId: number }) {
                                                     {entry.moduleType}
                                                 </span>
                                             </td>
-                                            {getCategories(entry.moduleType).map(cat => (
-                                                <td key={cat} className="px-3 py-4 text-center">
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        max="5"
-                                                        step="0.1"
-                                                        value={entry.grades[cat]}
-                                                        onChange={e => updateGrade(entry.id, cat, parseFloat(e.target.value))}
-                                                        className="w-12 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                                    />
-                                                </td>
-                                            ))}
+                                            {categoriesType5.map(cat => {
+                                                const isEditable = getCategories(entry.moduleType).includes(cat);
+                                                return (
+                                                    <td key={cat} className="px-3 py-4 text-center">
+                                                        {isEditable ? (
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                max="5"
+                                                                step="0.1"
+                                                                value={entry.grades[cat] ?? ''}
+                                                                onChange={e => updateGrade(entry.id, cat, parseFloat(e.target.value) || 0)}
+                                                                className="w-12 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-gray-300">-</span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
                                             <td className="px-6 py-4 text-center">
                                                 <p className="text-lg font-bold text-teal-600">{entry.average.toFixed(2)}</p>
                                             </td>
@@ -444,11 +424,8 @@ export default function GradesManager({ studentId }: { studentId: number }) {
                     >
                         <i className="bi bi-plus-lg" /> Tambah Pertemuan
                     </button>
-                    <button className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2">
-                        <i className="bi bi-floppy-fill" /> Simpan
-                    </button>
                     <Link
-                        href={`/tutor`}
+                        href="/tutor"
                         className="flex-1 text-center px-6 py-3 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
                     >
                         <i className="bi bi-arrow-left mr-2" /> Kembali

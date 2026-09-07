@@ -16,38 +16,60 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        $allowPublic = (bool) env('AICI_ALLOW_PUBLIC_REGISTRATION', false);
+        $requireCode = !empty(env('AICI_REGISTRATION_CODE'));
+
+        return Inertia::render('Auth/Register', [
+            'allowPublicRegistration' => $allowPublic,
+            'requireRegistrationCode' => $requireCode,
+        ]);
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $allowPublic = (bool) env('AICI_ALLOW_PUBLIC_REGISTRATION', false);
+        $registrationCode = env('AICI_REGISTRATION_CODE');
+        $defaultStatus = env('AICI_NEW_USER_DEFAULT_STATUS', 'pending');
+
+        if (! $allowPublic) {
+            throw ValidationException::withMessages([
+                'email' => __('Registrasi publik dinonaktifkan. Silakan hubungi admin sekolah atau Super Admin AICI untuk membuat akun.'),
+            ]);
+        }
+
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        ];
+
+        if (! empty($registrationCode)) {
+            $rules['registration_code'] = ['required', 'string', function ($attribute, $value, $fail) use ($registrationCode) {
+                if (! hash_equals((string) $registrationCode, (string) $value)) {
+                    $fail(__('Kode registrasi yang Anda masukkan salah.'));
+                }
+            }];
+        }
+
+        $validated = $request->validate($rules);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
             'role' => 'user',
+            'status' => in_array($defaultStatus, ['aktif', 'pending'], true) ? $defaultStatus : 'pending',
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
+        if ($user->isActive()) {
+            Auth::login($user);
+            return redirect()->route('user.beranda');
+        }
 
-        return redirect('/beranda');
+        return redirect()->route('login')->with('status', __('Registrasi berhasil. Akun Anda sedang menunggu persetujuan admin. Silakan coba login kembali setelah diaktifkan.'));
     }
 }

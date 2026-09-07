@@ -1,94 +1,87 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface Module {
     id: number;
     name: string;
-    image: string;
-    description: string;
+    image: string | null;
+    description: string | null;
+    type: string;
+    typeLabel: string;
     tools: string[];
-    hasRobotBuilding: boolean;
+    createdBy: string;
+    createdAt: string;
+    sessionsCount: number;
+}
+
+interface Paginated<T> {
+    data: T[];
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+}
+
+interface Props {
+    modules: Paginated<Module>;
+    search: string;
+    selectedType: string;
+    sortBy: string;
+    stats: { total: number; robot: number; coding: number; general: number };
 }
 
 export default function ModuleManagement() {
-    const [modules, setModules] = useState<Module[]>([
-        { 
-            id: 1, 
-            name: 'Fantasy Zoo', 
-            image: '🦁', 
-            description: 'Pembelajaran robotika dasar dengan tema hewan',
-            tools: ['LEGO Mindstorms', 'Laptop', 'Kabel USB'],
-            hasRobotBuilding: true
-        },
-        { 
-            id: 2, 
-            name: 'Future Town', 
-            image: '🏙️', 
-            description: 'Pembelajaran coding lanjutan tanpa robot',
-            tools: ['Laptop', 'IDE Setup'],
-            hasRobotBuilding: false
-        },
-    ]);
+    const { modules, search, selectedType, sortBy, stats } = usePage().props as unknown as Props;
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [imagePreview, setImagePreview] = useState<string>('');
-    const [newModule, setNewModule] = useState({ name: '', image: '', description: '', tools: [] as string[], newTool: '', hasRobotBuilding: true });
-    const [searchTerm, setSearchTerm] = useState('');
+    const [newModule, setNewModule] = useState({ name: '', image: '', description: '', tools: [] as string[], newTool: '', type: 'robot' });
+    const [searchTerm, setSearchTerm] = useState(search);
+    const [selectedTypeFilter, setSelectedTypeFilter] = useState(selectedType);
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && file.size <= 2097152) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setNewModule({ ...newModule, image: result });
-                setImagePreview(result);
-            };
-            reader.readAsDataURL(file);
-        }
+    const applyFilters = (term: string, type: string) => {
+        router.get('/superadmin/modules', { search: term, type }, { preserveState: true });
     };
 
-    const addModule = () => {
-        if (!newModule.name.trim() || !newModule.image.trim()) return;
+    const handleSubmit = () => {
+        if (!newModule.name.trim()) return;
+
+        const payload = {
+            name: newModule.name,
+            description: newModule.description || null,
+            image: newModule.image || null,
+            type: newModule.type,
+            tools: newModule.tools.length > 0 ? newModule.tools : null,
+        };
+
         if (editingId) {
-            setModules(modules.map(m => m.id === editingId ? { 
-                id: editingId, 
-                name: newModule.name, 
-                image: newModule.image, 
-                description: newModule.description,
-                tools: newModule.tools,
-                hasRobotBuilding: newModule.hasRobotBuilding
-            } : m));
-            setEditingId(null);
+            router.put(`/superadmin/modules/${editingId}`, payload, {
+                onSuccess: () => resetForm(),
+            });
         } else {
-            setModules([...modules, { 
-                id: Math.max(...modules.map(m => m.id), 0) + 1, 
-                name: newModule.name,
-                image: newModule.image,
-                description: newModule.description,
-                tools: newModule.tools,
-                hasRobotBuilding: newModule.hasRobotBuilding
-            }]);
+            router.post('/superadmin/modules', payload, {
+                onSuccess: () => resetForm(),
+            });
         }
-        resetForm();
     };
 
     const editModule = (m: Module) => {
-        setNewModule({ ...m, newTool: '' });
-        setImagePreview(m.image.startsWith('data:') ? m.image : '');
+        setNewModule({
+            name: m.name,
+            image: m.image ?? '',
+            description: m.description ?? '',
+            tools: m.tools ?? [],
+            newTool: '',
+            type: m.type,
+        });
         setEditingId(m.id);
         setShowForm(true);
     };
 
     const deleteModule = (id: number) => {
         if (window.confirm('Yakin ingin menghapus modul ini?')) {
-            setModules(modules.filter(m => m.id !== id));
+            router.delete(`/superadmin/modules/${id}`);
         }
     };
 
     const resetForm = () => {
-        setNewModule({ name: '', image: '', description: '', tools: [], newTool: '', hasRobotBuilding: true });
-        setImagePreview('');
+        setNewModule({ name: '', image: '', description: '', tools: [], newTool: '', type: 'robot' });
         setShowForm(false);
         setEditingId(null);
     };
@@ -108,10 +101,6 @@ export default function ModuleManagement() {
             tools: newModule.tools.filter((_, i) => i !== index)
         });
     };
-
-    const filteredModules = modules.filter(m => 
-        m.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -143,7 +132,7 @@ export default function ModuleManagement() {
 
                 {/* Search & Add Button */}
                 <div className="flex gap-4 mb-6">
-                    <div className="flex-1 relative">
+                    <form onSubmit={e => { e.preventDefault(); applyFilters(searchTerm, selectedTypeFilter); }} className="flex-1 relative">
                         <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
@@ -152,7 +141,17 @@ export default function ModuleManagement() {
                             onChange={e => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
-                    </div>
+                    </form>
+                    <select
+                        value={selectedTypeFilter}
+                        onChange={e => { setSelectedTypeFilter(e.target.value); applyFilters(searchTerm, e.target.value); }}
+                        className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                        <option value="">Semua Tipe</option>
+                        <option value="robot">Robot Building</option>
+                        <option value="coding">Coding</option>
+                        <option value="general">General</option>
+                    </select>
                     <button
                         onClick={() => {
                             resetForm();
@@ -166,20 +165,20 @@ export default function ModuleManagement() {
 
                 {/* Modules Grid */}
                 <div className="grid md:grid-cols-3 gap-6">
-                    {filteredModules.length === 0 ? (
+                    {modules.data.length === 0 ? (
                         <div className="col-span-full bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
                             <i className="bi bi-inbox text-4xl text-gray-300 block mb-3" />
                             <p className="text-gray-600">Belum ada modul</p>
                         </div>
                     ) : (
-                        filteredModules.map(module => (
+                        modules.data.map(module => (
                             <div key={module.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                                 {/* Module Image/Icon */}
                                 <div className="aspect-video bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center text-6xl">
-                                    {module.image.startsWith('data:') ? (
+                                    {module.image ? (
                                         <img src={module.image} alt={module.name} className="w-full h-full object-cover" />
                                     ) : (
-                                        <span>{module.image}</span>
+                                        <span>📦</span>
                                     )}
                                 </div>
 
@@ -188,11 +187,13 @@ export default function ModuleManagement() {
                                     <div className="flex items-start justify-between gap-2">
                                         <h3 className="font-bold text-gray-900 flex-1">{module.name}</h3>
                                         <span className={`px-2 py-1 text-xs font-semibold rounded whitespace-nowrap ${
-                                            module.hasRobotBuilding
+                                            module.type === 'robot'
                                                 ? 'bg-purple-100 text-purple-700'
-                                                : 'bg-blue-100 text-blue-700'
+                                                : module.type === 'coding'
+                                                ? 'bg-blue-100 text-blue-700'
+                                                : 'bg-gray-100 text-gray-700'
                                         }`}>
-                                            {module.hasRobotBuilding ? 'Type 5' : 'Type 4'}
+                                            {module.typeLabel}
                                         </span>
                                     </div>
 
@@ -233,6 +234,21 @@ export default function ModuleManagement() {
                     )}
                 </div>
 
+                {/* Pagination */}
+                {modules.links.length > 3 && (
+                    <div className="mt-6 flex flex-wrap gap-2">
+                        {modules.links.map((link, i) => (
+                            <button
+                                key={i}
+                                disabled={!link.url}
+                                onClick={() => link.url && router.visit(link.url)}
+                                className={`px-3 py-1.5 text-sm rounded-lg ${link.active ? 'bg-orange-600 text-white' : link.url ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ))}
+                    </div>
+                )}
+
                 {/* Back Button */}
                 <div className="mt-12">
                     <Link
@@ -267,27 +283,14 @@ export default function ModuleManagement() {
 
                             {/* Image/Icon */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Gambar/Emoji Modul</label>
-                                <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                                        />
-                                        <p className="text-xs text-gray-600 mt-1">PNG, JPG (Max 2MB)</p>
-                                    </div>
-                                    {imagePreview && (
-                                        <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center text-3xl overflow-hidden">
-                                            {imagePreview.startsWith('data:') ? (
-                                                <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span>{newModule.image}</span>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">URL Gambar Modul</label>
+                                <input
+                                    type="url"
+                                    value={newModule.image}
+                                    onChange={e => setNewModule({ ...newModule, image: e.target.value })}
+                                    placeholder="https://contoh.com/gambar.png"
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                />
                             </div>
 
                             {/* Deskripsi */}
@@ -299,6 +302,20 @@ export default function ModuleManagement() {
                                     placeholder="Jelaskan modul ini..."
                                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none h-20"
                                 />
+                            </div>
+
+                            {/* Tipe Modul */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Tipe Modul</label>
+                                <select
+                                    value={newModule.type}
+                                    onChange={e => setNewModule({ ...newModule, type: e.target.value })}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                >
+                                    <option value="robot">Robot Building</option>
+                                    <option value="coding">Coding</option>
+                                    <option value="general">General</option>
+                                </select>
                             </div>
 
                             {/* Tools */}
@@ -336,23 +353,6 @@ export default function ModuleManagement() {
                                 )}
                             </div>
 
-                            {/* Robot Building Toggle */}
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                <div>
-                                    <p className="font-semibold text-gray-900">Dengan Robot Building?</p>
-                                    <p className="text-xs text-gray-600">Type 5 dengan robot, Type 4 tanpa robot</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={newModule.hasRobotBuilding}
-                                        onChange={e => setNewModule({ ...newModule, hasRobotBuilding: e.target.checked })}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                                </label>
-                            </div>
-
                             {/* Buttons */}
                             <div className="flex gap-3 pt-6 border-t">
                                 <button
@@ -362,7 +362,7 @@ export default function ModuleManagement() {
                                     Batal
                                 </button>
                                 <button
-                                    onClick={addModule}
+                                    onClick={handleSubmit}
                                     className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
                                 >
                                     {editingId ? 'Update' : 'Tambah'} Modul

@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface Student {
@@ -6,37 +6,33 @@ interface Student {
     name: string;
     email: string;
     role: string;
-    status: 'Aktif' | 'Nonaktif';
+    status: string;
     createdAt: string;
+    tutorName: string | null;
+    tutorId: number | null;
+    sessionsCount: number;
+    gradesCount: number;
+}
+
+interface Tutor {
+    id: number;
+    name: string;
+}
+
+interface Paginated<T> {
+    data: T[];
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+}
+
+interface Props {
+    students: Paginated<Student>;
+    search: string;
+    filterStatus: string;
+    tutors: Tutor[];
 }
 
 export default function StudentManagement() {
-    const [students, setStudents] = useState<Student[]>([
-        {
-            id: 1,
-            name: 'Adi Wijaya',
-            email: 'adi@school.id',
-            role: 'Murid',
-            status: 'Aktif',
-            createdAt: '2025-01-02'
-        },
-        {
-            id: 2,
-            name: 'Binti Rahmah',
-            email: 'binti@school.id',
-            role: 'Murid',
-            status: 'Aktif',
-            createdAt: '2025-01-05'
-        },
-        {
-            id: 3,
-            name: 'Citra Dewi',
-            email: 'citra@school.id',
-            role: 'Murid',
-            status: 'Nonaktif',
-            createdAt: '2025-01-10'
-        }
-    ]);
+    const { students, search, filterStatus: initialFilterStatus, tutors } = usePage().props as unknown as Props;
 
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -44,75 +40,63 @@ export default function StudentManagement() {
         name: '',
         email: '',
         password: '',
+        status: 'aktif',
+        tutor_id: '' as string | number,
     });
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'Semua' | 'Aktif' | 'Nonaktif'>('Semua');
+    const [searchTerm, setSearchTerm] = useState(search);
+    const [filterStatus, setFilterStatus] = useState(initialFilterStatus);
 
-    const filteredStudents = students.filter(student => {
-        const matchSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchStatus = filterStatus === 'Semua' || student.status === filterStatus;
-        return matchSearch && matchStatus;
-    });
+    const applyFilters = (term: string, status: string) => {
+        router.get('/superadmin/students', { search: term, filter_status: status }, { preserveState: true });
+    };
 
     const openModal = (student?: Student) => {
         if (student) {
             setEditingId(student.id);
-            setFormData({ name: student.name, email: student.email, password: '' });
+            setFormData({ name: student.name, email: student.email, password: '', status: student.status, tutor_id: student.tutorId ?? '' });
         } else {
             setEditingId(null);
-            setFormData({ name: '', email: '', password: '' });
+            setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '' });
         }
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '' });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (!formData.name || !formData.email || (!editingId && !formData.password)) {
-            alert('Semua field harus diisi');
-            return;
-        }
+
+        const payload = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password || undefined,
+            password_confirmation: formData.password || undefined,
+            status: formData.status,
+            tutor_id: formData.tutor_id === '' ? null : formData.tutor_id,
+        };
 
         if (editingId) {
-            // Update student
-            setStudents(students.map(s => 
-                s.id === editingId 
-                    ? { ...s, name: formData.name, email: formData.email }
-                    : s
-            ));
+            router.put(`/superadmin/students/${editingId}`, payload, {
+                onSuccess: () => closeModal(),
+            });
         } else {
-            // Add new student
-            const newStudent: Student = {
-                id: Math.max(...students.map(s => s.id), 0) + 1,
-                name: formData.name,
-                email: formData.email,
-                role: 'Murid',
-                status: 'Aktif',
-                createdAt: new Date().toISOString().split('T')[0],
-            };
-            setStudents([...students, newStudent]);
+            router.post('/superadmin/students', payload, {
+                onSuccess: () => closeModal(),
+            });
         }
-        closeModal();
     };
 
     const deleteStudent = (id: number) => {
         if (window.confirm('Yakin ingin menghapus murid ini?')) {
-            setStudents(students.filter(s => s.id !== id));
+            router.delete(`/superadmin/students/${id}`);
         }
     };
 
     const toggleStatus = (id: number) => {
-        setStudents(students.map(s => 
-            s.id === id 
-                ? { ...s, status: s.status === 'Aktif' ? 'Nonaktif' : 'Aktif' }
-                : s
-        ));
+        router.patch(`/superadmin/students/${id}/toggle-status`);
     };
 
     return (
@@ -149,16 +133,18 @@ export default function StudentManagement() {
                         {/* Search */}
                         <div className="md:col-span-2">
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Cari Murid</label>
-                            <div className="relative">
-                                <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Cari nama atau email..."
-                                    value={searchTerm}
-                                    onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
-                            </div>
+                            <form onSubmit={e => { e.preventDefault(); applyFilters(searchTerm, filterStatus); }}>
+                                <div className="relative">
+                                    <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Cari nama atau email..."
+                                        value={searchTerm}
+                                        onChange={e => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </div>
+                            </form>
                         </div>
 
                         {/* Filter Status */}
@@ -166,12 +152,12 @@ export default function StudentManagement() {
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
                             <select
                                 value={filterStatus}
-                                onChange={e => setFilterStatus(e.target.value as any)}
+                                onChange={e => { setFilterStatus(e.target.value); applyFilters(searchTerm, e.target.value); }}
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                             >
                                 <option>Semua</option>
-                                <option>Aktif</option>
-                                <option>Nonaktif</option>
+                                <option>aktif</option>
+                                <option>nonaktif</option>
                             </select>
                         </div>
                     </div>
@@ -202,7 +188,7 @@ export default function StudentManagement() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredStudents.length === 0 ? (
+                                {students.data.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-8 text-center">
                                             <i className="bi bi-inbox text-4xl text-gray-300 block mb-3" />
@@ -210,7 +196,7 @@ export default function StudentManagement() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredStudents.map(student => (
+                                    students.data.map(student => (
                                         <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <p className="font-semibold text-gray-900">{student.name}</p>
@@ -227,12 +213,12 @@ export default function StudentManagement() {
                                                 <button
                                                     onClick={() => toggleStatus(student.id)}
                                                     className={`px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
-                                                        student.status === 'Aktif'
+                                                        student.status === 'aktif'
                                                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                                                     }`}
                                                 >
-                                                    {student.status}
+                                                    {student.status === 'aktif' ? 'Aktif' : student.status === 'pending' ? 'Pending' : 'Nonaktif'}
                                                 </button>
                                             </td>
                                             <td className="px-6 py-4">
@@ -262,6 +248,21 @@ export default function StudentManagement() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    {students.links.length > 3 && (
+                        <div className="px-6 py-4 border-t border-gray-100 flex flex-wrap gap-2">
+                            {students.links.map((link, i) => (
+                                <button
+                                    key={i}
+                                    disabled={!link.url}
+                                    onClick={() => link.url && router.visit(link.url)}
+                                    className={`px-3 py-1.5 text-sm rounded-lg ${link.active ? 'bg-teal-600 text-white' : link.url ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Back Button */}
@@ -306,6 +307,35 @@ export default function StudentManagement() {
                                     placeholder="Contoh: adi@school.id"
                                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                                 />
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                                <select
+                                    value={formData.status}
+                                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="aktif">Aktif</option>
+                                    <option value="nonaktif">Nonaktif</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+
+                            {/* Tutor */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Tutor</label>
+                                <select
+                                    value={formData.tutor_id}
+                                    onChange={e => setFormData({ ...formData, tutor_id: e.target.value })}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="">- Pilih Tutor -</option>
+                                    {tutors.map(t => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             {/* Password (only for new student) */}

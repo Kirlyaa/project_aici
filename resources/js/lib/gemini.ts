@@ -1,103 +1,71 @@
 /**
- * Gemini API Integration Service
- * Handles communication with Google Gemini AI
+ * AICI Chatbot Service
+ * Calls our own backend endpoint (NO client-side API key exposure!)
+ * Backend will forward request to Google Gemini if API key is configured
  */
 
-interface ChatMessage {
+interface ChatMessageInternal {
     role: 'user' | 'model';
     parts: Array<{ text: string }>;
 }
 
-interface GeminiResponse {
-    candidates: Array<{
-        content: {
-            parts: Array<{ text: string }>;
-        };
-    }>;
+interface BackendChatResponse {
+    reply: string;
+    fallback: boolean;
 }
 
-export async function callGeminiAPI(userMessage: string, conversationHistory: ChatMessage[] = []): Promise<string> {
+export async function callGeminiAPI(
+    userMessage: string,
+    conversationHistory: ChatMessageInternal[] = []
+): Promise<string> {
     try {
-        // Get API key from environment
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        
-        if (!apiKey) {
-            console.warn('Gemini API key not configured. Using fallback response.');
-            return getFallbackResponse(userMessage);
-        }
+        const csrfToken = getCsrfToken();
 
-        // Build request with conversation history
-        const messages: ChatMessage[] = [
-            ...conversationHistory,
-            {
-                role: 'user',
-                parts: [{ text: userMessage }]
-            }
-        ];
-
-        // Call Gemini API
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contents: messages,
-                    systemInstruction: {
-                        parts: [{
-                            text: `Anda adalah AICI Bot, asisten AI untuk platform pembelajaran robotika dan coding AICI. 
-                            Anda membantu menjawab pertanyaan tentang:
-                            - Cara menggunakan platform AICI
-                            - Fitur untuk siswa, tutor, dan admin
-                            - Masalah teknis dan akun
-                            - Rekomendasi pembelajaran
-                            
-                            Selalu:
-                            - Balas dalam Bahasa Indonesia
-                            - Jaga nada professional dan ramah
-                            - Berikan jawaban singkat dan jelas (2-3 kalimat max)
-                            - Jika tidak tahu, sarankan hubungi support kami
-                            - Gunakan emoji sesekali untuk ramah
-                            `
-                        }]
-                    },
-                    generationConfig: {
-                        temperature: 0.7,
-                        topK: 40,
-                        topP: 0.95,
-                        maxOutputTokens: 200,
-                    }
-                })
-            }
-        );
+        const response = await fetch('/api/chatbot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                message: userMessage,
+                history: conversationHistory,
+            }),
+        });
 
         if (!response.ok) {
-            console.error('Gemini API error:', response.status, response.statusText);
+            console.warn('Chatbot endpoint error:', response.status, response.statusText);
             return getFallbackResponse(userMessage);
         }
 
-        const data: GeminiResponse = await response.json();
-        
-        if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-            return data.candidates[0].content.parts[0].text;
-        }
-
-        return getFallbackResponse(userMessage);
+        const data: BackendChatResponse = await response.json();
+        return data.reply ?? getFallbackResponse(userMessage);
     } catch (error) {
-        console.error('Error calling Gemini API:', error);
+        console.error('Error calling chatbot endpoint:', error);
         return getFallbackResponse(userMessage);
     }
 }
 
+function getCsrfToken(): string | null {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
+    if (meta && meta.content) return meta.content;
+    const cookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='));
+    if (cookie) {
+        return decodeURIComponent(cookie.split('=')[1]);
+    }
+    return null;
+}
+
 /**
- * Fallback responses when API is not available
+ * Local fallback responses when backend endpoint is unreachable
  */
 function getFallbackResponse(userMessage: string): string {
     const lowerMessage = userMessage.toLowerCase();
 
-    // Pattern matching for common questions
     if (lowerMessage.includes('halo') || lowerMessage.includes('hi') || lowerMessage.includes('salam')) {
         return 'Halo! 👋 Saya adalah AICI Bot. Ada yang bisa saya bantu mengenai platform AICI?';
     }
@@ -107,49 +75,50 @@ function getFallbackResponse(userMessage: string): string {
     }
 
     if (lowerMessage.includes('daftar') || lowerMessage.includes('register')) {
-        return 'Untuk mendaftar, klik tombol "Daftar" dan isi form dengan nama, email, dan password. Hubungi sekolah Anda untuk kode registrasi.';
+        return 'Untuk mendaftar, hubungi sekolah Anda untuk kode registrasi atau izin pembuatan akun dari admin AICI.';
     }
 
     if (lowerMessage.includes('modul')) {
-        return 'Modul tersedia di Dashboard Tutor → Kelola Modul. Anda bisa menambah, edit, atau hapus modul pembelajaran. Pilih jenis modul: dengan robot (Type 5) atau tanpa (Type 4).';
+        return 'Modul tersedia di Dashboard Tutor → Kelola Modul. Anda bisa menambah, edit, atau hapus modul pembelajaran.';
     }
 
     if (lowerMessage.includes('nilai') || lowerMessage.includes('grade')) {
-        return 'Input nilai di Dashboard Tutor → Input Nilai. Pilih siswa dan modul, kemudian input nilai per kategori. Nilai akan otomatis terhitung rata-ratanya. Klik "Simpan" untuk menyimpan.';
+        return 'Input nilai di Dashboard Tutor → Input Nilai. Pilih siswa dan modul, kemudian input nilai per kategori.';
     }
 
     if (lowerMessage.includes('komentar')) {
-        return 'Komentar bisa personal atau sistem (AI-generated). Di Dashboard Tutor → Komentar, Anda bisa atur template sistem atau tambah komentar personal per semester.';
+        return 'Komentar bisa personal atau sistem (AI-generated). Di Dashboard Tutor → Komentar, Anda bisa atur template atau tambah komentar personal per semester.';
     }
 
     if (lowerMessage.includes('siswa') || lowerMessage.includes('murid')) {
-        return 'Admin bisa manage siswa di Super Admin Dashboard → Kelola Murid. Anda bisa tambah, edit, atau hapus akun siswa. Toggle status Aktif/Nonaktif sesuai kebutuhan.';
+        return 'Admin bisa mengelola siswa di Super Admin Dashboard → Kelola Murid. Tutor hanya bisa mengakses data murid yang berada di bawah pengawasannya.';
     }
 
     if (lowerMessage.includes('tutor') || lowerMessage.includes('pengajar')) {
-        return 'Admin bisa manage tutor di Super Admin Dashboard → Kelola Tutor. Tambah tutor baru dengan nama, email, dan password. Tutor akan bisa langsung login dan mengajar.';
+        return 'Admin bisa mengelola tutor di Super Admin Dashboard → Kelola Tutor. Tambah tutor baru dengan nama, email, dan password.';
     }
 
     if (lowerMessage.includes('bantuan') || lowerMessage.includes('help') || lowerMessage.includes('support')) {
-        return 'Anda bisa melihat FAQ di halaman ini untuk jawaban lengkap. Jika masih ada pertanyaan, hubungi tim support kami di support@aici.id atau lihat halaman Kontak.';
+        return 'Anda bisa melihat FAQ di halaman ini untuk jawaban lengkap. Jika masih ada pertanyaan, hubungi tim support kami di support@aici.id.';
     }
 
     if (lowerMessage.includes('error') || lowerMessage.includes('bug') || lowerMessage.includes('masalah')) {
         return 'Mohon jelaskan masalah yang Anda alami lebih detail. Error apa yang muncul? Di halaman mana? Tim support kami siap membantu! 😊';
     }
 
-    // Default response
     return 'Pertanyaan bagus! Untuk informasi lebih lengkap, silakan lihat FAQ di atas atau hubungi support kami. Ada yang lain yang bisa saya bantu? 🤖';
 }
 
 /**
- * Format conversation history for Gemini API
+ * Format conversation history for backend
  */
-export function formatConversationHistory(messages: Array<{ role: 'user' | 'bot', text: string }>): ChatMessage[] {
+export function formatConversationHistory(
+    messages: Array<{ role: 'user' | 'bot'; text: string }>
+): ChatMessageInternal[] {
     return messages
         .filter(msg => msg.role !== 'bot' || !msg.text.includes('👋'))
         .map(msg => ({
             role: msg.role === 'bot' ? 'model' : 'user',
-            parts: [{ text: msg.text }]
+            parts: [{ text: msg.text }],
         }));
 }
