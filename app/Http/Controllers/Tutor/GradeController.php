@@ -32,7 +32,7 @@ class GradeController extends Controller
                     'id' => $g->id,
                     'meetingNumber' => $g->meeting_number,
                     'moduleName' => $g->module?->name ?? 'Umum',
-                    'moduleType' => (int) $g->module_type,
+                    'moduleType' => $g->module_type,
                     'moduleId' => $g->module_id,
                     'grades' => [
                         'fokus' => (float) $g->fokus,
@@ -51,8 +51,8 @@ class GradeController extends Controller
 
         $averages = (object) [
             'overall' => round((float) $gradeEntries->avg('average') ?? 0, 2),
-            'robot' => round((float) $gradeEntries->where('moduleType', 5)->avg('average') ?? 0, 2),
-            'coding' => round((float) $gradeEntries->where('moduleType', 4)->avg('average') ?? 0, 2),
+            'robot' => round((float) $gradeEntries->where('moduleType', 'robot')->avg('average') ?? 0, 2),
+            'coding' => round((float) $gradeEntries->where('moduleType', 'coding')->avg('average') ?? 0, 2),
             'count' => $gradeEntries->count(),
         ];
 

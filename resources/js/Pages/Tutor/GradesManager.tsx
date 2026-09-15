@@ -27,8 +27,8 @@ interface Props {
     averages: { overall: number; robot: number; coding: number; count: number };
 }
 
-const categoriesType5 = ['interaksi', 'fokus', 'robot-building', 'tools-management', 'koding'];
-const categoriesType4 = ['fokus', 'tools-management', 'interaksi', 'koding'];
+const categoriesTypeRobot = ['interaksi', 'fokus', 'robot-building', 'tools-management', 'koding'];
+const categoriesTypeCoding = ['fokus', 'tools-management', 'interaksi', 'koding'];
 
 const getCategoryLabel = (cat: string): string => {
     const labels: Record<string, string> = {
@@ -61,9 +61,9 @@ export default function GradesManager() {
     const [notes, setNotes] = useState('');
 
     const selectedModule = modules.find(m => String(m.id) === selectedModuleId);
-    const moduleType = selectedModule?.module_type === 'robot' ? 5 : 4;
+    const moduleType = selectedModule?.module_type === 'robot' ? 'robot' : 'coding';
 
-    const getCategories = (type: number) => type === 5 ? categoriesType5 : categoriesType4;
+    const getCategories = (type: string) => type === 'robot' ? categoriesTypeRobot : categoriesTypeCoding;
 
     const updateGrade = (entryId: number, category: string, value: number) => {
         const entry = gradeEntries.find(e => e.id === entryId);
@@ -76,7 +76,7 @@ export default function GradesManager() {
             student_id: studentId,
             module_id: entry.moduleId,
             meeting_number: entry.meetingNumber,
-            module_type: entry.moduleType === 5 ? 'robot' : 'coding',
+            module_type: entry.moduleType === 'robot' ? 'robot' : 'coding',
             meeting_date: entry.date,
             fokus: grades['fokus'] ?? 0,
             robot_building: grades['robot-building'] ?? 0,
@@ -94,7 +94,7 @@ export default function GradesManager() {
             student_id: studentId,
             module_id: Number(selectedModuleId),
             meeting_number: meetingNumber ? Number(meetingNumber) : (gradeEntries.length > 0 ? Math.max(...gradeEntries.map(e => e.meetingNumber)) + 1 : 1),
-            module_type: moduleType === 5 ? 'robot' : 'coding',
+            module_type: moduleType === 'robot' ? 'robot' : 'coding',
             meeting_date: meetingDate || null,
             fokus: 0,
             robot_building: 0,

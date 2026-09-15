@@ -82,13 +82,18 @@ class CommentController extends Controller
         $tutor = request()->user();
         abort_if(!$tutor->managesStudent($studentId), 403);
 
+        // Validate semester format (YYYY-MM)
+        if (!preg_match('/^\d{4}-\d{2}$/', $semester)) {
+            return back()->with('error', 'Format semester tidak valid. Gunakan format YYYY-MM.');
+        }
+
         DB::transaction(function () use ($studentId, $semester, $tutor) {
             // Parse semester format (e.g., "2026-01" for first semester/month)
-            // Assuming semester is in format "YYYY-MM" or "YYYY-Q1/Q2/Q3/Q4"
-            // For monthly basis: get all entries from that month
+            $year = substr($semester, 0, 4);
+            $month = substr($semester, 5, 2);
             $entries = GradeEntry::where('student_id', $studentId)
-                ->whereYear('meeting_date', substr($semester, 0, 4))
-                ->whereMonth('meeting_date', substr($semester, 5, 2))
+                ->whereYear('meeting_date', $year)
+                ->whereMonth('meeting_date', $month)
                 ->get();
 
             $average = $entries->isNotEmpty() ? round((float) $entries->avg('average'), 2) : 0;
