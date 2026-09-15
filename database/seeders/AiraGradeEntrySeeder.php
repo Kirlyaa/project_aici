@@ -26,18 +26,18 @@ class AiraGradeEntrySeeder extends Seeder
             return;
         }
 
-        // Define 3 grade entries with different categories
+        // Define 3 grade entries with different categories (skala 0-5, sesuai validasi StoreGradeEntryRequest)
         $gradeEntriesData = [
             [
                 'meeting_number' => 1,
                 'module_type' => 'robot',
                 'meeting_date' => '2025-04-05',
                 'module_id' => 1,
-                'fokus' => 8.5,
-                'robot_building' => 8.0,
-                'tools_management' => 8.2,
-                'interaksi' => 8.8,
-                'coding' => 7.8,
+                'fokus' => 4.3,
+                'robot_building' => 4.0,
+                'tools_management' => 4.1,
+                'interaksi' => 4.4,
+                'coding' => 3.9,
                 'notes' => 'Aira menunjukkan kemajuan yang bagus dalam pemahaman konsep robotika.',
             ],
             [
@@ -45,11 +45,11 @@ class AiraGradeEntrySeeder extends Seeder
                 'module_type' => 'robot',
                 'meeting_date' => '2025-05-10',
                 'module_id' => 2,
-                'fokus' => 8.8,
-                'robot_building' => 8.5,
-                'tools_management' => 8.6,
-                'interaksi' => 9.0,
-                'coding' => 8.2,
+                'fokus' => 4.4,
+                'robot_building' => 4.3,
+                'tools_management' => 4.3,
+                'interaksi' => 4.5,
+                'coding' => 4.1,
                 'notes' => 'Peningkatan signifikan dalam sensitivitas sensor dan aktuator.',
             ],
             [
@@ -57,11 +57,11 @@ class AiraGradeEntrySeeder extends Seeder
                 'module_type' => 'coding',
                 'meeting_date' => '2025-06-07',
                 'module_id' => 5,
-                'fokus' => 9.0,
+                'fokus' => 4.5,
                 'robot_building' => null,
-                'tools_management' => 8.4,
-                'interaksi' => 9.2,
-                'coding' => 8.8,
+                'tools_management' => 4.2,
+                'interaksi' => 4.6,
+                'coding' => 4.4,
                 'notes' => 'Aira sangat mahir dalam penggunaan block programming dan variabel.',
             ],
         ];

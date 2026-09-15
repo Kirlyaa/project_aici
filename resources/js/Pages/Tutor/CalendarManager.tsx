@@ -1,6 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import FlashToast from '@/Components/FlashToast';
+import StudentLockBanner from '@/Components/StudentLockBanner';
+import { useStudentLock } from '@/Hooks/useStudentLock';
 import { SessionStatus } from '@/types/session';
 
 type DateStatus = SessionStatus | 'normal';
@@ -55,6 +57,9 @@ function getSessionForDate(sessions: SessionData[], year: number, month: number,
 }
 
 export default function CalendarManager({ studentId, student, sessions, modules }: Props) {
+    const { lock } = useStudentLock({ studentId, page: 'calendar' });
+    const isReadOnly = lock?.locked === true;
+
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -212,6 +217,8 @@ export default function CalendarManager({ studentId, student, sessions, modules 
                     <p className="text-gray-600">Tandai tanggal libur, absen, reschedule, hadir, atau akan datang</p>
                 </div>
 
+                <StudentLockBanner lock={lock} studentName={student.name} />
+
                 <div className="grid lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                         <div className="flex items-center justify-between mb-6">
@@ -250,11 +257,13 @@ export default function CalendarManager({ studentId, student, sessions, modules 
                                     <button
                                         key={date}
                                         onClick={() => openDateEditor(date)}
+                                        disabled={isReadOnly}
+                                        title={isReadOnly ? 'Murid ini sedang dibuka oleh tutor lain' : undefined}
                                         className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center relative font-medium text-sm ${
                                             session
                                                 ? `${getStatusColor(session.status)} border-gray-300`
                                                 : 'border-gray-200 hover:border-teal-400 hover:bg-teal-50'
-                                        }`}
+                                        } ${isReadOnly ? 'cursor-not-allowed opacity-70' : ''}`}
                                     >
                                         {session && (
                                             <i className={`bi ${getStatusIcon(session.status)} text-lg absolute top-0.5 right-0.5`} />
@@ -455,8 +464,9 @@ export default function CalendarManager({ studentId, student, sessions, modules 
                             <div className="flex gap-2 pt-4">
                                 <button
                                     onClick={saveDateMark}
-                                    disabled={saving}
-                                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50"
+                                    disabled={saving || isReadOnly}
+                                    title={isReadOnly ? 'Murid ini sedang dibuka oleh tutor lain' : undefined}
+                                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {saving ? 'Menyimpan...' : 'Simpan'}
                                 </button>

@@ -27,7 +27,8 @@ class StudentGradeReportController extends Controller
                     'id' => $g->id,
                     'meetingNumber' => $g->meeting_number,
                     'moduleName' => $g->module?->name ?? 'General',
-                    'moduleType' => (int) $g->module_type,
+                    'moduleType' => $g->module_type === 'robot' ? 5 : 4,
+                    'module_type' => $g->module_type,
                     'grades' => [
                         'fokus' => (float) $g->fokus,
                         'robot-building' => $g->robot_building !== null ? (float) $g->robot_building : null,
@@ -44,11 +45,11 @@ class StudentGradeReportController extends Controller
         // Calculate overall statistics
         $stats = [
             'total_meetings' => $gradeEntries->count(),
-            'overall_average' => round((float) $gradeEntries->avg('average') ?? 0, 2),
-            'type5_average' => round((float) $gradeEntries->where('moduleType', 5)->avg('average') ?? 0, 2),
-            'type4_average' => round((float) $gradeEntries->where('moduleType', 4)->avg('average') ?? 0, 2),
-            'highest_score' => round((float) $gradeEntries->max('average') ?? 0, 2),
-            'lowest_score' => round((float) $gradeEntries->min('average') ?? 0, 2),
+            'overall_average' => round((float) ($gradeEntries->avg('average') ?? 0), 2),
+            'type5_average' => round((float) ($gradeEntries->where('module_type', 'robot')->avg('average') ?? 0), 2),
+            'type4_average' => round((float) ($gradeEntries->where('module_type', 'coding')->avg('average') ?? 0), 2),
+            'highest_score' => round((float) ($gradeEntries->max('average') ?? 0), 2),
+            'lowest_score' => round((float) ($gradeEntries->min('average') ?? 0), 2),
         ];
 
         // Grouping by module for module-wise analysis

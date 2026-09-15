@@ -26,7 +26,7 @@ class DashboardController
         $activeTutors = User::where('role', 'tutor')->where('status', 'aktif')->count();
 
         // Grade Statistics
-        $avgGrade = round((float) GradeEntry::avg('average') ?? 0, 2);
+        $avgGrade = round((float) (GradeEntry::avg('average') ?? 0), 2);
         $totalGradeEntries = GradeEntry::count();
         $totalSessions = LearningSession::count();
 
@@ -56,7 +56,7 @@ class DashboardController
             ->limit(5)
             ->get()
             ->map(function (User $u) {
-                $avgGrade = $u->gradeEntries()->avg('average') ?? 0;
+                $avgGrade = (float) ($u->gradeEntries()->avg('average') ?? 0);
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
@@ -107,16 +107,19 @@ class DashboardController
             '4-5' => 0,
         ];
 
-        GradeEntry::selectRaw('CAST(average AS DECIMAL(3,1)) as grade')
-            ->pluck('average')
+        GradeEntry::whereNotNull('average')
+            ->selectRaw('CAST(average AS DECIMAL(3,1)) as grade')
+            ->pluck('grade')
             ->each(function ($grade) use (&$gradeRanges) {
-                if ($grade < 1) {
+                if ($grade === null) return;
+                $g = (float) $grade;
+                if ($g < 1) {
                     $gradeRanges['0-1']++;
-                } elseif ($grade < 2) {
+                } elseif ($g < 2) {
                     $gradeRanges['1-2']++;
-                } elseif ($grade < 3) {
+                } elseif ($g < 3) {
                     $gradeRanges['2-3']++;
-                } elseif ($grade < 4) {
+                } elseif ($g < 4) {
                     $gradeRanges['3-4']++;
                 } else {
                     $gradeRanges['4-5']++;
@@ -130,8 +133,8 @@ class DashboardController
             ->map(function ($stat) {
                 return [
                     'type' => $stat->module_type === 'robot' ? 'Robot Building' : ($stat->module_type === 'coding' ? 'Coding' : 'General'),
-                    'count' => $stat->count,
-                    'avg_grade' => round($stat->avg_grade, 2),
+                    'count' => (int) ($stat->count ?? 0),
+                    'avg_grade' => round((float) ($stat->avg_grade ?? 0), 2),
                 ];
             });
 

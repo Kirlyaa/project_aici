@@ -42,6 +42,7 @@ export default function Profil() {
 
     const currentScores = activeTab === 'robot' ? categoryData : focusToolsData;
     const comment = studentStats?.comment ?? {
+        system: null,
         general: null,
         strengths: null,
         notes: null,
@@ -117,17 +118,33 @@ export default function Profil() {
                 {/* 2-Column Section: Komentar Sistem & Top Chart */}
                 <div className="grid md:grid-cols-2 gap-6">
 
-                    {/* Left Card: Komentar Sistem */}
+                    {/* Left Card: Komentar */}
                     <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm space-y-4">
-                        <h2 className="text-base font-bold text-gray-900">Komentar Sistem</h2>
+                        <h2 className="text-base font-bold text-gray-900">Komentar</h2>
 
-                        {/* Analisis Umum */}
-                        <div className="bg-[#f2f8f8] border-l-4 border-[#034d52] p-4 rounded-r-xl">
-                            <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1">Analisis Umum</h3>
-                            <p className="text-xs text-gray-600 leading-relaxed">
-                                {comment.general ?? 'Belum ada analisis sistem. Nilai akan muncul setelah sesi pertama.'}
-                            </p>
-                        </div>
+                        {/* Komentar Sistem (Template) */}
+                        {comment.system && (
+                            <div className="bg-[#f2f8f8] border-l-4 border-[#034d52] p-4 rounded-r-xl">
+                                <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1 flex items-center gap-1.5">
+                                    <i className="bi bi-cpu text-[#034d52]" /> Komentar Sistem
+                                </h3>
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                    {comment.system}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Analisis Umum (Tutor) */}
+                        {comment.general && (
+                            <div className="bg-[#f0f4ff] border-l-4 border-blue-600 p-4 rounded-r-xl">
+                                <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1 flex items-center gap-1.5">
+                                    <i className="bi bi-person-fill text-blue-600" /> Analisis Umum
+                                </h3>
+                                <p className="text-xs text-gray-600 leading-relaxed">
+                                    {comment.general}
+                                </p>
+                            </div>
+                        )}
 
                         {/* Kelebihan */}
                         {comment.strengths && (
@@ -151,6 +168,11 @@ export default function Profil() {
                                     {comment.notes}
                                 </p>
                             </div>
+                        )}
+
+                        {/* Fallback jika belum ada komentar sama sekali */}
+                        {!comment.system && !comment.general && !comment.strengths && !comment.notes && (
+                            <p className="text-xs text-gray-400 italic">Belum ada komentar. Nilai akan muncul setelah sesi pertama.</p>
                         )}
                     </div>
 

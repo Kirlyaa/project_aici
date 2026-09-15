@@ -31,7 +31,8 @@ class ProfileController extends Controller
             $codingAvg      = round((float) ($gradeEntries->avg('coding') ?? 0), 1);
 
             $overallAvg = round((float) ($gradeEntries->avg('average') ?? 0), 2);
-            $overallPercentage = $overallAvg > 0 ? round(($overallAvg / 5.0) * 100, 1) : 0;
+            // Clamp ke 0-100 agar tidak melebihi 100% jika data seeder lama masih 0-10
+            $overallPercentage = $overallAvg > 0 ? min(100, round(($overallAvg / 5.0) * 100, 1)) : 0;
 
             $completedSessions = $user->learningSessions()->where('status', 'hadir')->count();
             $totalSessions = $user->learningSessions()->count();
@@ -59,9 +60,10 @@ class ProfileController extends Controller
                         'coding' => $codingAvg,
                     ],
                     'comment' => [
-                        'general' => $latestComment?->system_comment,
-                        'strengths' => $latestComment?->tutor_comment,
-                        'notes' => null,
+                        'system'    => $latestComment?->system_comment,
+                        'general'   => $latestComment?->tutor_comment,
+                        'strengths' => $latestComment?->strengths,
+                        'notes'     => $latestComment?->notes,
                     ]
                 ]
             ]);
@@ -140,7 +142,8 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $gradeEntries = \App\Models\GradeEntry::where('student_id', $user->id)->get();
-        $pct = fn(float $avg) => round(($avg / 5.0) * 100, 1);
+        // Clamp ke 0-100 agar tidak melebihi 100% jika data seeder lama masih 0-10
+        $pct = fn(float $avg) => min(100, round(($avg / 5.0) * 100, 1));
 
         $scores = [
             'interaction' => $pct((float) ($gradeEntries->avg('interaksi') ?? 0)),
@@ -173,8 +176,10 @@ class ProfileController extends Controller
                     'status' => $s->status,
                 ]),
                 'comment' => [
-                    'general' => $latestComment?->system_comment,
-                    'notes' => $latestComment?->tutor_comment,
+                    'system'    => $latestComment?->system_comment,
+                    'general'   => $latestComment?->tutor_comment,
+                    'strengths' => $latestComment?->strengths,
+                    'notes'     => $latestComment?->notes,
                 ],
             ],
         ]);

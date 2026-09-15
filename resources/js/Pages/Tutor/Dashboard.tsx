@@ -8,6 +8,14 @@ interface Student {
     email: string;
     level: string;
     progress: number;
+    averageGrade: number;
+    status: string;
+    totalSessions: number;
+    hadir: number;
+    absen: number;
+    reschedule: number;
+    libur: number;
+    akanDatang: number;
 }
 
 export default function TutorDashboard() {
@@ -176,35 +184,35 @@ export default function TutorDashboard() {
                                         </div>
                                     </Link>
                                 </div>
+
+                                {/* Quick Stats — data asli per murid terpilih */}
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                                    <h3 className="font-bold text-gray-900 mb-4">Ringkasan Semester — {currentStudent.name}</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="p-4 bg-gray-50 rounded-lg">
+                                            <p className="text-sm text-gray-600 mb-1">Total Sesi</p>
+                                            <p className="text-2xl font-bold text-gray-900">{currentStudent.totalSessions}</p>
+                                        </div>
+                                        <div className="p-4 bg-green-50 rounded-lg">
+                                            <p className="text-sm text-gray-600 mb-1">Hadir</p>
+                                            <p className="text-2xl font-bold text-green-600">{currentStudent.hadir}</p>
+                                        </div>
+                                        <div className="p-4 bg-red-50 rounded-lg">
+                                            <p className="text-sm text-gray-600 mb-1">Absen</p>
+                                            <p className="text-2xl font-bold text-red-600">{currentStudent.absen}</p>
+                                        </div>
+                                        <div className="p-4 bg-yellow-50 rounded-lg">
+                                            <p className="text-sm text-gray-600 mb-1">Reschedule</p>
+                                            <p className="text-2xl font-bold text-yellow-600">{currentStudent.reschedule}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </>
                         ) : (
                             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-500">
                                 Pilih murid dari daftar di sebelah kiri untuk mengelola kalender, nilai, dan komentar.
                             </div>
                         )}
-
-                        {/* Quick Stats */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                            <h3 className="font-bold text-gray-900 mb-4">Ringkasan Semester</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-600 mb-1">Total Sesi</p>
-                                    <p className="text-2xl font-bold text-gray-900">13</p>
-                                </div>
-                                <div className="p-4 bg-green-50 rounded-lg">
-                                    <p className="text-sm text-gray-600 mb-1">Hadir</p>
-                                    <p className="text-2xl font-bold text-green-600">8</p>
-                                </div>
-                                <div className="p-4 bg-red-50 rounded-lg">
-                                    <p className="text-sm text-gray-600 mb-1">Absen</p>
-                                    <p className="text-2xl font-bold text-red-600">2</p>
-                                </div>
-                                <div className="p-4 bg-yellow-50 rounded-lg">
-                                    <p className="text-sm text-gray-600 mb-1">Reschedule</p>
-                                    <p className="text-2xl font-bold text-yellow-600">1</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

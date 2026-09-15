@@ -11,6 +11,7 @@ use App\Http\Controllers\Tutor\CalendarController;
 use App\Http\Controllers\Tutor\GradeController;
 use App\Http\Controllers\Tutor\CommentController;
 use App\Http\Controllers\Tutor\ModuleController as TutorModuleController;
+use App\Http\Controllers\Tutor\StudentLockController;
 use App\Http\Controllers\Tutor\SessionController as TutorSessionController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\TutorController;
@@ -118,6 +119,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         // Export Routes
         Route::get('/export/grades/{studentId}', [ExportController::class, 'grades'])->name('export.grades');
         Route::get('/export/comments/{studentId}', [ExportController::class, 'comments'])->name('export.comments');
+
+        // Student Lock API (anti-bentrok antar tutor)
+        Route::get('/lock/{studentId}', [StudentLockController::class, 'status'])->name('lock.status');
+        Route::post('/lock/{studentId}/heartbeat', [StudentLockController::class, 'heartbeat'])->name('lock.heartbeat');
+        Route::post('/lock/{studentId}/release', [StudentLockController::class, 'release'])->name('lock.release');
     });
 
     // ============ ROUTE HANYA UNTUK SUPER ADMIN (role: superadmin) ============

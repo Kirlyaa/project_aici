@@ -18,7 +18,7 @@ interface Props {
         scores: { interaction: number; focus: number; robotBuilding: number; tools: number; coding: number };
         averagePercentage: number;
         sessions: SessionItem[];
-        comment: { general: string | null; notes: string | null };
+        comment: { system: string | null; general: string | null; strengths: string | null; notes: string | null };
     };
 }
 
@@ -35,7 +35,7 @@ export default function ProfilPDF() {
         scores: { interaction: 0, focus: 0, robotBuilding: 0, tools: 0, coding: 0 },
         averagePercentage: 0,
         sessions: [],
-        comment: { general: null, notes: null },
+        comment: { system: null, general: null, strengths: null, notes: null },
     };
 
     const { attendance, scores } = stats;
@@ -179,31 +179,64 @@ export default function ProfilPDF() {
                     <Card className="p-6 mb-6">
                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <i className="bi bi-info-circle-fill text-teal-600"></i>
-                            Komentar Sistem
+                            Komentar
                         </h2>
                         <div className="space-y-4">
-                            <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded">
-                                <div className="flex items-start gap-3">
-                                    <i className="bi bi-check-circle-fill text-green-600 text-xl"></i>
-                                    <div>
-                                        <p className="font-medium mb-1">Kondisi Umum</p>
-                                        <p className="text-sm text-gray-700">
-                                            {stats.comment.general ?? 'Belum ada analisis sistem. Nilai akan muncul setelah sesi pertama.'}
-                                        </p>
+                            {/* Komentar Sistem (Template) */}
+                            {stats.comment.system && (
+                                <div className="p-4 bg-[#f2f8f8] border-l-4 border-[#034d52] rounded">
+                                    <div className="flex items-start gap-3">
+                                        <i className="bi bi-cpu text-[#034d52] text-xl"></i>
+                                        <div>
+                                            <p className="font-medium mb-1">Komentar Sistem</p>
+                                            <p className="text-sm text-gray-700">{stats.comment.system}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            {stats.comment.notes && (
-                                <div className="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                            {/* Analisis Umum (Tutor) */}
+                            {stats.comment.general && (
+                                <div className="p-4 bg-[#f0f4ff] border-l-4 border-blue-600 rounded">
                                     <div className="flex items-start gap-3">
-                                        <i className="bi bi-exclamation-triangle-fill text-yellow-600 text-xl"></i>
+                                        <i className="bi bi-person-fill text-blue-600 text-xl"></i>
+                                        <div>
+                                            <p className="font-medium mb-1">Analisis Umum</p>
+                                            <p className="text-sm text-gray-700">{stats.comment.general}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Kelebihan */}
+                            {stats.comment.strengths && (
+                                <div className="p-4 bg-[#f0faf2] border-l-4 border-emerald-600 rounded">
+                                    <div className="flex items-start gap-3">
+                                        <i className="bi bi-check-circle-fill text-emerald-600 text-xl"></i>
+                                        <div>
+                                            <p className="font-medium mb-1">Kelebihan</p>
+                                            <p className="text-sm text-gray-700">{stats.comment.strengths}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Catatan */}
+                            {stats.comment.notes && (
+                                <div className="p-4 bg-[#fffdf2] border-l-4 border-amber-600 rounded">
+                                    <div className="flex items-start gap-3">
+                                        <i className="bi bi-exclamation-triangle-fill text-amber-600 text-xl"></i>
                                         <div>
                                             <p className="font-medium mb-1">Catatan</p>
                                             <p className="text-sm text-gray-700">{stats.comment.notes}</p>
                                         </div>
                                     </div>
                                 </div>
+                            )}
+
+                            {/* Fallback */}
+                            {!stats.comment.system && !stats.comment.general && !stats.comment.strengths && !stats.comment.notes && (
+                                <p className="text-sm text-gray-400 italic">Belum ada komentar. Nilai akan muncul setelah sesi pertama.</p>
                             )}
                         </div>
                     </Card>

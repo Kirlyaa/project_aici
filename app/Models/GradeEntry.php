@@ -45,6 +45,13 @@ class GradeEntry extends Model
         });
     }
 
+    /**
+     * Hitung rata-rata nilai sesi.
+     *
+     * - Default (coding/general): 4 kategori (fokus, tools, interaksi, coding)
+     * - Robot: 5 kategori jika robot_building !== null
+     * Skala nilai adalah 0.00 - 5.00
+     */
     public function recalculateAverage(): void
     {
         $values = [

@@ -1,5 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import StudentLockBanner from '@/Components/StudentLockBanner';
+import { useStudentLock } from '@/Hooks/useStudentLock';
 
 interface GradeEntry {
     id: number;
@@ -54,6 +56,10 @@ const getCategoryColor = (cat: string): string => {
 
 export default function GradesManager() {
     const { studentId, student, gradeEntries, modules, averages } = usePage().props as unknown as Props;
+
+    const { lock } = useStudentLock({ studentId, page: 'grades' });
+    const isReadOnly = lock?.locked === true;
+
     const [showForm, setShowForm] = useState(false);
     const [selectedModuleId, setSelectedModuleId] = useState('');
     const [meetingNumber, setMeetingNumber] = useState('');
@@ -146,6 +152,8 @@ export default function GradesManager() {
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Input Nilai: {student.name}</h1>
                     <p className="text-gray-600">Input nilai per pertemuan dengan modul yang dipilih</p>
                 </div>
+
+                <StudentLockBanner lock={lock} studentName={student.name} />
 
                 {/* Statistics Cards */}
                 <div className="grid md:grid-cols-3 gap-4 mb-8">
@@ -304,9 +312,10 @@ export default function GradesManager() {
                                                                 min="0"
                                                                 max="5"
                                                                 step="0.1"
+                                                                disabled={isReadOnly}
                                                                 value={entry.grades[cat] ?? ''}
                                                                 onChange={e => updateGrade(entry.id, cat, parseFloat(e.target.value) || 0)}
-                                                                className="w-12 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                                                className="w-12 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400"
                                                             />
                                                         ) : (
                                                             <span className="text-gray-300">-</span>
@@ -320,7 +329,9 @@ export default function GradesManager() {
                                             <td className="px-4 py-4 text-center">
                                                 <button
                                                     onClick={() => deleteEntry(entry.id)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    disabled={isReadOnly}
+                                                    title={isReadOnly ? 'Murid ini sedang dibuka oleh tutor lain' : undefined}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     <i className="bi bi-trash-fill" />
                                                 </button>
@@ -420,7 +431,9 @@ export default function GradesManager() {
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowForm(true)}
-                        className="flex-1 px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center justify-center gap-2"
+                        disabled={isReadOnly}
+                        title={isReadOnly ? 'Murid ini sedang dibuka oleh tutor lain' : undefined}
+                        className="flex-1 px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         <i className="bi bi-plus-lg" /> Tambah Pertemuan
                     </button>

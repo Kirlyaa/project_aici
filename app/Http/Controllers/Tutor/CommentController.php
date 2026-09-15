@@ -8,6 +8,7 @@ use App\Models\CommentTemplate;
 use App\Models\GradeEntry;
 use App\Models\StudentComment;
 use App\Models\User;
+use App\Services\StudentLock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,8 @@ class CommentController extends Controller
                     'academic_year' => $c->academic_year,
                     'systemComment' => $c->system_comment,
                     'tutorComment' => $c->tutor_comment,
+                    'strengths' => $c->strengths,
+                    'notes' => $c->notes,
                     'averageGrade' => $c->average_grade !== null ? (float) $c->average_grade : null,
                     'moduleNames' => $c->module_names,
                     'isSystemGenerated' => (bool) $c->is_system_generated,
@@ -60,6 +63,12 @@ class CommentController extends Controller
     {
         $validated = $request->validated();
         abort_if(!$request->user()->managesStudent($validated['student_id']), 403);
+        StudentLock::assertWritable((int) $validated['student_id'], $request->user());
+
+        $existing = StudentComment::firstOrNew([
+            'student_id' => $validated['student_id'],
+            'semester' => $validated['semester'],
+        ]);
 
         $comment = StudentComment::updateOrCreate(
             [
@@ -68,19 +77,68 @@ class CommentController extends Controller
             ],
             [
                 'tutor_id' => $request->user()->role === 'tutor' ? $request->user()->id : null,
-                'academic_year' => $validated['academic_year'] ?? null,
+                'academic_year' => $validated['academic_year'] ?? $existing->academic_year,
                 'tutor_comment' => $validated['tutor_comment'] ?? null,
-                'system_comment' => $validated['system_comment'] ?? null,
+                'strengths' => $validated['strengths'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                // Jangan timpa system_comment lama kecuali dikirim eksplisit
+                'system_comment' => $validated['system_comment'] ?? $existing->system_comment,
+                'average_grade' => $existing->average_grade,
+                'module_names' => $existing->module_names,
+                'is_system_generated' => (bool) $existing->is_system_generated,
             ]
         );
 
+        // Auto-generate komentar sistem dari template jika belum ada
+        if (empty($comment->system_comment)) {
+            $systemComment = $this->buildSystemComment($validated['student_id'], $validated['semester']);
+            if ($systemComment !== null) {
+                $comment->update([
+                    'system_comment' => $systemComment['text'],
+                    'average_grade' => $systemComment['average'],
+                    'module_names' => $systemComment['modules'],
+                    'is_system_generated' => true,
+                ]);
+            }
+        }
+
         return back()->with('success', 'Komentar berhasil disimpan.');
+    }
+
+    /**
+     * Susun komentar sistem dari CommentTemplate berdasarkan rata-rata nilai bulan itu.
+     *
+     * @return array{text: string, average: float, modules: array}|null
+     */
+    private function buildSystemComment(int $studentId, string $semester): ?array
+    {
+        $entries = GradeEntry::where('student_id', $studentId)
+            ->whereYear('meeting_date', substr($semester, 0, 4))
+            ->whereMonth('meeting_date', substr($semester, 5, 2))
+            ->get();
+
+        $average = $entries->isNotEmpty() ? round((float) $entries->avg('average'), 2) : 0;
+        $moduleNames = $entries->pluck('module.name')->unique()->filter()->values()->toArray();
+
+        $template = CommentTemplate::getTemplateForAverage($average);
+        if ($template === null) {
+            return null;
+        }
+
+        $text = CommentTemplate::substitute($template, [
+            'modules' => $moduleNames,
+            'average' => (string) $average,
+            'student' => User::find($studentId)?->name ?? 'Siswa',
+        ]);
+
+        return ['text' => $text, 'average' => $average, 'modules' => $moduleNames];
     }
 
     public function generate(int $studentId, string $semester): RedirectResponse
     {
         $tutor = request()->user();
         abort_if(!$tutor->managesStudent($studentId), 403);
+        StudentLock::assertWritable($studentId, $tutor);
 
         DB::transaction(function () use ($studentId, $semester, $tutor) {
             // Parse semester format (e.g., "2026-01" for first semester/month)
@@ -124,6 +182,7 @@ class CommentController extends Controller
     public function destroy(StudentComment $studentComment): RedirectResponse
     {
         abort_if(!request()->user()->managesStudent($studentComment->student_id), 403);
+        StudentLock::assertWritable((int) $studentComment->student_id, request()->user());
         $studentComment->delete();
         return back()->with('success', 'Komentar berhasil dihapus.');
     }

@@ -89,29 +89,29 @@ class User extends Authenticatable
         return $this->notifications()->where('is_read', false)->orderByDesc('created_at');
     }
 
+    /**
+     * Semua tutor aktif (dan superadmin) boleh mengakses semua murid.
+     *
+     * Catatan penting: method ini TIDAK boleh mengubah data apa pun.
+     * Sebelumnya ada auto-assign tutor_id yang membuat siapa pun yang
+     * pertama kali membuka murid otomatis menjadi tutor pemilik murid
+     * tersebut, sehingga tutor lain terkunci (403). Sekarang kepemilikan
+     * murid diatur eksplisit oleh superadmin lewat halaman Students,
+     * dan proteksi antar-tutor ditangani StudentLock (bukan hak akses).
+     */
     public function managesStudent(int|User $student): bool
     {
-        if ($this->role !== 'tutor' && $this->role !== 'superadmin') {
-            return false;
-        }
-
         if ($this->role === 'superadmin') {
             return true;
+        }
+
+        if ($this->role !== 'tutor' || !$this->isActive()) {
+            return false;
         }
 
         $studentId = $student instanceof User ? $student->id : (int) $student;
         $studentUser = $student instanceof User ? $student : User::find($studentId);
 
-        if (!$studentUser) {
-            return false;
-        }
-
-        // Auto-assign if student has no tutor assigned yet
-        if (is_null($studentUser->tutor_id)) {
-            $studentUser->update(['tutor_id' => $this->id]);
-            return true;
-        }
-
-        return (int) $studentUser->tutor_id === (int) $this->id;
+        return (bool) $studentUser && $studentUser->role === 'user';
     }
 }

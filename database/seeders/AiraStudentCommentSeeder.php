@@ -31,7 +31,9 @@ class AiraStudentCommentSeeder extends Seeder
                 'academic_year' => 2025,
                 'system_comment' => 'Aira menunjukkan pemahaman yang baik tentang dasar-dasar robotika. Fokus dan perhatiannya terhadap detail sangat baik, dan dia mampu mengikuti instruksi dengan baik.',
                 'tutor_comment' => 'Aira adalah siswa yang sangat termotivasi. Dia selalu bertanya ketika tidak mengerti dan aktif berpartisipasi dalam setiap sesi pembelajaran.',
-                'average_grade' => 8.55,
+                'strengths' => 'Sangat aktif bertanya, logika coding cepat dipahami, dan teliti dalam perakitan robot.',
+                'notes' => 'Perlu latihan tambahan pada materi sensor dan aktuator agar lebih percaya diri.',
+                'average_grade' => 4.32,
                 'is_system_generated' => false,
             ],
             [
@@ -39,23 +41,31 @@ class AiraStudentCommentSeeder extends Seeder
                 'academic_year' => 2025,
                 'system_comment' => 'Aira telah membuat kemajuan luar biasa dalam pemrograman dan kontrol motor. Kemampuannya untuk menangkap konsep kompleks sangat mengesankan.',
                 'tutor_comment' => 'Terus pertahankan semangat dan dedikasi ini Aira! Kamu memiliki potensi yang besar dalam bidang robotika dan coding.',
-                'average_grade' => 8.75,
+                'strengths' => 'Kemampuan problem-solving meningkat pesat, mampu menyelesaikan tantangan coding secara mandiri.',
+                'notes' => 'Fokus pada pengembangan kreativitas dalam desain robot untuk sesi berikutnya.',
+                'average_grade' => 4.40,
                 'is_system_generated' => false,
             ],
         ];
 
         foreach ($commentsData as $data) {
-            StudentComment::create([
-                'student_id' => $aira->id,
-                'tutor_id' => $aiya->id,
-                'semester' => $data['semester'],
-                'academic_year' => $data['academic_year'],
-                'system_comment' => $data['system_comment'],
-                'tutor_comment' => $data['tutor_comment'],
-                'average_grade' => $data['average_grade'],
-                'module_names' => ['Modul 1 - Pengenalan Robotika', 'Modul 2 - Sensor & Aktuator'],
-                'is_system_generated' => $data['is_system_generated'],
-            ]);
+            StudentComment::updateOrCreate(
+                [
+                    'student_id' => $aira->id,
+                    'semester'   => $data['semester'],
+                ],
+                [
+                    'tutor_id'            => $aiya->id,
+                    'academic_year'       => $data['academic_year'],
+                    'system_comment'      => $data['system_comment'],
+                    'tutor_comment'       => $data['tutor_comment'],
+                    'strengths'           => $data['strengths'],
+                    'notes'               => $data['notes'],
+                    'average_grade'       => $data['average_grade'],
+                    'module_names'        => ['Modul 1 - Pengenalan Robotika', 'Modul 2 - Sensor & Aktuator'],
+                    'is_system_generated' => $data['is_system_generated'],
+                ]
+            );
         }
 
         echo "✅ Created 2 student comments for Aira from tutor Aiya for different semesters.\n";

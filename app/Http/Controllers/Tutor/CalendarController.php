@@ -7,6 +7,7 @@ use App\Http\Requests\Tutor\StoreLearningSessionRequest;
 use App\Models\LearningSession;
 use App\Models\Module;
 use App\Models\User;
+use App\Services\StudentLock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +53,7 @@ class CalendarController extends Controller
     {
         $validated = $request->validated();
         abort_if(!$request->user()->managesStudent($validated['student_id']), 403);
+        StudentLock::assertWritable((int) $validated['student_id'], $request->user());
 
         DB::transaction(function () use ($validated, $request) {
             /** @var LearningSession $session */
@@ -77,6 +79,7 @@ class CalendarController extends Controller
     public function update(StoreLearningSessionRequest $request, LearningSession $session): RedirectResponse
     {
         abort_if(!$request->user()->managesStudent($session->user_id), 403);
+        StudentLock::assertWritable((int) $session->user_id, $request->user());
 
         $validated = $request->validated();
 
@@ -101,6 +104,7 @@ class CalendarController extends Controller
     public function destroy(LearningSession $session): RedirectResponse
     {
         abort_if(!request()->user()->managesStudent($session->user_id), 403);
+        StudentLock::assertWritable((int) $session->user_id, request()->user());
         $session->modules()->detach();
         $session->delete();
 

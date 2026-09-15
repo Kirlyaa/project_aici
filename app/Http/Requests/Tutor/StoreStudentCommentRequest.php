@@ -23,6 +23,8 @@ class StoreStudentCommentRequest extends FormRequest
             'semester' => ['required', 'string', 'max:20'],
             'academic_year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
             'tutor_comment' => ['nullable', 'string'],
+            'strengths' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
             'system_comment' => ['nullable', 'string'],
         ];
     }
