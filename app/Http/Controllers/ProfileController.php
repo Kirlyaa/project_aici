@@ -57,7 +57,7 @@ class ProfileController extends Controller
                 'studentStats' => [
                     'name' => $user->name,
                     'email' => $user->email,
-                    'class' => null,
+                    'class' => $user->class,
                     'level' => null,
                     'completedSessions' => $completedSessions,
                     'totalSessions' => $totalSessions,
@@ -152,16 +152,17 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $gradeEntries = \App\Models\GradeEntry::where('student_id', $user->id)->get();
-        // Clamp ke 0-100 agar tidak melebihi 100% jika data seeder lama masih 0-10
-        $pct = fn(float $avg) => min(100, round(($avg / GradeEntry::MAX_SCORE) * 100, 1));
 
         $scores = [
-            'interaction' => $pct((float) ($gradeEntries->avg('interaksi') ?? 0)),
-            'focus' => $pct((float) ($gradeEntries->avg('fokus') ?? 0)),
-            'robotBuilding' => $pct((float) ($gradeEntries->filter(fn($g) => $g->robot_building !== null)->avg('robot_building') ?? 0)),
-            'tools' => $pct((float) ($gradeEntries->avg('tools_management') ?? 0)),
-            'coding' => $pct((float) ($gradeEntries->avg('coding') ?? 0)),
+            'interaction'  => round((float) ($gradeEntries->avg('interaksi') ?? 0), 2),
+            'focus'        => round((float) ($gradeEntries->avg('fokus') ?? 0), 2),
+            'robotBuilding'=> round((float) ($gradeEntries->filter(fn($g) => $g->robot_building !== null)->avg('robot_building') ?? 0), 2),
+            'tools'        => round((float) ($gradeEntries->avg('tools_management') ?? 0), 2),
+            'coding'       => round((float) ($gradeEntries->avg('coding') ?? 0), 2),
         ];
+
+        $overallAvg = round((float) ($gradeEntries->avg('average') ?? 0), 2);
+        $overallPct = $overallAvg > 0 ? min(100, round(($overallAvg / GradeEntry::MAX_SCORE) * 100, 1)) : 0;
 
         // R9: hitung kehadiran dari sessions (tanpa kirim list sesi ke PDF)
         $sessions = $user->learningSessions()->get(['status']);
@@ -175,12 +176,12 @@ class ProfileController extends Controller
         return Inertia::render('User/ProfilPDF', [
             'studentStats' => [
                 'name' => $user->name,
-                'class' => null,
+                'class' => $user->class,
                 'level' => null,
                 'totalSessions' => $sessions->count(),
                 'attendance' => ['hadir' => $hadir, 'absen' => $absen, 'reschedule' => $reschedule, 'percentage' => $attendancePct],
                 'scores' => $scores,
-                'averagePercentage' => $pct((float) ($gradeEntries->avg('average') ?? 0)),
+                'averagePercentage' => $overallPct,
                 // R9: sessions tidak dikirim ke PDF lagi
                 'comment' => [
                     'system' => $latestComment?->system_comment,

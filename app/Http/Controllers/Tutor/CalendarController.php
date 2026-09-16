@@ -44,7 +44,13 @@ class CalendarController extends Controller
 
         return Inertia::render('Tutor/CalendarManager', [
             'studentId' => (int) $studentId,
-            'student' => ['id' => $student->id, 'name' => $student->name, 'email' => $student->email],
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
+                'class' => $student->class ?? 'Tanpa Kelas',
+                'tutor' => $student->tutor?->name ?? 'Belum ada tutor',
+            ],
             'sessions' => $sessions,
             'modules' => $modules,
             'readOnly' => true,

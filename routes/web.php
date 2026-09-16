@@ -12,6 +12,7 @@ use App\Http\Controllers\Tutor\GradeController;
 use App\Http\Controllers\Tutor\CommentController;
 use App\Http\Controllers\Tutor\StudentLockController;
 use App\Http\Controllers\Tutor\SessionController as TutorSessionController;
+use App\Http\Controllers\Tutor\ModuleViewController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\TutorController;
 use App\Http\Controllers\SuperAdmin\StudentController;
@@ -85,6 +86,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('role:tutor,superadmin')->name('tutor.')->prefix('tutor')->group(function () {
         // Dashboard & Main Pages
         Route::get('/', DashboardController::class)->name('dashboard');
+        
+        // Modules (read-only for tutor)
+        Route::get('/modules', [ModuleViewController::class, 'index'])->name('modules');
         
         // R6: Module Management pindah ke superadmin — route tutor dihapus
         

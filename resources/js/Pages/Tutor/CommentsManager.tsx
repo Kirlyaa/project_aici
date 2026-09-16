@@ -11,6 +11,7 @@ interface Comment {
     tutorComment: string | null;
     strengths: string | null;
     notes: string | null;
+    adminNote: string | null;
     averageGrade: number | null;
     moduleNames: string[] | null;
     isSystemGenerated: boolean;
@@ -46,6 +47,7 @@ export default function CommentsManager() {
 
     const [commentForm, setCommentForm] = useState({
         notes: '',
+        admin_note: '',
     });
 
     const [selectedSemester] = useState(() => {
@@ -55,6 +57,7 @@ export default function CommentsManager() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState({
         notes: '',
+        admin_note: '',
     });
 
     const [showSystemTemplateForm, setShowSystemTemplateForm] = useState(false);
@@ -63,14 +66,15 @@ export default function CommentsManager() {
 
     const savePersonalComment = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!commentForm.notes.trim()) return;
+        if (!commentForm.notes.trim() && !commentForm.admin_note.trim()) return;
 
         router.post('/tutor/comments', {
             student_id: studentId,
             semester: selectedSemester,
             notes: commentForm.notes,
+            admin_note: commentForm.admin_note,
         }, {
-            onSuccess: () => setCommentForm({ notes: '' }),
+            onSuccess: () => setCommentForm({ notes: '', admin_note: '' }),
         });
     };
 
@@ -82,10 +86,11 @@ export default function CommentsManager() {
             student_id: studentId,
             semester: comment.semester,
             notes: editForm.notes,
+            admin_note: editForm.admin_note,
         }, {
             onSuccess: () => {
                 setEditingId(null);
-                setEditForm({ notes: '' });
+                setEditForm({ notes: '', admin_note: '' });
             },
         });
     };
@@ -218,7 +223,6 @@ export default function CommentsManager() {
                     </div>
                 )}
 
-                {/* Add Structured Personal Comment */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
                     <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="bi bi-chat-left-text text-orange-600" />
@@ -235,6 +239,20 @@ export default function CommentsManager() {
                                 onChange={e => setCommentForm({ ...commentForm, notes: e.target.value })}
                                 placeholder="Catatan evaluasi atau hal yang perlu ditingkatkan di sesi berikutnya..."
                                 className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none h-20"
+                            />
+                        </div>
+
+                        {/* Catatan ke Admin (hanya tutor & admin yang bisa lihat) */}
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
+                                <i className="bi bi-shield-lock-fill text-indigo-600" /> Catatan ke Admin
+                                <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px] font-medium">Tutor & Admin Only</span>
+                            </label>
+                            <textarea
+                                value={commentForm.admin_note}
+                                onChange={e => setCommentForm({ ...commentForm, admin_note: e.target.value })}
+                                placeholder="Catatan khusus untuk admin (tidak terlihat oleh murid)..."
+                                className="w-full border border-indigo-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-16 bg-indigo-50/30"
                             />
                         </div>
 
@@ -277,7 +295,7 @@ export default function CommentsManager() {
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex-1">
                                             <p className="text-sm font-semibold text-gray-900">
-                                                Range nilai: {template.grade_range} · {template.category}
+                                                Range nilai: {template.grade_range === '<4' ? 'Di bawah 4' : template.grade_range === '4-4.99' ? '4 – 4.99' : '5 (Sempurna)'}
                                             </p>
                                             <p className="text-sm text-gray-700 mt-1">{template.template}</p>
                                         </div>
@@ -341,7 +359,8 @@ export default function CommentsManager() {
                                                 onClick={() => {
                                                     setEditingId(comment.id);
                                                     setEditForm({
-                                                        notes: comment.notes ?? '',
+                                                        notes: comment.notes ?? comment.tutorComment ?? '',
+                                                        admin_note: comment.adminNote ?? '',
                                                     });
                                                 }}
                                                 disabled={isReadOnly}
@@ -370,7 +389,6 @@ export default function CommentsManager() {
                                     </div>
                                 )}
 
-                                {/* Tutor Comment (Edit Mode) */}
                                 {editingId === comment.id ? (
                                     <div className="space-y-3 pt-2">
                                         <div>
@@ -379,6 +397,18 @@ export default function CommentsManager() {
                                                 value={editForm.notes}
                                                 onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
                                                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none h-16"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
+                                                <i className="bi bi-shield-lock-fill text-indigo-600" /> Catatan ke Admin
+                                                <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px] font-medium">Tutor & Admin Only</span>
+                                            </label>
+                                            <textarea
+                                                value={editForm.admin_note}
+                                                onChange={e => setEditForm({ ...editForm, admin_note: e.target.value })}
+                                                placeholder="Catatan khusus untuk admin..."
+                                                className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-14 bg-indigo-50/30"
                                             />
                                         </div>
                                         <div className="flex gap-2">
@@ -401,13 +431,37 @@ export default function CommentsManager() {
                                 ) : (
                                     /* Tutor Comment (Display Mode) */
                                     <div className="space-y-2">
-                                        {comment.notes && (
+                                        {/* Kekuatan (data lama) */}
+                                        {comment.strengths && (
+                                            <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-r-lg">
+                                                <p className="text-xs font-bold text-green-800 mb-0.5 flex items-center gap-1">
+                                                    <i className="bi bi-star-fill text-green-600" /> Kekuatan
+                                                </p>
+                                                <p className="text-xs text-gray-700">{comment.strengths}</p>
+                                            </div>
+                                        )}
+                                        {/* Catatan (notes baru, atau tutor_comment lama sebagai fallback) */}
+                                        {(comment.notes || comment.tutorComment) && (
                                             <div className="bg-[#fffdf2] border-l-4 border-amber-600 p-3 rounded-r-lg">
                                                 <p className="text-xs font-bold text-amber-800 mb-0.5 flex items-center gap-1">
                                                     <i className="bi bi-exclamation-triangle-fill text-amber-600" /> Catatan & Rekomendasi
                                                 </p>
-                                                <p className="text-xs text-gray-700">{comment.notes}</p>
+                                                <p className="text-xs text-gray-700">{comment.notes || comment.tutorComment}</p>
                                             </div>
+                                        )}
+                                        {/* Catatan ke Admin */}
+                                        {comment.adminNote && (
+                                            <div className="bg-indigo-50 border-l-4 border-indigo-500 p-3 rounded-r-lg">
+                                                <p className="text-xs font-bold text-indigo-800 mb-0.5 flex items-center gap-1">
+                                                    <i className="bi bi-shield-lock-fill text-indigo-600" /> Catatan ke Admin
+                                                    <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px] font-medium">Tutor & Admin Only</span>
+                                                </p>
+                                                <p className="text-xs text-gray-700">{comment.adminNote}</p>
+                                            </div>
+                                        )}
+                                        {/* Jika benar-benar kosong */}
+                                        {!comment.notes && !comment.tutorComment && !comment.strengths && !comment.adminNote && (
+                                            <p className="text-xs text-gray-400 italic">Belum ada catatan personal.</p>
                                         )}
                                     </div>
                                 )}

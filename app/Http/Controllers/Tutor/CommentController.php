@@ -39,6 +39,7 @@ class CommentController extends Controller
                     'tutorComment' => $c->tutor_comment,
                     'strengths' => $c->strengths,
                     'notes' => $c->notes,
+                    'adminNote' => $c->admin_note,
                     'averageGrade' => $c->average_grade !== null ? (float) $c->average_grade : null,
                     'moduleNames' => $c->module_names,
                     'isSystemGenerated' => (bool) $c->is_system_generated,
@@ -83,6 +84,7 @@ class CommentController extends Controller
                 'tutor_comment' => null,
                 'strengths' => null,
                 'notes' => $validated['notes'] ?? null,
+                'admin_note' => $validated['admin_note'] ?? $existing->admin_note,
                 // Jangan timpa system_comment lama kecuali dikirim eksplisit
                 'system_comment' => $validated['system_comment'] ?? $existing->system_comment,
                 'average_grade' => $existing->average_grade,

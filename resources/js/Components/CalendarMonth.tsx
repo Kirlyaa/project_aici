@@ -113,50 +113,51 @@ export default function CalendarMonth({ sessions }: Props) {
                     const status = !isPrevMonth && !isNextMonth ? getSessionStatus(day) : null;
                     const isToday = !isPrevMonth && !isNextMonth && day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
 
+                    const statusColorClasses: Record<string, string> = {
+                        hadir: 'bg-green-500 text-white',
+                        absen: 'bg-red-500 text-white',
+                        reschedule: 'bg-yellow-400 text-gray-900',
+                        libur: 'bg-blue-500 text-white',
+                        'akan-datang': 'bg-purple-400 text-white',
+                    };
+
                     return (
                         <div
                             key={idx}
-                            className={`aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition-colors relative ${
-                                isPrevMonth || isNextMonth ? 'text-gray-400 opacity-40' :
-                                isToday ? 'bg-teal-600 text-white' :
-                                status ? `bg-gray-50 text-gray-900` : 'bg-gray-50 text-gray-400'
+                            className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm font-medium transition-colors relative ${
+                                isPrevMonth || isNextMonth ? 'bg-gray-50 text-gray-400 opacity-40' :
+                                isToday ? 'bg-teal-600 text-white font-bold' :
+                                status ? (statusColorClasses[status] ?? 'bg-gray-50 text-gray-900') : 'bg-gray-50 text-gray-400'
                             }`}
                         >
-                            <div className="flex flex-col items-center gap-0.5">
-                                <span>{day}</span>
-                                {status && status !== 'libur' && (
-                                    <div className={`w-1.5 h-1.5 rounded-full ${statusDots[status]}`} />
-                                )}
-                            </div>
-                            {status === 'libur' && (
-                                <div className="absolute -top-1 -right-1">
-                                    <i className={`bi ${statusIcons[status]} text-sm`} />
-                                </div>
+                            <span className="font-bold text-xs">{day}</span>
+                            {status && !isToday && (
+                                <span className="text-[10px] leading-tight opacity-90">{status}</span>
                             )}
                         </div>
                     );
                 })}
             </div>
 
-            <div className="text-xs space-y-1">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2 pt-4 border-t border-gray-100 text-xs">
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="w-4 h-4 rounded bg-green-500 inline-block flex-shrink-0" />
                     <span className="text-gray-600">Hadir</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <span className="w-4 h-4 rounded bg-red-500 inline-block flex-shrink-0" />
                     <span className="text-gray-600">Absen</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                    <span className="w-4 h-4 rounded bg-yellow-400 inline-block flex-shrink-0" />
                     <span className="text-gray-600">Reschedule</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <i className="bi bi-bookmark-fill text-orange-500" />
+                    <span className="w-4 h-4 rounded bg-blue-500 inline-block flex-shrink-0" />
                     <span className="text-gray-600">Libur</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                    <span className="w-4 h-4 rounded bg-purple-400 inline-block flex-shrink-0" />
                     <span className="text-gray-600">Akan Datang</span>
                 </div>
             </div>

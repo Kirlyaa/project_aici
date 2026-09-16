@@ -167,7 +167,7 @@ export default function TutorDashboard() {
                                 </div>
 
                                 {/* Menu Cards */}
-                                <div className="grid md:grid-cols-4 gap-4">
+                                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <Link
                                         href={`/tutor/calendar/${currentStudent.id}`}
                                         className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
@@ -212,15 +212,37 @@ export default function TutorDashboard() {
                                             </div>
                                         </div>
                                     </Link>
+
+                                    <Link
+                                        href={`/tutor/modules`}
+                                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                <i className="bi bi-collection text-purple-600 text-xl" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900">Lihat Modul</h3>
+                                                <p className="text-sm text-gray-600">Daftar modul tersedia</p>
+                                            </div>
+                                        </div>
+                                    </Link>
                                 </div>
 
                                 {/* Quick Stats — data asli per murid terpilih */}
                                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                                    <h3 className="font-bold text-gray-900 mb-4">Ringkasan Semester — {currentStudent.name}</h3>
+                                    <h3 className="font-bold text-gray-900 mb-4">Ringkasan Kehadiran — {currentStudent.name}</h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <div className="p-4 bg-gray-50 rounded-lg">
                                             <p className="text-sm text-gray-600 mb-1">Total Sesi</p>
-                                            <p className="text-2xl font-bold text-gray-900">{currentStudent.totalSessions}</p>
+                                            <p className="text-2xl font-bold text-gray-900">
+                                                {currentStudent.hadir} / {currentStudent.totalSessions}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                {currentStudent.totalSessions > 0
+                                                    ? `${Math.round((currentStudent.hadir / currentStudent.totalSessions) * 100)}% kehadiran`
+                                                    : 'Belum ada sesi'}
+                                            </p>
                                         </div>
                                         <div className="p-4 bg-green-50 rounded-lg">
                                             <p className="text-sm text-gray-600 mb-1">Hadir</p>

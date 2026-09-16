@@ -36,8 +36,8 @@ export default function ProfilPDF() {
         <>
             <Head title={`Profil - ${userName}`} />
 
-            <div className="bg-white min-h-screen p-8">
-                <div className="max-w-4xl mx-auto">
+            <div className="bg-white min-h-screen">
+                <div className="max-w-4xl mx-auto p-8">
                     {/* Header Card */}
                     <Card className="p-6 mb-6 bg-gradient-to-r from-teal-600 to-teal-700 text-white">
                         <p className="text-teal-100 text-sm mb-1">Peserta Program</p>
@@ -54,6 +54,17 @@ export default function ProfilPDF() {
                             </span>
                         </div>
                     </Card>
+
+                    {/* Komentar Sistem — full width, di atas statistik */}
+                    {stats.comment.system && (
+                        <div className="-mx-8 bg-[#034d52] text-white px-8 py-5 flex items-start gap-4 mb-6">
+                            <i className="bi bi-cpu text-2xl flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <p className="font-semibold text-sm uppercase tracking-wide text-teal-200 mb-1">Komentar Sistem</p>
+                                <p className="text-base leading-relaxed">{stats.comment.system}</p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Statistics Grid */}
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -88,16 +99,16 @@ export default function ProfilPDF() {
                                 Breakdown Nilai
                             </h2>
                             <div className="space-y-3">
-                                <ProgressBar value={scores.interaction} label="Interaksi" color="bg-teal-600" />
-                                <ProgressBar value={scores.focus} label="Fokus" color="bg-blue-600" />
-                                <ProgressBar value={scores.robotBuilding} label="Robot Building" color="bg-green-600" />
-                                <ProgressBar value={scores.tools} label="Tools Mgmt" color="bg-orange-600" />
-                                <ProgressBar value={scores.coding} label="Coding" color="bg-red-600" />
+                                <ProgressBar value={scores.interaction} max={5} label="Interaksi" color="bg-teal-600" />
+                                <ProgressBar value={scores.focus} max={5} label="Fokus" color="bg-blue-600" />
+                                <ProgressBar value={scores.robotBuilding} max={5} label="Robot Building" color="bg-green-600" />
+                                <ProgressBar value={scores.tools} max={5} label="Tools Mgmt" color="bg-orange-600" />
+                                <ProgressBar value={scores.coding} max={5} label="Coding" color="bg-red-600" />
                             </div>
                             <div className="mt-4 pt-4 border-t">
                                 <div className="flex justify-between items-center">
-                                    <span className="font-medium">Rata-rata</span>
-                                    <span className="text-2xl font-bold text-teal-600">{stats.averagePercentage}%</span>
+                                    <span className="font-medium">Rata-rata (skala 0–5)</span>
+                                    <span className="text-2xl font-bold text-teal-600">{((scores.interaction + scores.focus + scores.robotBuilding + scores.tools + scores.coding) / 5).toFixed(2)}</span>
                                 </div>
                             </div>
                         </Card>
@@ -120,67 +131,51 @@ export default function ProfilPDF() {
                         </div>
                         <div className="h-48 bg-gray-50 rounded-lg flex items-end justify-around p-4">
                             <div className="text-center">
-                                <div className="w-16 bg-teal-600 rounded-t" style={{ height: `${(scores.interaction / 100) * 180}px` }}></div>
+                                <div className="text-xs font-bold text-teal-700 mb-1">{scores.interaction.toFixed(1)}</div>
+                                <div className="w-16 bg-teal-600 rounded-t" style={{ height: `${(scores.interaction / 5) * 160}px` }}></div>
                                 <span className="text-xs mt-1 block">Interaksi</span>
                             </div>
                             <div className="text-center">
-                                <div className="w-16 bg-blue-600 rounded-t" style={{ height: `${(scores.focus / 100) * 180}px` }}></div>
+                                <div className="text-xs font-bold text-blue-700 mb-1">{scores.focus.toFixed(1)}</div>
+                                <div className="w-16 bg-blue-600 rounded-t" style={{ height: `${(scores.focus / 5) * 160}px` }}></div>
                                 <span className="text-xs mt-1 block">Fokus</span>
                             </div>
                             <div className="text-center">
-                                <div className="w-16 bg-green-600 rounded-t" style={{ height: `${(scores.robotBuilding / 100) * 180}px` }}></div>
+                                <div className="text-xs font-bold text-green-700 mb-1">{scores.robotBuilding.toFixed(1)}</div>
+                                <div className="w-16 bg-green-600 rounded-t" style={{ height: `${(scores.robotBuilding / 5) * 160}px` }}></div>
                                 <span className="text-xs mt-1 block">Robot Build</span>
                             </div>
                             <div className="text-center">
-                                <div className="w-16 bg-orange-600 rounded-t" style={{ height: `${(scores.tools / 100) * 180}px` }}></div>
+                                <div className="text-xs font-bold text-orange-700 mb-1">{scores.tools.toFixed(1)}</div>
+                                <div className="w-16 bg-orange-600 rounded-t" style={{ height: `${(scores.tools / 5) * 160}px` }}></div>
                                 <span className="text-xs mt-1 block">Tools Mgmt</span>
                             </div>
                             <div className="text-center">
-                                <div className="w-16 bg-red-600 rounded-t" style={{ height: `${(scores.coding / 100) * 180}px` }}></div>
+                                <div className="text-xs font-bold text-red-700 mb-1">{scores.coding.toFixed(1)}</div>
+                                <div className="w-16 bg-red-600 rounded-t" style={{ height: `${(scores.coding / 5) * 160}px` }}></div>
                                 <span className="text-xs mt-1 block">Coding</span>
                             </div>
                         </div>
                     </Card>
 
-                    {/* System Comments */}
-                    <Card className="p-6 mb-6">
-                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                            <i className="bi bi-info-circle-fill text-teal-600"></i>
-                            Komentar
-                        </h2>
-                        <div className="space-y-4">
-                            {/* Komentar Sistem (Template) */}
-                            {stats.comment.system && (
-                                <div className="p-4 bg-[#f2f8f8] border-l-4 border-[#034d52] rounded">
-                                    <div className="flex items-start gap-3">
-                                        <i className="bi bi-cpu text-[#034d52] text-xl"></i>
-                                        <div>
-                                            <p className="font-medium mb-1">Komentar Sistem</p>
-                                            <p className="text-sm text-gray-700">{stats.comment.system}</p>
-                                        </div>
+                    {/* Catatan Tutor */}
+                    {stats.comment.notes && (
+                        <Card className="p-6 mb-6">
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <i className="bi bi-exclamation-triangle-fill text-amber-600"></i>
+                                Catatan Tutor
+                            </h2>
+                            <div className="p-4 bg-[#fffdf2] border-l-4 border-amber-600 rounded">
+                                <div className="flex items-start gap-3">
+                                    <i className="bi bi-exclamation-triangle-fill text-amber-600 text-xl"></i>
+                                    <div>
+                                        <p className="font-medium mb-1 text-amber-800">Catatan</p>
+                                        <p className="text-sm text-gray-700">{stats.comment.notes}</p>
                                     </div>
                                 </div>
-                            )}
-
-                            {/* Catatan Tutor */}
-                            {stats.comment.notes && (
-                                <div className="p-4 bg-[#fffdf2] border-l-4 border-amber-600 rounded">
-                                    <div className="flex items-start gap-3">
-                                        <i className="bi bi-exclamation-triangle-fill text-amber-600 text-xl"></i>
-                                        <div>
-                                            <p className="font-medium mb-1">Catatan</p>
-                                            <p className="text-sm text-gray-700">{stats.comment.notes}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Fallback */}
-                            {!stats.comment.system && !stats.comment.notes && (
-                                <p className="text-sm text-gray-400 italic">Belum ada komentar. Nilai akan muncul setelah sesi pertama.</p>
-                            )}
-                        </div>
-                    </Card>
+                            </div>
+                        </Card>
+                    )}
 
                     {/* Footer */}
                     <div className="text-center text-sm text-gray-500 mt-8 pb-8">

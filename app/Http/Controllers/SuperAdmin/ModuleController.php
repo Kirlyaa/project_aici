@@ -70,7 +70,7 @@ class ModuleController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:modules,name',
             'description' => 'nullable|string',
-            'image' => 'nullable|url',
+            'image' => 'nullable|string|max:500',
             'type' => 'required|in:robot,coding,general',
             'tools' => 'nullable|array',
             'tools.*' => 'string|max:100',
@@ -101,7 +101,7 @@ class ModuleController extends Controller
                     ->ignore($module->id),
             ],
             'description' => 'nullable|string',
-            'image' => 'nullable|url',
+            'image' => 'nullable|string|max:500',
             'type' => 'required|in:robot,coding,general',
             'tools' => 'nullable|array',
             'tools.*' => 'string|max:100',

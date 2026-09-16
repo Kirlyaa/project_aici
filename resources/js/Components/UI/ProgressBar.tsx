@@ -7,13 +7,14 @@ interface ProgressBarProps {
 
 export default function ProgressBar({ value, max = 100, color = 'bg-teal-600', label }: ProgressBarProps) {
     const percentage = (value / max) * 100;
+    const displayValue = max === 100 ? `${percentage.toFixed(0)}%` : value.toFixed(2);
 
     return (
         <div className="w-full">
             {label && (
                 <div className="flex justify-between text-sm mb-1">
                     <span>{label}</span>
-                    <span className="font-medium">{percentage.toFixed(0)}%</span>
+                    <span className="font-medium">{displayValue}</span>
                 </div>
             )}
             <div className="w-full bg-gray-200 rounded-full h-2.5">

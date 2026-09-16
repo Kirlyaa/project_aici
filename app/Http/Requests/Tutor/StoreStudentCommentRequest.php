@@ -25,6 +25,7 @@ class StoreStudentCommentRequest extends FormRequest
             'tutor_comment' => ['nullable', 'string'],
             'strengths' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
+            'admin_note' => ['nullable', 'string'],
             'system_comment' => ['nullable', 'string'],
         ];
     }

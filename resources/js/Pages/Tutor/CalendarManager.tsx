@@ -22,6 +22,8 @@ interface Student {
     id: number;
     name: string;
     email: string;
+    class?: string;
+    tutor?: string;
 }
 
 interface Module {
@@ -296,36 +298,13 @@ export default function CalendarManager({ studentId, student, sessions, modules,
                             <div className="space-y-2 text-sm">
                                 <p><span className="text-gray-600">Nama:</span> <span className="font-medium text-gray-900">{student.name}</span></p>
                                 <p><span className="text-gray-600">Email:</span> <span className="font-medium text-gray-900">{student.email}</span></p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <i className="bi bi-collection text-blue-600 text-xl" />
-                                Modul Tersedia
-                            </h3>
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                                {modules.length === 0 ? (
-                                    <p className="text-sm text-gray-500 italic">Belum ada modul.</p>
-                                ) : (
-                                    modules.map(m => (
-                                        <div key={m.id} className="p-3 bg-gray-50 rounded-lg text-sm flex gap-3">
-                                            <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                {m.image?.startsWith('data:') || m.image?.startsWith('http') ? (
-                                                    <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <span className="text-xl">{m.image || '📘'}</span>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-900">{m.name}</p>
-                                                {m.module_type && (
-                                                    <p className="text-xs text-gray-600">{m.module_type}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                                <p><span className="text-gray-600">Kelas:</span> <span className="font-medium text-gray-900">{student.class || 'Tanpa Kelas'}</span></p>
+                                <p><span className="text-gray-600">Modul Sesi Ini:</span> <span className="font-medium text-teal-700">
+                                    {Array.from(new Set(sessions.flatMap(s => s.module_ids)))
+                                        .map(mid => modules.find(m => m.id === mid)?.name)
+                                        .filter(Boolean)
+                                        .join(', ') || 'Belum ada modul'}
+                                </span></p>
                             </div>
                         </div>
 
@@ -341,33 +320,33 @@ export default function CalendarManager({ studentId, student, sessions, modules,
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-check-circle-fill text-green-600" /> Hadir
+                                        <span className="w-3 h-3 rounded-sm bg-green-500 inline-block flex-shrink-0" /> Hadir
                                     </span>
                                     <span className="font-bold text-green-600">{statusCounts.hadir}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-bookmark-fill text-orange-600" /> Libur
+                                        <span className="w-3 h-3 rounded-sm bg-blue-500 inline-block flex-shrink-0" /> Libur
                                     </span>
-                                    <span className="font-bold text-orange-600">{statusCounts.libur}</span>
+                                    <span className="font-bold text-blue-600">{statusCounts.libur}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-x-circle-fill text-red-600" /> Absen
+                                        <span className="w-3 h-3 rounded-sm bg-red-500 inline-block flex-shrink-0" /> Absen
                                     </span>
                                     <span className="font-bold text-red-600">{statusCounts.absen}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-arrow-clockwise text-yellow-600" /> Reschedule
+                                        <span className="w-3 h-3 rounded-sm bg-yellow-400 inline-block flex-shrink-0" /> Reschedule
                                     </span>
                                     <span className="font-bold text-yellow-600">{statusCounts.reschedule}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-calendar-check-fill text-blue-600" /> Akan Datang
+                                        <span className="w-3 h-3 rounded-sm bg-purple-400 inline-block flex-shrink-0" /> Akan Datang
                                     </span>
-                                    <span className="font-bold text-blue-600">{statusCounts['akan-datang']}</span>
+                                    <span className="font-bold text-purple-600">{statusCounts['akan-datang']}</span>
                                 </div>
                             </div>
                         </div>

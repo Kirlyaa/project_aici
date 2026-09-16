@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import StudentLockBanner from '@/Components/StudentLockBanner';
 import { useStudentLock } from '@/Hooks/useStudentLock';
 
@@ -7,7 +7,7 @@ interface GradeEntry {
     id: number;
     meetingNumber: number;
     moduleName: string;
-    moduleType: number;
+    moduleType: string;
     moduleId: number | null;
     grades: Record<string, number | null>;
     average: number;
@@ -31,6 +31,8 @@ interface Props {
 
 const categoriesTypeRobot = ['interaksi', 'fokus', 'robot-building', 'tools-management', 'koding'];
 const categoriesTypeCoding = ['fokus', 'tools-management', 'interaksi', 'koding'];
+// Semua kolom yang mungkin muncul di tabel (robot punya 5 kolom, coding 4)
+const categoriesAll = categoriesTypeRobot;
 
 const getCategoryLabel = (cat: string): string => {
     const labels: Record<string, string> = {
@@ -62,6 +64,15 @@ export default function GradesManager() {
     const { lock } = useStudentLock({ studentId, page: 'grades' });
     const isReadOnly = lock?.locked === true;
 
+    // Local grade state for optimistic UI (avoid bad connection on every keystroke)
+    const [localGrades, setLocalGrades] = useState<Record<number, Record<string, number | null>>>({});
+    const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
+    const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
+    const debounceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+
+    // Merge server grades with local overrides
+    const getGrades = (entry: GradeEntry) => ({ ...entry.grades, ...(localGrades[entry.id] ?? {}) });
+
     const [showForm, setShowForm] = useState(false);
     const [selectedModuleId, setSelectedModuleId] = useState('');
     const [meetingNumber, setMeetingNumber] = useState('');
@@ -76,23 +87,52 @@ export default function GradesManager() {
     const updateGrade = (entryId: number, category: string, value: number) => {
         const entry = gradeEntries.find(e => e.id === entryId);
         if (!entry) return;
-        const grades = { ...entry.grades, [category]: Math.max(0, Math.min(5, value)) };
-        const values = Object.values(grades).filter((v): v is number => v !== null);
-        const average = values.length > 0 ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100 : 0;
 
-        router.put(`/tutor/grades/${entryId}`, {
-            student_id: studentId,
-            module_id: entry.moduleId,
-            meeting_number: entry.meetingNumber,
-            module_type: entry.moduleType === 'robot' ? 'robot' : 'coding',
-            meeting_date: entry.date,
-            fokus: grades['fokus'] ?? 0,
-            robot_building: grades['robot-building'] ?? 0,
-            tools_management: grades['tools-management'] ?? 0,
-            interaksi: grades['interaksi'] ?? 0,
-            coding: grades['koding'] ?? 0,
-            notes: entry.notes,
-        });
+        const clampedValue = Math.max(0, Math.min(5, value));
+
+        // Optimistic local update — UI responds instantly
+        setLocalGrades(prev => ({
+            ...prev,
+            [entryId]: { ...(prev[entryId] ?? entry.grades), [category]: clampedValue },
+        }));
+
+        // Mark as saving (show indicator)
+        setSavedIds(prev => { const s = new Set(prev); s.delete(entryId); return s; });
+        setSavingIds(prev => new Set(prev).add(entryId));
+
+        // Debounce: cancel previous timer for this entry, then send after 700ms idle
+        if (debounceTimers.current[entryId]) {
+            clearTimeout(debounceTimers.current[entryId]);
+        }
+
+        debounceTimers.current[entryId] = setTimeout(() => {
+            const mergedGrades = { ...entry.grades, ...(localGrades[entryId] ?? {}), [category]: clampedValue };
+
+            router.put(`/tutor/grades/${entryId}`, {
+                student_id: studentId,
+                module_id: entry.moduleId,
+                meeting_number: entry.meetingNumber,
+                module_type: entry.moduleType === 'robot' ? 'robot' : 'coding',
+                meeting_date: entry.date,
+                fokus: mergedGrades['fokus'] ?? 0,
+                robot_building: mergedGrades['robot-building'] ?? 0,
+                tools_management: mergedGrades['tools-management'] ?? 0,
+                interaksi: mergedGrades['interaksi'] ?? 0,
+                coding: mergedGrades['koding'] ?? 0,
+                notes: entry.notes,
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSavingIds(prev => { const s = new Set(prev); s.delete(entryId); return s; });
+                    setSavedIds(prev => new Set(prev).add(entryId));
+                    // Clear saved indicator after 2s
+                    setTimeout(() => setSavedIds(prev => { const s = new Set(prev); s.delete(entryId); return s; }), 2000);
+                },
+                onError: () => {
+                    setSavingIds(prev => { const s = new Set(prev); s.delete(entryId); return s; });
+                },
+            });
+        }, 700);
     };
 
     const addGradeEntry = () => {
@@ -236,7 +276,7 @@ export default function GradesManager() {
                                 <div className="p-3 bg-blue-50 rounded-lg">
                                     <p className="text-sm text-blue-700">
                                         <i className="bi bi-info-circle mr-1" />
-                                        Kategori: {moduleType === 5
+                                        Kategori: {moduleType === 'robot'
                                             ? 'Fokus, Robot Building, Tools Mgmt, Interaksi, Koding'
                                             : 'Fokus, Tools Management, Interaksi, Koding'}
                                     </p>
@@ -277,7 +317,7 @@ export default function GradesManager() {
                                         <th className="text-left px-6 py-4 font-semibold text-gray-700">Pertemuan</th>
                                         <th className="text-left px-6 py-4 font-semibold text-gray-700">Modul</th>
                                         <th className="text-center px-3 py-4 font-semibold text-gray-700 text-sm">Tipe</th>
-                                        {categoriesType5.map(cat => (
+                                        {categoriesAll.map(cat => (
                                             <th key={cat} className="text-center px-3 py-4 font-semibold text-gray-700 text-sm">
                                                 {getCategoryLabel(cat)}
                                             </th>
@@ -304,8 +344,9 @@ export default function GradesManager() {
                                                     {entry.moduleType}
                                                 </span>
                                             </td>
-                                            {categoriesType5.map(cat => {
+                                            {categoriesAll.map(cat => {
                                                 const isEditable = getCategories(entry.moduleType).includes(cat);
+                                                const currentGrades = getGrades(entry);
                                                 return (
                                                     <td key={cat} className="px-3 py-4 text-center">
                                                         {isEditable ? (
@@ -315,7 +356,7 @@ export default function GradesManager() {
                                                                 max="5"
                                                                 step="0.1"
                                                                 disabled={isReadOnly}
-                                                                value={entry.grades[cat] ?? ''}
+                                                                value={currentGrades[cat] ?? ''}
                                                                 onChange={e => updateGrade(entry.id, cat, parseFloat(e.target.value) || 0)}
                                                                 className="w-12 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400"
                                                             />
@@ -327,6 +368,16 @@ export default function GradesManager() {
                                             })}
                                             <td className="px-6 py-4 text-center">
                                                 <p className="text-lg font-bold text-teal-600">{entry.average.toFixed(2)}</p>
+                                                {savingIds.has(entry.id) && (
+                                                    <p className="text-xs text-gray-400 mt-0.5">
+                                                        <i className="bi bi-arrow-repeat animate-spin mr-1" />menyimpan...
+                                                    </p>
+                                                )}
+                                                {savedIds.has(entry.id) && (
+                                                    <p className="text-xs text-green-600 mt-0.5">
+                                                        <i className="bi bi-check-circle-fill mr-1" />tersimpan
+                                                    </p>
+                                                )}
                                             </td>
                                             <td className="px-4 py-4 text-center">
                                                 <button
@@ -346,7 +397,7 @@ export default function GradesManager() {
                     )}
                 </div>
 
-                {/* Chart Overview - 3 Diagram Batang Vertical */}
+                {/* Chart Overview - Rata-rata Per Kategori */}
                 {gradeEntries.length > 0 && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 mb-8">
                         <h3 className="font-bold text-gray-900 mb-8 flex items-center gap-2">
@@ -357,27 +408,26 @@ export default function GradesManager() {
                         {/* Main Category Chart */}
                         <div className="mb-12">
                             <div className="flex items-end justify-center gap-4 h-64">
-                                {getCategories(5).map(cat => {
+                                {categoriesAll.map(cat => {
                                     const categoryValues = gradeEntries
-                                        .filter(e => e.moduleType === 5)
-                                        .map(e => e.grades[cat] || 0);
-                                    const avgValue = categoryValues.length > 0 
-                                        ? categoryValues.reduce((a, b) => a + b, 0) / categoryValues.length 
+                                        .map(e => e.grades[cat])
+                                        .filter((v): v is number => v !== null && v !== undefined);
+                                    const avgValue = categoryValues.length > 0
+                                        ? categoryValues.reduce((a, b) => a + b, 0) / categoryValues.length
                                         : 0;
-                                    const percentage = (avgValue / gradeScale) * 100;
                                     const barHeight = (avgValue / gradeScale) * 200;
 
                                     return (
                                         <div key={cat} className="flex flex-col items-center gap-2">
+                                            <span className="text-xs font-bold text-gray-700">{avgValue.toFixed(2)}</span>
                                             <div
                                                 className="w-16 rounded-t-lg transition-all duration-300"
                                                 style={{
                                                     height: `${barHeight}px`,
                                                     backgroundColor: getCategoryColor(cat),
                                                 }}
-                                                title={`${getCategoryLabel(cat)}: ${avgValue.toFixed(0)}%`}
+                                                title={`${getCategoryLabel(cat)}: ${avgValue.toFixed(2)}`}
                                             />
-                                            <span className="text-sm font-semibold text-gray-700">{percentage.toFixed(0)}%</span>
                                             <span className="text-xs text-gray-600 text-center max-w-16">
                                                 {getCategoryLabel(cat)}
                                             </span>
@@ -386,7 +436,7 @@ export default function GradesManager() {
                                 })}
                             </div>
                             <div className="text-center mt-4 text-sm text-gray-600">
-                                Rata-rata Per Kategori (Type 5)
+                                Rata-rata Per Kategori (Skala 0–{gradeScale})
                             </div>
                         </div>
 
@@ -394,12 +444,12 @@ export default function GradesManager() {
                         <div className="pt-8 border-t border-gray-200">
                             <h4 className="font-semibold text-gray-900 mb-6">Rata-rata Per Kategori</h4>
                             <div className="space-y-4">
-                                {getCategories(5).map(cat => {
+                                {categoriesAll.map(cat => {
                                     const categoryValues = gradeEntries
-                                        .filter(e => e.moduleType === 5)
-                                        .map(e => e.grades[cat] || 0);
-                                    const avgValue = categoryValues.length > 0 
-                                        ? categoryValues.reduce((a, b) => a + b, 0) / categoryValues.length 
+                                        .map(e => e.grades[cat])
+                                        .filter((v): v is number => v !== null && v !== undefined);
+                                    const avgValue = categoryValues.length > 0
+                                        ? categoryValues.reduce((a, b) => a + b, 0) / categoryValues.length
                                         : 0;
                                     const percentage = (avgValue / gradeScale) * 100;
 
@@ -410,7 +460,7 @@ export default function GradesManager() {
                                                     <i className="bi bi-square-fill text-sm" style={{ color: getCategoryColor(cat) }} />
                                                     {getCategoryLabel(cat)}
                                                 </span>
-                                                <span className="text-sm font-bold text-gray-900">{percentage.toFixed(0)}%</span>
+                                                <span className="text-sm font-bold text-gray-900">{avgValue.toFixed(2)} / {gradeScale}</span>
                                             </div>
                                             <div className="w-full h-6 bg-gray-100 rounded-full overflow-hidden">
                                                 <div

@@ -283,9 +283,9 @@ export default function ModuleManagement() {
 
                             {/* Image/Icon */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">URL Gambar Modul</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">URL Gambar Modul <span className="text-gray-400 font-normal">(opsional)</span></label>
                                 <input
-                                    type="url"
+                                    type="text"
                                     value={newModule.image}
                                     onChange={e => setNewModule({ ...newModule, image: e.target.value })}
                                     placeholder="https://contoh.com/gambar.png"

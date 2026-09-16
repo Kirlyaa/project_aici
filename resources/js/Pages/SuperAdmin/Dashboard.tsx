@@ -123,7 +123,7 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {/* User & Role Management */}
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
@@ -290,6 +290,63 @@ export default function SuperAdminDashboard() {
                                     <i className="bi bi-list-ul mr-2" /> Lihat Semua Modul
                                 </Link>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Kelola Kalender */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-violet-600 to-violet-700 px-6 py-4">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <i className="bi bi-calendar3" />
+                                Kelola Kalender
+                            </h2>
+                            <p className="text-violet-100 text-sm mt-1">Atur jadwal sesi belajar per murid.</p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* Quick Stats */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="bg-violet-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-violet-600 font-semibold">Total Sesi</p>
+                                    <p className="text-2xl font-bold text-violet-900">{stats.totalSessions}</p>
+                                </div>
+                                <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-indigo-600 font-semibold">Total Murid</p>
+                                    <p className="text-2xl font-bold text-indigo-900">{stats.totalStudents}</p>
+                                </div>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <p className="text-sm text-gray-600 mb-3">
+                                    <i className="bi bi-info-circle mr-1 text-violet-500" />
+                                    Pilih murid dari daftar untuk mengelola kalender sesi belajarnya.
+                                </p>
+                                <div className="space-y-2">
+                                    {recentStudents.slice(0, 3).map(s => (
+                                        <Link
+                                            key={s.id}
+                                            href={`/superadmin/calendar/${s.id}`}
+                                            className="flex items-center justify-between p-2.5 hover:bg-violet-50 rounded-lg border border-transparent hover:border-violet-200 transition-colors"
+                                        >
+                                            <div>
+                                                <p className="font-medium text-sm text-gray-900">{s.name}</p>
+                                                <p className="text-xs text-gray-500">{s.tutor ? `Tutor: ${s.tutor}` : 'Belum ada tutor'}</p>
+                                            </div>
+                                            <i className="bi bi-calendar-check text-violet-500" />
+                                        </Link>
+                                    ))}
+                                    {recentStudents.length === 0 && (
+                                        <p className="text-sm text-gray-500">Belum ada murid.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <Link
+                                href="/superadmin/students"
+                                className="block text-center mt-4 px-4 py-2.5 bg-violet-600 text-white rounded-lg font-medium hover:bg-violet-700 transition-colors"
+                            >
+                                <i className="bi bi-people-fill mr-2" /> Pilih Murid & Kelola Kalender
+                            </Link>
                         </div>
                     </div>
                 </div>

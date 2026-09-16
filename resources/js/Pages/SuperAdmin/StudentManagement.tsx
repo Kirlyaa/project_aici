@@ -10,6 +10,7 @@ interface Student {
     createdAt: string;
     tutorName: string | null;
     tutorId: number | null;
+    class: string | null;
     sessionsCount: number;
     gradesCount: number;
 }
@@ -42,6 +43,7 @@ export default function StudentManagement() {
         password: '',
         status: 'aktif',
         tutor_id: '' as string | number,
+        class: '',
     });
     const [searchTerm, setSearchTerm] = useState(search);
     const [filterStatus, setFilterStatus] = useState(initialFilterStatus);
@@ -53,17 +55,17 @@ export default function StudentManagement() {
     const openModal = (student?: Student) => {
         if (student) {
             setEditingId(student.id);
-            setFormData({ name: student.name, email: student.email, password: '', status: student.status, tutor_id: student.tutorId ?? '' });
+            setFormData({ name: student.name, email: student.email, password: '', status: student.status, tutor_id: student.tutorId ?? '', class: student.class ?? '' });
         } else {
             setEditingId(null);
-            setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '' });
+            setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '', class: '' });
         }
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
-        setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '' });
+        setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '', class: '' });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -76,6 +78,7 @@ export default function StudentManagement() {
             password_confirmation: formData.password || undefined,
             status: formData.status,
             tutor_id: formData.tutor_id === '' ? null : formData.tutor_id,
+            class: formData.class || null,
         };
 
         if (editingId) {
@@ -179,18 +182,19 @@ export default function StudentManagement() {
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nama</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Peran</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Terdaftar</th>
-                                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Murid</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Kelas</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Tutor</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Sesi</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Nilai</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {students.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-8 text-center">
+                                        <td colSpan={7} className="px-6 py-8 text-center">
                                             <i className="bi bi-inbox text-4xl text-gray-300 block mb-3" />
                                             <p className="text-gray-600">Tidak ada murid yang ditemukan</p>
                                         </td>
@@ -198,34 +202,56 @@ export default function StudentManagement() {
                                 ) : (
                                     students.data.map(student => (
                                         <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-4">
                                                 <p className="font-semibold text-gray-900">{student.name}</p>
+                                                <p className="text-xs text-gray-500">{student.email}</p>
+                                                <p className="text-xs text-gray-400">{student.createdAt}</p>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <p className="text-gray-600">{student.email}</p>
+                                            <td className="px-4 py-4">
+                                                {student.class ? (
+                                                    <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded">
+                                                        {student.class}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-gray-400 italic">—</span>
+                                                )}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                                                    {student.role}
-                                                </span>
+                                            <td className="px-4 py-4">
+                                                {student.tutorName ? (
+                                                    <span className="text-sm text-gray-700">{student.tutorName}</span>
+                                                ) : (
+                                                    <span className="text-xs text-gray-400 italic">Belum ada</span>
+                                                )}
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="text-sm font-semibold text-teal-700">{student.sessionsCount}</span>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="text-sm font-semibold text-blue-700">{student.gradesCount}</span>
+                                            </td>
+                                            <td className="px-4 py-4">
                                                 <button
                                                     onClick={() => toggleStatus(student.id)}
                                                     className={`px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
                                                         student.status === 'aktif'
                                                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                            : student.status === 'pending'
+                                                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
                                                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                                                     }`}
                                                 >
                                                     {student.status === 'aktif' ? 'Aktif' : student.status === 'pending' ? 'Pending' : 'Nonaktif'}
                                                 </button>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <p className="text-gray-600 text-sm">{student.createdAt}</p>
-                                            </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-4">
                                                 <div className="flex items-center justify-center gap-2">
+                                                    <Link
+                                                        href={`/superadmin/calendar/${student.id}`}
+                                                        className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+                                                        title="Kelola Kalender"
+                                                    >
+                                                        <i className="bi bi-calendar3" />
+                                                    </Link>
                                                     <button
                                                         onClick={() => openModal(student)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -321,6 +347,18 @@ export default function StudentManagement() {
                                     <option value="nonaktif">Nonaktif</option>
                                     <option value="pending">Pending</option>
                                 </select>
+                            </div>
+
+                            {/* Kelas */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Kelas</label>
+                                <input
+                                    type="text"
+                                    value={formData.class}
+                                    onChange={e => setFormData({ ...formData, class: e.target.value })}
+                                    placeholder="Contoh: 5A, 6B, Kelas Pagi..."
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                />
                             </div>
 
                             {/* Tutor */}

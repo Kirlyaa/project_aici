@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'tutor_comment',
     'strengths',
     'notes',
+    'admin_note',
     'average_grade',
     'module_names',
     'is_system_generated',

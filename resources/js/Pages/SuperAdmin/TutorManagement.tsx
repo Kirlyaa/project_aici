@@ -169,12 +169,12 @@ export default function TutorManagement() {
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nama</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Peran</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Terdaftar</th>
-                                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Tutor</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Murid</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Sesi</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Terdaftar</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -188,33 +188,34 @@ export default function TutorManagement() {
                                 ) : (
                                     users.data.map(tutor => (
                                         <tr key={tutor.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-4">
                                                 <p className="font-semibold text-gray-900">{tutor.name}</p>
+                                                <p className="text-xs text-gray-500">{tutor.email}</p>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <p className="text-gray-600">{tutor.email}</p>
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="text-sm font-semibold text-teal-700">{tutor.students_count}</span>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                                    {tutor.peran}
-                                                </span>
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="text-sm font-semibold text-blue-700">{tutor.sessions_count}</span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-4">
                                                 <button
                                                     onClick={() => toggleStatus(tutor.id)}
                                                     className={`px-3 py-1 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
                                                         tutor.status === 'aktif'
                                                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                            : tutor.status === 'pending'
+                                                            ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
                                                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                                                     }`}
                                                 >
                                                     {tutor.status === 'aktif' ? 'Aktif' : tutor.status === 'pending' ? 'Pending' : 'Nonaktif'}
                                                 </button>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-4">
                                                 <p className="text-gray-600 text-sm">{tutor.terdaftar}</p>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-4">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => openModal(tutor)}

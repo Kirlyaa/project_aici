@@ -8,7 +8,7 @@ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', '
 const monthsLong = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 export default function CalendarYear({ sessions }: Props) {
-    const currentYear = 2025; // As per the requirement/hardcoded view
+    const currentYear = new Date().getFullYear();
     const getMonthStats = (monthIdx: number) => {
         const monthStr = String(monthIdx + 1).padStart(2, '0');
         const prefix = `${currentYear}-${monthStr}`;
@@ -22,7 +22,7 @@ export default function CalendarYear({ sessions }: Props) {
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 h-full flex flex-col">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Rekap 2025</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Rekap {currentYear}</h3>
 
             <div className="grid grid-cols-3 gap-4 flex-1">
                 {months.map((month, idx) => {
