@@ -2,12 +2,6 @@ import { Head, usePage } from '@inertiajs/react';
 import Card from '@/Components/UI/Card';
 import ProgressBar from '@/Components/UI/ProgressBar';
 
-interface SessionItem {
-    title: string | null;
-    date: string | null;
-    status: string | null;
-}
-
 interface Props {
     studentStats: {
         name: string;
@@ -17,8 +11,7 @@ interface Props {
         attendance: { hadir: number; absen: number; reschedule: number; percentage: number };
         scores: { interaction: number; focus: number; robotBuilding: number; tools: number; coding: number };
         averagePercentage: number;
-        sessions: SessionItem[];
-        comment: { general: string | null; notes: string | null };
+        comment: { system: string | null; notes: string | null };
     };
 }
 
@@ -34,8 +27,7 @@ export default function ProfilPDF() {
         attendance: { hadir: 0, absen: 0, reschedule: 0, percentage: 0 },
         scores: { interaction: 0, focus: 0, robotBuilding: 0, tools: 0, coding: 0 },
         averagePercentage: 0,
-        sessions: [],
-        comment: { general: null, notes: null },
+        comment: { system: null, notes: null },
     };
 
     const { attendance, scores } = stats;
@@ -150,60 +142,42 @@ export default function ProfilPDF() {
                         </div>
                     </Card>
 
-                    {/* Session History */}
-                    <Card className="p-6 mb-6">
-                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                            <i className="bi bi-clock-history text-teal-600"></i>
-                            Riwayat Sesi
-                        </h2>
-                        <div className="space-y-2">
-                            {stats.sessions.length === 0 ? (
-                                <p className="text-sm text-gray-500 italic">Belum ada riwayat sesi.</p>
-                            ) : (
-                                stats.sessions.map((session, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 border-b">
-                                        <div className="flex items-center gap-3">
-                                            <i className={`bi ${session.status === 'hadir' ? 'bi-check-circle-fill text-green-500' : session.status === 'absen' ? 'bi-x-circle-fill text-red-500' : 'bi-arrow-repeat text-yellow-500'}`}></i>
-                                            <div>
-                                                <h3 className="font-bold text-sm">{session.title}</h3>
-                                                <p className="text-xs text-gray-600">{session.date}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </Card>
-
                     {/* System Comments */}
                     <Card className="p-6 mb-6">
                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <i className="bi bi-info-circle-fill text-teal-600"></i>
-                            Komentar Sistem
+                            Komentar
                         </h2>
                         <div className="space-y-4">
-                            <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded">
-                                <div className="flex items-start gap-3">
-                                    <i className="bi bi-check-circle-fill text-green-600 text-xl"></i>
-                                    <div>
-                                        <p className="font-medium mb-1">Kondisi Umum</p>
-                                        <p className="text-sm text-gray-700">
-                                            {stats.comment.general ?? 'Belum ada analisis sistem. Nilai akan muncul setelah sesi pertama.'}
-                                        </p>
+                            {/* Komentar Sistem (Template) */}
+                            {stats.comment.system && (
+                                <div className="p-4 bg-[#f2f8f8] border-l-4 border-[#034d52] rounded">
+                                    <div className="flex items-start gap-3">
+                                        <i className="bi bi-cpu text-[#034d52] text-xl"></i>
+                                        <div>
+                                            <p className="font-medium mb-1">Komentar Sistem</p>
+                                            <p className="text-sm text-gray-700">{stats.comment.system}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
+                            {/* Catatan Tutor */}
                             {stats.comment.notes && (
-                                <div className="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                                <div className="p-4 bg-[#fffdf2] border-l-4 border-amber-600 rounded">
                                     <div className="flex items-start gap-3">
-                                        <i className="bi bi-exclamation-triangle-fill text-yellow-600 text-xl"></i>
+                                        <i className="bi bi-exclamation-triangle-fill text-amber-600 text-xl"></i>
                                         <div>
                                             <p className="font-medium mb-1">Catatan</p>
                                             <p className="text-sm text-gray-700">{stats.comment.notes}</p>
                                         </div>
                                     </div>
                                 </div>
+                            )}
+
+                            {/* Fallback */}
+                            {!stats.comment.system && !stats.comment.notes && (
+                                <p className="text-sm text-gray-400 italic">Belum ada komentar. Nilai akan muncul setelah sesi pertama.</p>
                             )}
                         </div>
                     </Card>

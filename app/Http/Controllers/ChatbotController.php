@@ -20,11 +20,11 @@ class ChatbotController extends Controller
         }
 
         if (str_contains($lowerMessage, 'daftar') || str_contains($lowerMessage, 'register')) {
-            return 'Untuk mendaftar, hubungi sekolah Anda untuk kode registrasi atau izin pembuatan akun dari admin AICI.';
+            return 'Pendaftaran mandiri sudah tidak tersedia. Akun dibuatkan oleh Super Admin — hubungi sekolah atau admin AICI Anda untuk mendapatkan akun.';
         }
 
         if (str_contains($lowerMessage, 'modul')) {
-            return 'Modul tersedia di Dashboard Tutor → Kelola Modul. Anda bisa menambah, edit, atau hapus modul pembelajaran.';
+            return 'Modul dikelola oleh Super Admin di Dashboard → Kelola Modul. Tutor dapat melihat daftar modul yang tersedia untuk murid binaannya.';
         }
 
         if (str_contains($lowerMessage, 'nilai') || str_contains($lowerMessage, 'grade')) {
@@ -32,7 +32,7 @@ class ChatbotController extends Controller
         }
 
         if (str_contains($lowerMessage, 'komentar')) {
-            return 'Komentar bisa personal atau sistem (AI-generated). Di Dashboard Tutor → Komentar, Anda bisa atur template atau tambah komentar personal per semester.';
+            return 'Komentar bisa personal atau sistem (AI-generated). Di Dashboard Tutor → Komentar, Anda bisa menambah catatan personal per semester.';
         }
 
         if (str_contains($lowerMessage, 'siswa') || str_contains($lowerMessage, 'murid')) {
@@ -44,7 +44,7 @@ class ChatbotController extends Controller
         }
 
         if (str_contains($lowerMessage, 'bantuan') || str_contains($lowerMessage, 'help') || str_contains($lowerMessage, 'support')) {
-            return 'Anda bisa melihat FAQ di halaman ini untuk jawaban lengkap. Jika masih ada pertanyaan, hubungi tim support kami di support@aici.id.';
+            return 'Anda bisa melihat FAQ di halaman ini untuk jawaban lengkap. Jika masih ada pertanyaan, hubungi tim support kami di ' . config('app.support_email') . '.';
         }
 
         if (str_contains($lowerMessage, 'error') || str_contains($lowerMessage, 'bug') || str_contains($lowerMessage, 'masalah')) {
@@ -65,6 +65,7 @@ class ChatbotController extends Controller
         ]);
 
         $apiKey = config('services.gemini.api_key');
+        $model = config('services.gemini.model', 'gemini-1.5-flash');
         $userMessage = $validated['message'];
         $conversationHistory = $validated['history'] ?? [];
 
@@ -101,16 +102,16 @@ class ChatbotController extends Controller
         try {
             $response = Http::timeout(15)->withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' . $apiKey, [
+            ])->post('https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':generateContent?key=' . $apiKey, [
                 'contents' => $messages,
                 'systemInstruction' => [
                     'parts' => [['text' => $systemInstruction]],
                 ],
                 'generationConfig' => [
-                    'temperature' => 0.7,
+                    'temperature' => config('services.gemini.temperature', 0.7),
                     'topK' => 40,
                     'topP' => 0.95,
-                    'maxOutputTokens' => 200,
+                    'maxOutputTokens' => config('services.gemini.max_output_tokens', 200),
                 ],
             ]);
 

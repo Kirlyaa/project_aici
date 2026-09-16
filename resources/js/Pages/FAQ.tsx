@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { callGeminiAPI, formatConversationHistory } from '../lib/gemini';
 
@@ -15,6 +15,8 @@ interface ChatMessage {
 }
 
 export default function FAQ() {
+    const { props } = usePage();
+    const supportEmail: string = (props as any).supportEmail ?? 'support@aici.id';
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [chatOpen, setChatOpen] = useState(false);
@@ -140,7 +142,7 @@ export default function FAQ() {
             const conversationHistory = formatConversationHistory(newMessages.slice(0, -1));
 
             // Call Gemini API
-            const response = await callGeminiAPI(userMsg, conversationHistory);
+            const response = await callGeminiAPI(userMsg, conversationHistory, supportEmail);
             setChatMessages(prev => [...prev, { role: 'bot', text: response }]);
         } catch (error) {
             console.error('Chat error:', error);

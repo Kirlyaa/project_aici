@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'support_email' => env('SUPPORT_EMAIL', 'support@aici.id'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

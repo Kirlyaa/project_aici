@@ -20,7 +20,7 @@ return new class extends Migration
             });
 
             // Migrate data: 5 => 'robot', 4 => 'coding'
-            DB::table('modules')->whereNotNull('module_type')->each(function ($module) {
+            DB::table('modules')->whereNotNull('module_type')->orderBy('id')->each(function ($module) {
                 $newType = $module->module_type == 5 ? 'robot' : ($module->module_type == 4 ? 'coding' : 'general');
                 DB::table('modules')->where('id', $module->id)->update(['module_type_new' => $newType]);
             });
@@ -50,7 +50,7 @@ return new class extends Migration
                 $table->string('module_type_new')->nullable()->after('module_type');
             });
 
-            DB::table('grade_entries')->whereNotNull('module_type')->each(function ($entry) {
+            DB::table('grade_entries')->whereNotNull('module_type')->orderBy('id')->each(function ($entry) {
                 $newType = $entry->module_type == 5 ? 'robot' : ($entry->module_type == 4 ? 'coding' : 'general');
                 DB::table('grade_entries')->where('id', $entry->id)->update(['module_type_new' => $newType]);
             });
@@ -76,7 +76,7 @@ return new class extends Migration
                 $table->string('category_new')->nullable()->after('category');
             });
 
-            DB::table('comment_templates')->each(function ($template) {
+            DB::table('comment_templates')->orderBy('id')->each(function ($template) {
                 DB::table('comment_templates')->where('id', $template->id)->update(['category_new' => $template->category]);
             });
 
@@ -105,7 +105,7 @@ return new class extends Migration
                 $table->string('module_type_old')->nullable();
             });
 
-            DB::table('modules')->each(function ($module) {
+            DB::table('modules')->orderBy('id')->each(function ($module) {
                 $oldType = $module->module_type === 'robot' ? 5 : ($module->module_type === 'coding' ? 4 : null);
                 DB::table('modules')->where('id', $module->id)->update(['module_type_old' => $oldType]);
             });

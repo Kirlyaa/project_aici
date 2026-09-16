@@ -7,6 +7,7 @@ use App\Http\Requests\Tutor\StoreLearningSessionRequest;
 use App\Models\LearningSession;
 use App\Models\Module;
 use App\Models\User;
+use App\Services\StudentLock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,9 +43,9 @@ class SessionController extends Controller
             'modules'     => $s->modules->map(fn($m) => ['id' => $m->id, 'name' => $m->name])->toArray(),
         ])->withQueryString();
 
-        // Students managed by this tutor (for the form)
+        // Semua tutor boleh melihat murid dalam form session
         $students = User::where('role', 'user')
-            ->when(!$isSuperAdmin, fn($q) => $q->where('tutor_id', $tutor->id))
+            ->whereIn('status', ['aktif', 'pending'])
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -65,6 +66,7 @@ class SessionController extends Controller
 
         $student = User::findOrFail($validated['student_id']);
         abort_if(!Auth::user()->managesStudent($student), 403);
+        StudentLock::assertWritable((int) $validated['student_id'], Auth::user());
 
         $moduleIds = $validated['module_ids'] ?? [];
         unset($validated['module_ids']);
@@ -80,7 +82,9 @@ class SessionController extends Controller
     public function update(StoreLearningSessionRequest $request, LearningSession $session): RedirectResponse
     {
         $tutor = Auth::user();
-        abort_if($tutor->role !== 'superadmin' && $session->tutor_id !== $tutor->id, 403);
+        // Semua tutor boleh mengubah sesi muridnya; eksklusivitas dijaga StudentLock.
+        abort_if(!$tutor->managesStudent($session->user_id), 403);
+        StudentLock::assertWritable((int) $session->user_id, $tutor);
 
         $validated = $request->validated();
 
@@ -96,7 +100,8 @@ class SessionController extends Controller
     public function destroy(LearningSession $session): RedirectResponse
     {
         $tutor = Auth::user();
-        abort_if($tutor->role !== 'superadmin' && $session->tutor_id !== $tutor->id, 403);
+        abort_if(!$tutor->managesStudent($session->user_id), 403);
+        StudentLock::assertWritable((int) $session->user_id, $tutor);
 
         $session->delete();
 

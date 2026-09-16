@@ -7,6 +7,7 @@ use App\Models\Module;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -93,7 +94,12 @@ class ModuleController extends Controller
     public function update(Request $request, Module $module): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => "required|string|max:255|unique:modules,name,{$module->id}",
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('modules', 'name')
+                    ->where(fn ($q) => $q->whereNull('deleted_at'))
+                    ->ignore($module->id),
+            ],
             'description' => 'nullable|string',
             'image' => 'nullable|url',
             'type' => 'required|in:robot,coding,general',

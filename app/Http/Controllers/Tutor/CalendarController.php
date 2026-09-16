@@ -3,25 +3,27 @@
 namespace App\Http\Controllers\Tutor;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Tutor\StoreLearningSessionRequest;
 use App\Models\LearningSession;
 use App\Models\Module;
 use App\Models\User;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * R5: Tutor hanya bisa melihat jadwal miliknya sendiri (read-only).
+ * CRUD kalender dipindah ke SuperAdmin\CalendarController.
+ */
 class CalendarController extends Controller
 {
     public function index(int $studentId): Response
     {
         $tutor = Auth::user();
-        abort_if(!$tutor->managesStudent($studentId), 403, 'Anda tidak memiliki izin mengakses data murid ini.');
-
         $student = User::findOrFail($studentId);
+
+        // Tutor hanya lihat sesi yang tutor_id = dirinya sendiri
         $sessions = LearningSession::where('user_id', $studentId)
+            ->where('tutor_id', $tutor->id)
             ->with('modules')
             ->orderBy('date')
             ->get()
@@ -45,65 +47,8 @@ class CalendarController extends Controller
             'student' => ['id' => $student->id, 'name' => $student->name, 'email' => $student->email],
             'sessions' => $sessions,
             'modules' => $modules,
+            'readOnly' => true,
         ]);
     }
-
-    public function store(StoreLearningSessionRequest $request): RedirectResponse
-    {
-        $validated = $request->validated();
-        abort_if(!$request->user()->managesStudent($validated['student_id']), 403);
-
-        DB::transaction(function () use ($validated, $request) {
-            /** @var LearningSession $session */
-            $session = LearningSession::create([
-                'user_id' => $validated['student_id'],
-                'tutor_id' => $request->user()->role === 'tutor' ? $request->user()->id : null,
-                'title' => $validated['title'],
-                'date_string' => $validated['date_string'],
-                'date' => $validated['date'],
-                'status' => $validated['status'],
-                'description' => $validated['description'] ?? null,
-                'tools' => $validated['tools'] ?? null,
-            ]);
-
-            if (! empty($validated['module_ids'])) {
-                $session->modules()->sync($validated['module_ids']);
-            }
-        });
-
-        return back()->with('success', 'Sesi pembelajaran berhasil ditambahkan.');
-    }
-
-    public function update(StoreLearningSessionRequest $request, LearningSession $session): RedirectResponse
-    {
-        abort_if(!$request->user()->managesStudent($session->user_id), 403);
-
-        $validated = $request->validated();
-
-        DB::transaction(function () use ($session, $validated) {
-            $session->update([
-                'user_id' => $validated['student_id'],
-                'title' => $validated['title'],
-                'date_string' => $validated['date_string'],
-                'date' => $validated['date'],
-                'status' => $validated['status'],
-                'description' => $validated['description'] ?? null,
-                'tools' => $validated['tools'] ?? null,
-            ]);
-
-            $modules = $validated['module_ids'] ?? [];
-            $session->modules()->sync($modules);
-        });
-
-        return back()->with('success', 'Sesi pembelajaran berhasil diperbarui.');
-    }
-
-    public function destroy(LearningSession $session): RedirectResponse
-    {
-        abort_if(!request()->user()->managesStudent($session->user_id), 403);
-        $session->modules()->detach();
-        $session->delete();
-
-        return back()->with('success', 'Sesi pembelajaran berhasil dihapus.');
-    }
 }
+

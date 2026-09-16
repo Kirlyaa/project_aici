@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Http\Controllers\Controller;
 use App\Models\GradeEntry;
 use App\Models\LearningSession;
-use App\Models\School;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class DashboardController
+class DashboardController extends Controller
 {
     public function __invoke(): Response
     {
@@ -18,7 +18,6 @@ class DashboardController
         $totalUsers = User::count();
         $totalStudents = User::where('role', 'user')->count();
         $totalTutors = User::where('role', 'tutor')->count();
-        $totalSchools = School::count();
 
         // Status breakdown
         $activeStudents = User::where('role', 'user')->where('status', 'aktif')->count();
@@ -26,7 +25,7 @@ class DashboardController
         $activeTutors = User::where('role', 'tutor')->where('status', 'aktif')->count();
 
         // Grade Statistics
-        $avgGrade = round((float) GradeEntry::avg('average') ?? 0, 2);
+        $avgGrade = round((float) (GradeEntry::avg('average') ?? 0), 2);
         $totalGradeEntries = GradeEntry::count();
         $totalSessions = LearningSession::count();
 
@@ -36,32 +35,20 @@ class DashboardController
             ->pluck('count', 'status')
             ->toArray();
 
-        // Top Schools by Students
-        $topSchools = School::withCount('students')
-            ->orderByDesc('students_count')
-            ->limit(5)
-            ->get()
-            ->map(function (School $s) {
-                return [
-                    'name' => $s->name,
-                    'students_count' => $s->students_count,
-                    'tutors_count' => $s->tutors_count,
-                ];
-            });
+        // Top Schools by Students — REMOVED (R7)
 
         // Recent Students
         $recentStudents = User::where('role', 'user')
-            ->with(['school', 'tutor'])
+            ->with(['tutor'])
             ->latest('created_at')
             ->limit(5)
             ->get()
             ->map(function (User $u) {
-                $avgGrade = $u->gradeEntries()->avg('average') ?? 0;
+                $avgGrade = (float) ($u->gradeEntries()->avg('average') ?? 0);
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
-                    'school' => $u->school?->name ?? '-',
                     'tutor' => $u->tutor?->name ?? '-',
                     'avgGrade' => round($avgGrade, 2),
                     'status' => $u->status ?? 'aktif',
@@ -107,16 +94,19 @@ class DashboardController
             '4-5' => 0,
         ];
 
-        GradeEntry::selectRaw('CAST(average AS DECIMAL(3,1)) as grade')
-            ->pluck('average')
+        GradeEntry::whereNotNull('average')
+            ->selectRaw('CAST(average AS DECIMAL(3,1)) as grade')
+            ->pluck('grade')
             ->each(function ($grade) use (&$gradeRanges) {
-                if ($grade < 1) {
+                if ($grade === null) return;
+                $g = (float) $grade;
+                if ($g < 1) {
                     $gradeRanges['0-1']++;
-                } elseif ($grade < 2) {
+                } elseif ($g < 2) {
                     $gradeRanges['1-2']++;
-                } elseif ($grade < 3) {
+                } elseif ($g < 3) {
                     $gradeRanges['2-3']++;
-                } elseif ($grade < 4) {
+                } elseif ($g < 4) {
                     $gradeRanges['3-4']++;
                 } else {
                     $gradeRanges['4-5']++;
@@ -130,8 +120,8 @@ class DashboardController
             ->map(function ($stat) {
                 return [
                     'type' => $stat->module_type === 'robot' ? 'Robot Building' : ($stat->module_type === 'coding' ? 'Coding' : 'General'),
-                    'count' => $stat->count,
-                    'avg_grade' => round($stat->avg_grade, 2),
+                    'count' => (int) ($stat->count ?? 0),
+                    'avg_grade' => round((float) ($stat->avg_grade ?? 0), 2),
                 ];
             });
 
@@ -149,19 +139,13 @@ class DashboardController
                 ];
             });
 
-        // School Status Distribution
-        $schoolStatus = School::selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->get()
-            ->pluck('count', 'status')
-            ->toArray();
+        // School Status Distribution — REMOVED (R7)
 
         return Inertia::render('SuperAdmin/Dashboard', [
             'stats' => [
                 'totalUsers' => $totalUsers,
                 'totalStudents' => $totalStudents,
                 'totalTutors' => $totalTutors,
-                'totalSchools' => $totalSchools,
                 'activeStudents' => $activeStudents,
                 'pendingStudents' => $pendingStudents,
                 'activeTutors' => $activeTutors,
@@ -175,9 +159,7 @@ class DashboardController
                 'gradeDistribution' => $gradeRanges,
                 'moduleTypeStats' => $moduleTypeStats,
                 'registrationTrend' => $registrationTrend,
-                'schoolStatus' => $schoolStatus,
             ],
-            'topSchools' => $topSchools,
             'recentStudents' => $recentStudents,
             'recentTutors' => $recentTutors,
             'recentModules' => $recentModules,

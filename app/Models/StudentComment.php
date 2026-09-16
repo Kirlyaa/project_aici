@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'academic_year',
     'system_comment',
     'tutor_comment',
+    'strengths',
+    'notes',
     'average_grade',
     'module_names',
     'is_system_generated',

@@ -12,6 +12,7 @@ export default function Profil() {
     const { props } = usePage();
     const auth = (props as any).auth;
     const studentStats = (props as any).studentStats;
+    const gradeScale: number = (props as any).gradeScale ?? 5;
 
     const userName = studentStats?.name || auth?.user?.name || 'Siswa AICI';
     const [activeTab, setActiveTab] = useState<'robot' | 'focus'>('robot');
@@ -42,10 +43,11 @@ export default function Profil() {
 
     const currentScores = activeTab === 'robot' ? categoryData : focusToolsData;
     const comment = studentStats?.comment ?? {
-        general: null,
-        strengths: null,
+        system: null,
         notes: null,
     };
+    const sessions: { title: string | null; date: string | null; status: string | null }[] =
+        studentStats?.sessions ?? [];
 
     return (
         <UserLayout currentPage="profil">
@@ -117,31 +119,23 @@ export default function Profil() {
                 {/* 2-Column Section: Komentar Sistem & Top Chart */}
                 <div className="grid md:grid-cols-2 gap-6">
 
-                    {/* Left Card: Komentar Sistem */}
+                    {/* Left Card: Komentar */}
                     <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm space-y-4">
-                        <h2 className="text-base font-bold text-gray-900">Komentar Sistem</h2>
+                        <h2 className="text-base font-bold text-gray-900">Komentar</h2>
 
-                        {/* Analisis Umum */}
-                        <div className="bg-[#f2f8f8] border-l-4 border-[#034d52] p-4 rounded-r-xl">
-                            <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1">Analisis Umum</h3>
-                            <p className="text-xs text-gray-600 leading-relaxed">
-                                {comment.general ?? 'Belum ada analisis sistem. Nilai akan muncul setelah sesi pertama.'}
-                            </p>
-                        </div>
-
-                        {/* Kelebihan */}
-                        {comment.strengths && (
-                            <div className="bg-[#f0faf2] border-l-4 border-emerald-600 p-4 rounded-r-xl">
+                        {/* Komentar Sistem (Template) — selalu paling atas */}
+                        {comment.system && (
+                            <div className="bg-[#f2f8f8] border-l-4 border-[#034d52] p-4 rounded-r-xl">
                                 <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1 flex items-center gap-1.5">
-                                    <i className="bi bi-check-circle-fill text-emerald-600" /> Kelebihan
+                                    <i className="bi bi-cpu text-[#034d52]" /> Komentar Sistem
                                 </h3>
                                 <p className="text-xs text-gray-600 leading-relaxed">
-                                    {comment.strengths}
+                                    {comment.system}
                                 </p>
                             </div>
                         )}
 
-                        {/* Catatan */}
+                        {/* Catatan Tutor */}
                         {comment.notes && (
                             <div className="bg-[#fffdf2] border-l-4 border-amber-600 p-4 rounded-r-xl">
                                 <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1 flex items-center gap-1.5">
@@ -152,6 +146,11 @@ export default function Profil() {
                                 </p>
                             </div>
                         )}
+
+                        {/* Fallback jika belum ada komentar sama sekali */}
+                        {!comment.system && !comment.notes && (
+                            <p className="text-xs text-gray-400 italic">Belum ada komentar. Nilai akan muncul setelah sesi pertama.</p>
+                        )}
                     </div>
 
                     {/* Right Card: Robot Building Bar Chart */}
@@ -160,7 +159,7 @@ export default function Profil() {
                             {activeTab === 'robot' ? 'Robot Building' : 'Focus & Tools'}
                         </h2>
 
-                        <BarChartVisual data={currentScores} />
+                        <BarChartVisual data={currentScores} gradeScale={gradeScale} />
                     </div>
                 </div>
 
@@ -168,7 +167,34 @@ export default function Profil() {
                 <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm space-y-4">
                     <h2 className="text-base font-bold text-gray-900">Rata-rata Per Kategori</h2>
 
-                    <BarChartVisual data={categoryData} isWide />
+                    <BarChartVisual data={categoryData} isWide gradeScale={gradeScale} />
+                </div>
+
+                {/* R9: Riwayat Sesi */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+                    <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i className="bi bi-clock-history text-teal-600" /> Riwayat Sesi
+                    </h2>
+                    {sessions.length === 0 ? (
+                        <p className="text-sm text-gray-400 italic">Belum ada riwayat sesi.</p>
+                    ) : (
+                        <div className="space-y-2">
+                            {sessions.map((s, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <i className={`bi ${s.status === 'hadir' ? 'bi-check-circle-fill text-green-500' : s.status === 'absen' ? 'bi-x-circle-fill text-red-500' : 'bi-arrow-repeat text-yellow-500'} text-lg`} />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-800">{s.title ?? '—'}</p>
+                                            <p className="text-xs text-gray-500">{s.date ?? '—'}</p>
+                                        </div>
+                                    </div>
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.status === 'hadir' ? 'bg-green-100 text-green-700' : s.status === 'absen' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {s.status ?? '—'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Red Action Button at Bottom Left */}
@@ -188,8 +214,8 @@ export default function Profil() {
 }
 
 // Custom High-Precision Bar Chart Component matching the exact visual style of the mockup
-function BarChartVisual({ data, isWide = false }: { data: CategoryScore[]; isWide?: boolean }) {
-    const maxScale = 5;
+function BarChartVisual({ data, isWide = false, gradeScale = 5 }: { data: CategoryScore[]; isWide?: boolean; gradeScale?: number }) {
+    const maxScale = gradeScale;
     const ticks = [5, 4, 3, 2, 1, 0];
 
     return (
@@ -222,7 +248,7 @@ function BarChartVisual({ data, isWide = false }: { data: CategoryScore[]; isWid
                                     <div
                                         className="w-full bg-[#529699] transition-all duration-500 rounded-t-sm"
                                         style={{ height: `${heightPercent}%` }}
-                                        title={`${item.label}: ${item.score} / 5`}
+                                        title={`${item.label}: ${item.score} / ${gradeScale}`}
                                     />
                                 </div>
                             </div>

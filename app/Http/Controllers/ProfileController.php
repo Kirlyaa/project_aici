@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\GradeEntry;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,10 +32,21 @@ class ProfileController extends Controller
             $codingAvg      = round((float) ($gradeEntries->avg('coding') ?? 0), 1);
 
             $overallAvg = round((float) ($gradeEntries->avg('average') ?? 0), 2);
-            $overallPercentage = $overallAvg > 0 ? round(($overallAvg / 5.0) * 100, 1) : 0;
+            // Clamp ke 0-100 agar tidak melebihi 100% jika data seeder lama masih 0-10
+            $overallPercentage = $overallAvg > 0 ? min(100, round(($overallAvg / GradeEntry::MAX_SCORE) * 100, 1)) : 0;
 
             $completedSessions = $user->learningSessions()->where('status', 'hadir')->count();
             $totalSessions = $user->learningSessions()->count();
+
+            // R9: Riwayat sesi dikirim ke Profil
+            $sessions = $user->learningSessions()
+                ->orderByDesc('date')
+                ->get(['title', 'date', 'status'])
+                ->map(fn($s) => [
+                    'title' => $s->title,
+                    'date' => $s->date?->format('d M Y'),
+                    'status' => $s->status,
+                ]);
 
             $latestComment = \App\Models\StudentComment::where('student_id', $user->id)->latest()->first();
 
@@ -59,10 +71,10 @@ class ProfileController extends Controller
                         'coding' => $codingAvg,
                     ],
                     'comment' => [
-                        'general' => $latestComment?->system_comment,
-                        'strengths' => $latestComment?->tutor_comment,
-                        'notes' => null,
-                    ]
+                        'system' => $latestComment?->system_comment,
+                        'notes'  => $latestComment?->notes,
+                    ],
+                    'sessions' => $sessions,
                 ]
             ]);
         }
@@ -140,7 +152,8 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $gradeEntries = \App\Models\GradeEntry::where('student_id', $user->id)->get();
-        $pct = fn(float $avg) => round(($avg / 5.0) * 100, 1);
+        // Clamp ke 0-100 agar tidak melebihi 100% jika data seeder lama masih 0-10
+        $pct = fn(float $avg) => min(100, round(($avg / GradeEntry::MAX_SCORE) * 100, 1));
 
         $scores = [
             'interaction' => $pct((float) ($gradeEntries->avg('interaksi') ?? 0)),
@@ -150,7 +163,8 @@ class ProfileController extends Controller
             'coding' => $pct((float) ($gradeEntries->avg('coding') ?? 0)),
         ];
 
-        $sessions = $user->learningSessions()->orderBy('date')->get(['title', 'date', 'status']);
+        // R9: hitung kehadiran dari sessions (tanpa kirim list sesi ke PDF)
+        $sessions = $user->learningSessions()->get(['status']);
         $hadir = $sessions->where('status', 'hadir')->count();
         $absen = $sessions->where('status', 'absen')->count();
         $reschedule = $sessions->where('status', 'reschedule')->count();
@@ -167,14 +181,10 @@ class ProfileController extends Controller
                 'attendance' => ['hadir' => $hadir, 'absen' => $absen, 'reschedule' => $reschedule, 'percentage' => $attendancePct],
                 'scores' => $scores,
                 'averagePercentage' => $pct((float) ($gradeEntries->avg('average') ?? 0)),
-                'sessions' => $sessions->map(fn($s) => [
-                    'title' => $s->title,
-                    'date' => $s->date?->format('d M Y'),
-                    'status' => $s->status,
-                ]),
+                // R9: sessions tidak dikirim ke PDF lagi
                 'comment' => [
-                    'general' => $latestComment?->system_comment,
-                    'notes' => $latestComment?->tutor_comment,
+                    'system' => $latestComment?->system_comment,
+                    'notes'  => $latestComment?->notes,
                 ],
             ],
         ]);

@@ -24,6 +24,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class GradeEntry extends Model
 {
+    /**
+     * B10: Skala nilai maksimum (0–5). Satu sumber kebenaran untuk
+     * konversi persentase di PHP dan frontend.
+     */
+    public const MAX_SCORE = 5.0;
+
     use SoftDeletes;
     protected function casts(): array
     {
@@ -45,6 +51,13 @@ class GradeEntry extends Model
         });
     }
 
+    /**
+     * Hitung rata-rata nilai sesi.
+     *
+     * - Default (coding/general): 4 kategori (fokus, tools, interaksi, coding)
+     * - Robot: 5 kategori jika robot_building !== null
+     * Skala nilai adalah 0.00 - 5.00
+     */
     public function recalculateAverage(): void
     {
         $values = [

@@ -16,7 +16,8 @@ interface BackendChatResponse {
 
 export async function callGeminiAPI(
     userMessage: string,
-    conversationHistory: ChatMessageInternal[] = []
+    conversationHistory: ChatMessageInternal[] = [],
+    supportEmail: string = 'support@aici.id'
 ): Promise<string> {
     try {
         const csrfToken = getCsrfToken();
@@ -37,14 +38,14 @@ export async function callGeminiAPI(
 
         if (!response.ok) {
             console.warn('Chatbot endpoint error:', response.status, response.statusText);
-            return getFallbackResponse(userMessage);
+            return getFallbackResponse(userMessage, supportEmail);
         }
 
         const data: BackendChatResponse = await response.json();
-        return data.reply ?? getFallbackResponse(userMessage);
+        return data.reply ?? getFallbackResponse(userMessage, supportEmail);
     } catch (error) {
         console.error('Error calling chatbot endpoint:', error);
-        return getFallbackResponse(userMessage);
+        return getFallbackResponse(userMessage, supportEmail);
     }
 }
 
@@ -63,7 +64,7 @@ function getCsrfToken(): string | null {
 /**
  * Local fallback responses when backend endpoint is unreachable
  */
-function getFallbackResponse(userMessage: string): string {
+function getFallbackResponse(userMessage: string, supportEmail: string = 'support@aici.id'): string {
     const lowerMessage = userMessage.toLowerCase();
 
     if (lowerMessage.includes('halo') || lowerMessage.includes('hi') || lowerMessage.includes('salam')) {
@@ -75,11 +76,11 @@ function getFallbackResponse(userMessage: string): string {
     }
 
     if (lowerMessage.includes('daftar') || lowerMessage.includes('register')) {
-        return 'Untuk mendaftar, hubungi sekolah Anda untuk kode registrasi atau izin pembuatan akun dari admin AICI.';
+        return 'Pendaftaran mandiri sudah tidak tersedia. Akun dibuatkan oleh Super Admin — hubungi sekolah atau admin AICI Anda untuk mendapatkan akun.';
     }
 
     if (lowerMessage.includes('modul')) {
-        return 'Modul tersedia di Dashboard Tutor → Kelola Modul. Anda bisa menambah, edit, atau hapus modul pembelajaran.';
+        return 'Modul dikelola oleh Super Admin di Dashboard → Kelola Modul. Tutor dapat melihat daftar modul yang tersedia untuk murid binaannya.';
     }
 
     if (lowerMessage.includes('nilai') || lowerMessage.includes('grade')) {
@@ -87,7 +88,7 @@ function getFallbackResponse(userMessage: string): string {
     }
 
     if (lowerMessage.includes('komentar')) {
-        return 'Komentar bisa personal atau sistem (AI-generated). Di Dashboard Tutor → Komentar, Anda bisa atur template atau tambah komentar personal per semester.';
+        return 'Komentar bisa personal atau sistem (AI-generated). Di Dashboard Tutor → Komentar, Anda bisa tambah catatan personal per semester.';
     }
 
     if (lowerMessage.includes('siswa') || lowerMessage.includes('murid')) {
@@ -99,7 +100,7 @@ function getFallbackResponse(userMessage: string): string {
     }
 
     if (lowerMessage.includes('bantuan') || lowerMessage.includes('help') || lowerMessage.includes('support')) {
-        return 'Anda bisa melihat FAQ di halaman ini untuk jawaban lengkap. Jika masih ada pertanyaan, hubungi tim support kami di support@aici.id.';
+        return `Anda bisa melihat FAQ di halaman ini untuk jawaban lengkap. Jika masih ada pertanyaan, hubungi tim support kami di ${supportEmail}.`;
     }
 
     if (lowerMessage.includes('error') || lowerMessage.includes('bug') || lowerMessage.includes('masalah')) {

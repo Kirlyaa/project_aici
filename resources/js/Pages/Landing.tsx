@@ -30,12 +30,6 @@ export default function Landing() {
                             >
                                 Masuk
                             </Link>
-                            <Link
-                                href="/register"
-                                className="px-6 py-2.5 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700"
-                            >
-                                Daftar
-                            </Link>
                         </div>
                     </div>
                 </div>
@@ -54,10 +48,10 @@ export default function Landing() {
                             </p>
                             <div className="flex gap-4">
                                 <Link
-                                    href="/register"
+                                    href="/login"
                                     className="px-8 py-3.5 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 flex items-center gap-2"
                                 >
-                                    <i className="bi bi-play-fill" /> Mulai Sekarang
+                                    <i className="bi bi-box-arrow-in-right" /> Masuk Sekarang
                                 </Link>
                                 <button className="px-8 py-3.5 border-2 border-gray-300 text-gray-900 font-semibold rounded-lg hover:bg-gray-50">
                                     Pelajari Lebih Lanjut
@@ -257,10 +251,10 @@ export default function Landing() {
                     <p className="text-xl text-teal-100 mb-8">Bergabunglah dengan ribuan siswa dan sekolah yang telah mempercayai AICI untuk pembelajaran robotika dan coding mereka.</p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
-                            href="/register"
+                            href="/login"
                             className="px-8 py-4 bg-white text-teal-600 font-bold rounded-lg hover:bg-gray-100 flex items-center justify-center gap-2"
                         >
-                            <i className="bi bi-play-fill" /> Daftar Gratis Sekarang
+                            <i className="bi bi-box-arrow-in-right" /> Masuk Sekarang
                         </Link>
                         <Link
                             href="/faq"

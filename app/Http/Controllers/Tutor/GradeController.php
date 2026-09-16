@@ -7,6 +7,7 @@ use App\Http\Requests\Tutor\StoreGradeEntryRequest;
 use App\Models\GradeEntry;
 use App\Models\Module;
 use App\Models\User;
+use App\Services\StudentLock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +33,12 @@ class GradeController extends Controller
                     'id' => $g->id,
                     'meetingNumber' => $g->meeting_number,
                     'moduleName' => $g->module?->name ?? 'Umum',
+<<<<<<< HEAD
                     'moduleType' => $g->module_type,
+=======
+                    'moduleType' => $g->module_type === 'robot' ? 5 : 4,
+                    'module_type' => $g->module_type,
+>>>>>>> 96daa4dbdba2dd40e556e515927b4d03a0c731dd
                     'moduleId' => $g->module_id,
                     'grades' => [
                         'fokus' => (float) $g->fokus,
@@ -51,8 +57,13 @@ class GradeController extends Controller
 
         $averages = (object) [
             'overall' => round((float) $gradeEntries->avg('average') ?? 0, 2),
+<<<<<<< HEAD
             'robot' => round((float) $gradeEntries->where('moduleType', 'robot')->avg('average') ?? 0, 2),
             'coding' => round((float) $gradeEntries->where('moduleType', 'coding')->avg('average') ?? 0, 2),
+=======
+            'robot' => round((float) $gradeEntries->where('module_type', 'robot')->avg('average') ?? 0, 2),
+            'coding' => round((float) $gradeEntries->where('module_type', 'coding')->avg('average') ?? 0, 2),
+>>>>>>> 96daa4dbdba2dd40e556e515927b4d03a0c731dd
             'count' => $gradeEntries->count(),
         ];
 
@@ -69,6 +80,7 @@ class GradeController extends Controller
     {
         $validated = $request->validated();
         abort_if(!$request->user()->managesStudent($validated['student_id']), 403);
+        StudentLock::assertWritable((int) $validated['student_id'], $request->user());
 
         GradeEntry::create([
             'student_id' => $validated['student_id'],
@@ -92,6 +104,7 @@ class GradeController extends Controller
     public function update(StoreGradeEntryRequest $request, GradeEntry $gradeEntry): RedirectResponse
     {
         abort_if(!$request->user()->managesStudent($gradeEntry->student_id), 403);
+        StudentLock::assertWritable((int) $gradeEntry->student_id, $request->user());
         $validated = $request->validated();
 
         $gradeEntry->update([
@@ -114,6 +127,7 @@ class GradeController extends Controller
     public function destroy(Request $request, GradeEntry $gradeEntry): RedirectResponse
     {
         abort_if(!$request->user()->managesStudent($gradeEntry->student_id), 403);
+        StudentLock::assertWritable((int) $gradeEntry->student_id, $request->user());
         $gradeEntry->delete();
         return back()->with('success', 'Nilai berhasil dihapus.');
     }

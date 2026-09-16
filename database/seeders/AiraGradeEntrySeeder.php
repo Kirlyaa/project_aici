@@ -26,42 +26,49 @@ class AiraGradeEntrySeeder extends Seeder
             return;
         }
 
-        // Define 3 grade entries with different categories
+        // B7: Lookup module_id by name instead of hardcoding
+        $moduleRobot1 = Module::where('name', 'Modul 1 – Pengenalan Robotika')->first()?->id;
+        $moduleRobot2 = Module::where('name', 'Modul 2 – Sensor & Aktuator')->first()?->id
+            ?? Module::where('module_type', 'robot')->first()?->id;
+        $moduleCoding5 = Module::where('name', 'Modul 5 – Logika Program')->first()?->id
+            ?? Module::where('module_type', 'coding')->first()?->id;
+
+        // Define 3 grade entries with different categories (skala 0-5, sesuai validasi StoreGradeEntryRequest)
         $gradeEntriesData = [
             [
                 'meeting_number' => 1,
                 'module_type' => 'robot',
                 'meeting_date' => '2025-04-05',
-                'module_id' => 1,
-                'fokus' => 8.5,
-                'robot_building' => 8.0,
-                'tools_management' => 8.2,
-                'interaksi' => 8.8,
-                'coding' => 7.8,
+                'module_id' => $moduleRobot1,
+                'fokus' => 4.3,
+                'robot_building' => 4.0,
+                'tools_management' => 4.1,
+                'interaksi' => 4.4,
+                'coding' => 3.9,
                 'notes' => 'Aira menunjukkan kemajuan yang bagus dalam pemahaman konsep robotika.',
             ],
             [
                 'meeting_number' => 2,
                 'module_type' => 'robot',
                 'meeting_date' => '2025-05-10',
-                'module_id' => 2,
-                'fokus' => 8.8,
-                'robot_building' => 8.5,
-                'tools_management' => 8.6,
-                'interaksi' => 9.0,
-                'coding' => 8.2,
+                'module_id' => $moduleRobot2,
+                'fokus' => 4.4,
+                'robot_building' => 4.3,
+                'tools_management' => 4.3,
+                'interaksi' => 4.5,
+                'coding' => 4.1,
                 'notes' => 'Peningkatan signifikan dalam sensitivitas sensor dan aktuator.',
             ],
             [
                 'meeting_number' => 3,
                 'module_type' => 'coding',
                 'meeting_date' => '2025-06-07',
-                'module_id' => 5,
-                'fokus' => 9.0,
+                'module_id' => $moduleCoding5,
+                'fokus' => 4.5,
                 'robot_building' => null,
-                'tools_management' => 8.4,
-                'interaksi' => 9.2,
-                'coding' => 8.8,
+                'tools_management' => 4.2,
+                'interaksi' => 4.6,
+                'coding' => 4.4,
                 'notes' => 'Aira sangat mahir dalam penggunaan block programming dan variabel.',
             ],
         ];

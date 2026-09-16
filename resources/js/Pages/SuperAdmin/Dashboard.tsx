@@ -6,7 +6,6 @@ interface Props {
         totalUsers: number;
         totalStudents: number;
         totalTutors: number;
-        totalSchools: number;
         totalModules: number;
         activeStudents: number;
         pendingStudents: number;
@@ -19,7 +18,6 @@ interface Props {
         id: number;
         name: string;
         email: string;
-        school: string;
         tutor: string;
         avgGrade: number;
         status: string;
@@ -37,11 +35,10 @@ interface Props {
         typeLabel: string;
         image: string | null;
     }>;
-    topSchools: Array<{ name: string; students_count: number; tutors_count: number }>;
 }
 
 export default function SuperAdminDashboard() {
-    const { stats, recentStudents, recentTutors, recentModules, topSchools } = usePage().props as unknown as Props;
+    const { stats, recentStudents, recentTutors, recentModules } = usePage().props as unknown as Props;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -120,18 +117,6 @@ export default function SuperAdminDashboard() {
                             </div>
                             <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
                                 <i className="bi bi-person-workspace text-green-600 text-xl" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-gray-600 text-sm font-medium">Sekolah</p>
-                                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalSchools}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                                <i className="bi bi-building text-orange-600 text-xl" />
                             </div>
                         </div>
                     </div>
@@ -224,7 +209,7 @@ export default function SuperAdminDashboard() {
                                         <div key={s.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
                                             <div>
                                                 <p className="font-medium text-sm text-gray-900">{s.name}</p>
-                                                <p className="text-xs text-gray-500">{s.school}</p>
+                                                <p className="text-xs text-gray-500">{s.email}</p>
                                             </div>
                                             <span className={`px-2 py-1 text-xs font-semibold rounded ${s.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                                                 {s.status === 'aktif' ? 'Aktif' : s.status === 'pending' ? 'Pending' : 'Nonaktif'}

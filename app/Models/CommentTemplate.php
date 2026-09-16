@@ -30,10 +30,22 @@ class CommentTemplate extends Model
     {
         $range = $average >= 5 ? '5' : ($average >= 4 ? '4-4.99' : '<4');
 
+        // Primary: match category + range
         /** @var self|null $template */
         $template = self::query()
             ->where('grade_range', $range)
             ->where('category', $category)
+            ->where('is_active', true)
+            ->inRandomOrder()
+            ->first();
+
+        if ($template) {
+            return $template->template;
+        }
+
+        // Fallback B4: any active template with matching range (ignore category)
+        $template = self::query()
+            ->where('grade_range', $range)
             ->where('is_active', true)
             ->inRandomOrder()
             ->first();

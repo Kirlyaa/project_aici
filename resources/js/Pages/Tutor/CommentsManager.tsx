@@ -1,5 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import StudentLockBanner from '@/Components/StudentLockBanner';
+import { useStudentLock, LockInfo } from '@/Hooks/useStudentLock';
 
 interface Comment {
     id: number;
@@ -7,6 +9,8 @@ interface Comment {
     academic_year: number | null;
     systemComment: string | null;
     tutorComment: string | null;
+    strengths: string | null;
+    notes: string | null;
     averageGrade: number | null;
     moduleNames: string[] | null;
     isSystemGenerated: boolean;
@@ -31,61 +35,64 @@ const GRADE_RANGES = ['<4', '4-4.99', '5'] as const;
 
 const emptyTemplateForm = {
     grade_range: '<4' as (typeof GRADE_RANGES)[number],
-    category: 'umum',
     template: '',
 };
 
 export default function CommentsManager() {
     const { studentId, student, comments, templates } = usePage().props as unknown as Props;
 
-    const [newComment, setNewComment] = useState('');
-    const [selectedSemester, setSelectedSemester] = useState('2026-01');
+    const { lock } = useStudentLock({ studentId, page: 'comments' });
+    const isReadOnly = lock?.locked === true;
+
+    const [commentForm, setCommentForm] = useState({
+        notes: '',
+    });
+
+    const [selectedSemester] = useState(() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    });
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editText, setEditText] = useState('');
+    const [editForm, setEditForm] = useState({
+        notes: '',
+    });
+
     const [showSystemTemplateForm, setShowSystemTemplateForm] = useState(false);
     const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
     const [templateForm, setTemplateForm] = useState(emptyTemplateForm);
 
-    const filteredComments = comments.filter(c => c.semester === selectedSemester);
-    const semesterComment = filteredComments[0];
-    const hasSystemComment = filteredComments.some(c => c.isSystemGenerated);
-
     const savePersonalComment = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newComment.trim()) return;
+        if (!commentForm.notes.trim()) return;
 
-        router.post('/comments', {
+        router.post('/tutor/comments', {
             student_id: studentId,
             semester: selectedSemester,
-            tutor_comment: newComment,
+            notes: commentForm.notes,
         }, {
-            onSuccess: () => setNewComment(''),
+            onSuccess: () => setCommentForm({ notes: '' }),
         });
-    };
-
-    const generateSystemComment = () => {
-        router.post(`/comments/generate/${studentId}/${selectedSemester}`);
     };
 
     const updateComment = (id: number) => {
         const comment = comments.find(c => c.id === id);
         if (!comment) return;
 
-        router.post('/comments', {
+        router.post('/tutor/comments', {
             student_id: studentId,
             semester: comment.semester,
-            tutor_comment: editText,
+            notes: editForm.notes,
         }, {
             onSuccess: () => {
                 setEditingId(null);
-                setEditText('');
+                setEditForm({ notes: '' });
             },
         });
     };
 
     const deleteComment = (id: number) => {
         if (window.confirm('Yakin ingin menghapus komentar ini?')) {
-            router.delete(`/comments/${id}`);
+            router.delete(`/tutor/comments/${id}`);
         }
     };
 
@@ -97,7 +104,7 @@ export default function CommentsManager() {
 
     const openTemplateEdit = (t: Template) => {
         setEditingTemplateId(t.id);
-        setTemplateForm({ grade_range: t.grade_range as (typeof GRADE_RANGES)[number], category: t.category, template: t.template });
+        setTemplateForm({ grade_range: t.grade_range as (typeof GRADE_RANGES)[number], template: t.template });
         setShowSystemTemplateForm(true);
     };
 
@@ -105,12 +112,18 @@ export default function CommentsManager() {
         e.preventDefault();
         if (!templateForm.template.trim()) return;
 
+        const payload = {
+            grade_range: templateForm.grade_range,
+            category: 'umum',
+            template: templateForm.template,
+        };
+
         if (editingTemplateId !== null) {
-            router.put(`/comment-templates/${editingTemplateId}`, templateForm, {
+            router.put(`/tutor/comment-templates/${editingTemplateId}`, payload, {
                 onSuccess: () => setShowSystemTemplateForm(false),
             });
         } else {
-            router.post('/comment-templates', templateForm, {
+            router.post('/tutor/comment-templates', payload, {
                 onSuccess: () => setShowSystemTemplateForm(false),
             });
         }
@@ -118,7 +131,7 @@ export default function CommentsManager() {
 
     const deleteTemplate = (id: number) => {
         if (window.confirm('Yakin ingin menghapus template ini?')) {
-            router.delete(`/comment-templates/${id}`);
+            router.delete(`/tutor/comment-templates/${id}`);
         }
     };
 
@@ -147,7 +160,97 @@ export default function CommentsManager() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Kelola Komentar Murid</h1>
-                    <p className="text-gray-600">Komentar sistem otomatis per semester (YYYY-MM) + komentar personal tutor</p>
+                    <p className="text-gray-600">Komentar personal terstruktur (Analisis Umum, Kelebihan, Catatan) untuk {student.name}</p>
+                </div>
+
+                <StudentLockBanner lock={lock} studentName={student.name} />
+
+                {/* Template Form Modal */}
+                {showSystemTemplateForm && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">
+                                {editingTemplateId !== null ? 'Edit Template' : 'Tambah Template Baru'}
+                            </h3>
+
+                            <form onSubmit={saveTemplate} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Range Nilai</label>
+                                    <select
+                                        value={templateForm.grade_range}
+                                        onChange={e => setTemplateForm({ ...templateForm, grade_range: e.target.value as (typeof GRADE_RANGES)[number] })}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        {GRADE_RANGES.map(r => (
+                                            <option key={r} value={r}>{r === '<4' ? 'Di bawah 4' : r === '4-4.99' ? '4 - 4.99' : '5 (Sempurna)'}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Template Komentar</label>
+                                    <textarea
+                                        value={templateForm.template}
+                                        onChange={e => setTemplateForm({ ...templateForm, template: e.target.value })}
+                                        placeholder="Gunakan {modules}, {average}, dan {student} sebagai placeholder"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-24"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 pt-4">
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                                    >
+                                        {editingTemplateId !== null ? 'Update' : 'Tambah'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSystemTemplateForm(false)}
+                                        className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                                    >
+                                        Batal
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Add Structured Personal Comment */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+                    <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i className="bi bi-chat-left-text text-orange-600" />
+                        Tambah Komentar Personal
+                    </h2>
+                    <form onSubmit={savePersonalComment} className="space-y-4">
+                        {/* Catatan & Rekomendasi */}
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
+                                <i className="bi bi-exclamation-triangle-fill text-amber-600" /> Catatan & Rekomendasi
+                            </label>
+                            <textarea
+                                value={commentForm.notes}
+                                onChange={e => setCommentForm({ ...commentForm, notes: e.target.value })}
+                                placeholder="Catatan evaluasi atau hal yang perlu ditingkatkan di sesi berikutnya..."
+                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none h-20"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isReadOnly}
+                            className="px-5 py-2.5 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm shadow-sm"
+                            title={isReadOnly ? 'Halaman dikunci oleh tutor lain (read-only)' : undefined}
+                        >
+                            <i className="bi bi-check-lg" /> Simpan Komentar
+                        </button>
+                    </form>
+                    <p className="text-xs text-gray-500 mt-3">
+                        <i className="bi bi-info-circle mr-1" />
+                        Gunakan {'{modules}'} untuk nama modul, {'{average}'} untuk nilai, dan {'{student}'} untuk nama murid
+                    </p>
                 </div>
 
                 {/* System Comment Templates Section */}
@@ -204,157 +307,15 @@ export default function CommentsManager() {
                     </p>
                 </div>
 
-                {/* Template Form Modal */}
-                {showSystemTemplateForm && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">
-                                {editingTemplateId !== null ? 'Edit Template' : 'Tambah Template Baru'}
-                            </h3>
-
-                            <form onSubmit={saveTemplate} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Range Nilai</label>
-                                        <select
-                                            value={templateForm.grade_range}
-                                            onChange={e => setTemplateForm({ ...templateForm, grade_range: e.target.value as (typeof GRADE_RANGES)[number] })}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            {GRADE_RANGES.map(r => (
-                                                <option key={r} value={r}>{r === '<4' ? 'Di bawah 4' : r === '4-4.99' ? '4 - 4.99' : '5 (Sempurna)'}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Kategori</label>
-                                        <input
-                                            type="text"
-                                            value={templateForm.category}
-                                            onChange={e => setTemplateForm({ ...templateForm, category: e.target.value })}
-                                            placeholder="umum"
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Template Komentar</label>
-                                    <textarea
-                                        value={templateForm.template}
-                                        onChange={e => setTemplateForm({ ...templateForm, template: e.target.value })}
-                                        placeholder="Gunakan {modules}, {average}, dan {student} sebagai placeholder"
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-24"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="flex gap-2 pt-4">
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-                                    >
-                                        {editingTemplateId !== null ? 'Update' : 'Tambah'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowSystemTemplateForm(false)}
-                                        className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
-                                    >
-                                        Batal
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* Semester Selector */}
-                <div className="flex gap-2 mb-6 items-center flex-wrap">
-                    <label className="text-sm font-semibold text-gray-700">Semester (YYYY-MM):</label>
-                    <input
-                        type="month"
-                        value={selectedSemester}
-                        onChange={e => setSelectedSemester(e.target.value)}
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                </div>
-
-                {/* Semester Overview */}
-                {semesterComment && (semesterComment.averageGrade !== null || (semesterComment.moduleNames?.length ?? 0) > 0) && (
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <i className="bi bi-calendar3 text-blue-600" />
-                            Ringkasan Semester {selectedSemester}
-                        </h3>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="p-4 bg-gradient-to-br from-blue-50 to-teal-50 rounded-lg border border-blue-200">
-                                <p className="text-sm text-gray-600">Rata-rata Nilai</p>
-                                <p className="text-3xl font-bold text-blue-600">{(semesterComment.averageGrade ?? 0).toFixed(2)}</p>
-                            </div>
-                            <div className="p-4 bg-gradient-to-br from-teal-50 to-blue-50 rounded-lg border border-teal-200">
-                                <p className="text-sm text-gray-600 mb-1">Modul Dipelajari</p>
-                                <div className="flex flex-wrap gap-1">
-                                    {(semesterComment.moduleNames ?? []).map((m, i) => (
-                                        <span key={i} className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded">{m}</span>
-                                    ))}
-                                    {(semesterComment.moduleNames?.length ?? 0) === 0 && (
-                                        <span className="text-xs text-gray-500">-</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Add System Comment */}
-                {!hasSystemComment && (
-                    <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6">
-                        <p className="text-sm text-gray-700 mb-3">
-                            <i className="bi bi-info-circle text-teal-600 mr-2" />
-                            Sistem akan generate komentar otomatis dari nilai bulan ini + template.
-                        </p>
-                        <button
-                            onClick={generateSystemComment}
-                            className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-2 text-sm"
-                        >
-                            <i className="bi bi-magic" /> Generate Komentar Sistem
-                        </button>
-                    </div>
-                )}
-
-                {/* Add Personal Comment */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-                    <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i className="bi bi-chat-left-text text-orange-600" />
-                        Tambah Komentar Personal
-                    </h2>
-                    <form onSubmit={savePersonalComment} className="space-y-4">
-                        <textarea
-                            value={newComment}
-                            onChange={e => setNewComment(e.target.value)}
-                            placeholder="Tulis komentar pribadi tentang perkembangan murid..."
-                            className="w-full border border-gray-200 rounded-lg px-4 py-3 h-24 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                            required
-                        />
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 flex items-center gap-2"
-                        >
-                            <i className="bi bi-check-lg" /> Simpan Komentar Personal
-                        </button>
-                    </form>
-                </div>
-
                 {/* Comments List */}
                 <div className="space-y-4">
-                    {filteredComments.length === 0 ? (
+                    {comments.length === 0 ? (
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
                             <i className="bi bi-inbox text-4xl text-gray-300 block mb-3" />
-                            <p className="text-gray-600">Belum ada komentar untuk semester ini.</p>
+                            <p className="text-gray-600">Belum ada komentar untuk murid ini.</p>
                         </div>
                     ) : (
-                        filteredComments.map(comment => (
+                        comments.map(comment => (
                             <div key={comment.id} className={`rounded-xl border shadow-sm p-6 ${
                                 comment.isSystemGenerated
                                     ? 'bg-gradient-to-r from-teal-50 to-blue-50 border-teal-200'
@@ -367,20 +328,38 @@ export default function CommentsManager() {
                                         } text-lg`} />
                                         <div>
                                             <p className="font-bold text-gray-900 text-sm">
-                                                {comment.isSystemGenerated ? 'Komentar Sistem (Otomatis)' : 'Komentar Personal'}
+                                                {comment.isSystemGenerated ? 'Komentar Sistem (Otomatis)' : 'Komentar Personal Tutor'}
                                             </p>
                                             {comment.lastUpdated && (
                                                 <p className="text-xs text-gray-500">Diperbarui: {comment.lastUpdated}</p>
                                             )}
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => deleteComment(comment.id)}
-                                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Hapus"
-                                    >
-                                        <i className="bi bi-trash-fill" />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {!comment.isSystemGenerated && editingId !== comment.id && (
+                                            <button
+                                                onClick={() => {
+                                                    setEditingId(comment.id);
+                                                    setEditForm({
+                                                        notes: comment.notes ?? '',
+                                                    });
+                                                }}
+                                                disabled={isReadOnly}
+                                                className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                                                title={isReadOnly ? 'Halaman dikunci oleh tutor lain' : 'Edit'}
+                                            >
+                                                <i className="bi bi-pencil-fill text-sm" />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => deleteComment(comment.id)}
+                                            disabled={isReadOnly}
+                                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            title={isReadOnly ? 'Halaman dikunci oleh tutor lain' : 'Hapus'}
+                                        >
+                                            <i className="bi bi-trash-fill" />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* System Comment */}
@@ -391,45 +370,46 @@ export default function CommentsManager() {
                                     </div>
                                 )}
 
-                                {/* Tutor Comment */}
-                                {comment.tutorComment && (
-                                    editingId === comment.id ? (
-                                        <div className="space-y-3">
+                                {/* Tutor Comment (Edit Mode) */}
+                                {editingId === comment.id ? (
+                                    <div className="space-y-3 pt-2">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 mb-1">Catatan & Rekomendasi:</label>
                                             <textarea
-                                                value={editText}
-                                                onChange={e => setEditText(e.target.value)}
-                                                className="w-full border border-gray-200 rounded-lg px-4 py-3 h-24 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                                value={editForm.notes}
+                                                onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
+                                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none h-16"
                                             />
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => updateComment(comment.id)}
-                                                    className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2 text-sm"
-                                                >
-                                                    <i className="bi bi-check-lg" /> Simpan
-                                                </button>
-                                                <button
-                                                    onClick={() => setEditingId(null)}
-                                                    className="flex-1 px-3 py-2 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center gap-2 text-sm"
-                                                >
-                                                    <i className="bi bi-x-lg" /> Batal
-                                                </button>
-                                            </div>
                                         </div>
-                                    ) : (
-                                        <div className="flex items-start justify-between gap-3">
-                                            <p className="text-sm text-gray-700">{comment.tutorComment}</p>
+                                        <div className="flex gap-2">
                                             <button
-                                                onClick={() => {
-                                                    setEditingId(comment.id);
-                                                    setEditText(comment.tutorComment ?? '');
-                                                }}
-                                                className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg shrink-0"
-                                                title="Edit"
+                                                onClick={() => updateComment(comment.id)}
+                                                disabled={isReadOnly}
+                                                className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                                                title={isReadOnly ? 'Halaman dikunci oleh tutor lain (read-only)' : undefined}
                                             >
-                                                <i className="bi bi-pencil-fill text-sm" />
+                                                <i className="bi bi-check-lg" /> Simpan
+                                            </button>
+                                            <button
+                                                onClick={() => setEditingId(null)}
+                                                className="flex-1 px-3 py-2 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center gap-2 text-sm"
+                                            >
+                                                <i className="bi bi-x-lg" /> Batal
                                             </button>
                                         </div>
-                                    )
+                                    </div>
+                                ) : (
+                                    /* Tutor Comment (Display Mode) */
+                                    <div className="space-y-2">
+                                        {comment.notes && (
+                                            <div className="bg-[#fffdf2] border-l-4 border-amber-600 p-3 rounded-r-lg">
+                                                <p className="text-xs font-bold text-amber-800 mb-0.5 flex items-center gap-1">
+                                                    <i className="bi bi-exclamation-triangle-fill text-amber-600" /> Catatan & Rekomendasi
+                                                </p>
+                                                <p className="text-xs text-gray-700">{comment.notes}</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         ))

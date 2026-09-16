@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
 // Demo account hanya boleh terlihat pada dev build.
@@ -100,27 +100,6 @@ export default function Login() {
                             {processing ? 'Sedang Masuk...' : 'Masuk'}
                         </button>
                     </form>
-
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 my-8">
-                        <div className="h-px bg-gray-200 flex-1" />
-                        <span className="text-gray-400 text-xs font-medium">BARU DI SINI?</span>
-                        <div className="h-px bg-gray-200 flex-1" />
-                    </div>
-
-                    {/* Register Link */}
-                    <div className="text-center">
-                        <p className="text-gray-600 text-sm">
-                            Belum memiliki akun?{' '}
-                            <Link
-                                href="/register"
-                                className="text-teal-600 font-bold hover:text-teal-700 transition-colors inline-flex items-center gap-1"
-                            >
-                                Daftar di sini
-                                <i className="bi bi-arrow-right text-xs" />
-                            </Link>
-                        </p>
-                    </div>
                 </div>
 
                 {/* Footer Info */}
