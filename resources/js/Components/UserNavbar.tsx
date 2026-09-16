@@ -53,6 +53,13 @@ export default function UserNavbar({ userName }: UserNavbarProps) {
                         <i className="bi bi-mortarboard" /> Tugas / Jadwal
                     </Link>
                     <Link
+                        href="/nilai"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-sm font-medium"
+                    >
+                        <i className="bi bi-bar-chart" /> Nilai
+                    </Link>
+                    <Link
                         href="/profil"
                         onClick={() => setMobileMenuOpen(false)}
                         className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-sm font-medium"
@@ -89,6 +96,9 @@ export default function UserNavbar({ userName }: UserNavbarProps) {
                             </Link>
                             <Link href="/jadwal" className="text-gray-700 hover:text-[#034d52] transition-colors">
                                 Jadwal
+                            </Link>
+                            <Link href="/nilai" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                Nilai
                             </Link>
                             <Link href="/profil" className="text-gray-700 hover:text-[#034d52] transition-colors">
                                 Profil

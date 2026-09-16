@@ -6,24 +6,45 @@ use App\Http\Controllers\Controller;
 use App\Models\GradeEntry;
 use App\Models\LearningSession;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(Request $request): Response
     {
         /** @var User $tutor */
         $tutor = Auth::user();
+
+        // R4: filter murid per kelas ("Tanpa Kelas" => class IS NULL)
+        $classFilter = $request->input('class');
 
         // Semua tutor boleh melihat & mengakses semua murid.
         // Exclusivity (tidak boleh edit bersamaan) dijaga oleh StudentLock.
         $students = User::where('role', 'user')
             ->whereIn('status', ['aktif', 'pending'])
+            ->when($classFilter, function ($q) use ($classFilter) {
+                if ($classFilter === 'Tanpa Kelas') {
+                    $q->whereNull('class');
+                } else {
+                    $q->where('class', $classFilter);
+                }
+            })
             ->withCount(['learningSessions', 'gradeEntries'])
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
+
+        // R4: daftar kelas untuk tampilan dua level (kelas -> murid)
+        $classes = User::where('role', 'user')
+            ->whereIn('status', ['aktif', 'pending'])
+            ->selectRaw('COALESCE(class, ?) as class_name, COUNT(*) as total', ['Tanpa Kelas'])
+            ->groupBy('class_name')
+            ->orderBy('class_name')
+            ->get()
+            ->map(fn($r) => ['name' => $r->class_name, 'total' => (int) $r->total]);
 
         $stats = [
             'total_students' => $students->total(),
@@ -49,9 +70,10 @@ class DashboardController extends Controller
                 'id' => $s->id,
                 'name' => $s->name,
                 'email' => $s->email,
+                'class' => $s->class ?? 'Tanpa Kelas',
                 'level' => $s->tutor?->name ?? 'Belum ada tutor',
                 // Progress dalam persen (skala 0-5 dikonversi ke 0-100)
-                'progress' => min(100, round(($avg / 5) * 100, 1)),
+                'progress' => min(100, round(($avg / GradeEntry::MAX_SCORE) * 100, 1)),
                 'averageGrade' => round($avg, 2),
                 'status' => $s->status ?? 'aktif',
                 'totalSessions' => (int) $byStatus->sum(),
@@ -72,6 +94,7 @@ class DashboardController extends Controller
                 'name' => $tutor->name,
                 'email' => $tutor->email,
             ],
+            'classes' => $classes,
         ]);
     }
 }

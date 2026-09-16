@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Tutor;
 
+use App\Models\GradeEntry;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -26,11 +27,11 @@ class StoreGradeEntryRequest extends FormRequest
             'meeting_number' => ['required', 'integer', 'min:1', 'max:50'],
             'module_type' => ['required', Rule::in(['robot', 'coding', 'general'])],
             'meeting_date' => ['nullable', 'date'],
-            'fokus' => ['required', 'numeric', 'min:0', 'max:5'],
-            'robot_building' => ['nullable', 'numeric', 'min:0', 'max:5'],
-            'tools_management' => ['required', 'numeric', 'min:0', 'max:5'],
-            'interaksi' => ['required', 'numeric', 'min:0', 'max:5'],
-            'coding' => ['required', 'numeric', 'min:0', 'max:5'],
+            'fokus' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
+            'robot_building' => ['nullable', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
+            'tools_management' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
+            'interaksi' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
+            'coding' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
             'notes' => ['nullable', 'string'],
         ];
     }

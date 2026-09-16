@@ -24,6 +24,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class GradeEntry extends Model
 {
+    /**
+     * B10: Skala nilai maksimum (0–5). Satu sumber kebenaran untuk
+     * konversi persentase di PHP dan frontend.
+     */
+    public const MAX_SCORE = 5.0;
+
     use SoftDeletes;
     protected function casts(): array
     {

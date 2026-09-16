@@ -78,8 +78,10 @@ class CommentController extends Controller
             [
                 'tutor_id' => $request->user()->role === 'tutor' ? $request->user()->id : null,
                 'academic_year' => $validated['academic_year'] ?? $existing->academic_year,
-                'tutor_comment' => $validated['tutor_comment'] ?? null,
-                'strengths' => $validated['strengths'] ?? null,
+                // R2: komentar personal disederhanakan jadi satu field "Catatan".
+                // tutor_comment & strengths dinull-kan; kolom DB dibiarkan untuk data lama.
+                'tutor_comment' => null,
+                'strengths' => null,
                 'notes' => $validated['notes'] ?? null,
                 // Jangan timpa system_comment lama kecuali dikirim eksplisit
                 'system_comment' => $validated['system_comment'] ?? $existing->system_comment,
@@ -153,6 +155,11 @@ class CommentController extends Controller
             $moduleNames = $entries->pluck('module.name')->unique()->filter()->values()->toArray();
 
             $template = CommentTemplate::getTemplateForAverage($average);
+            if (! $template) {
+                // Flash warning/error jika tidak ada template yang cocok sama sekali
+                session()->flash('error', 'Tidak ada template komentar aktif yang cocok untuk nilai rata-rata ' . $average . '. Silakan buat template baru terlebih dahulu.');
+            }
+
             $systemComment = $template
                 ? CommentTemplate::substitute($template, [
                     'modules' => $moduleNames,
@@ -193,10 +200,11 @@ class CommentController extends Controller
     {
         $validated = $request->validate([
             'grade_range' => ['required', Rule::in(['<4', '4-4.99', '5'])],
-            'category' => ['required', 'string', 'max:50'],
             'template' => ['required', 'string'],
         ]);
 
+        // R2: template hanya kategori 'umum'
+        $validated['category'] = 'umum';
         $validated['created_by'] = $request->user()->id;
         CommentTemplate::create($validated);
 
@@ -207,10 +215,11 @@ class CommentController extends Controller
     {
         $validated = $request->validate([
             'grade_range' => ['required', Rule::in(['<4', '4-4.99', '5'])],
-            'category' => ['required', 'string', 'max:50'],
             'template' => ['required', 'string'],
         ]);
 
+        // R2: template hanya kategori 'umum'
+        $validated['category'] = 'umum';
         $template->update($validated);
 
         return back()->with('success', 'Template komentar berhasil diperbarui.');

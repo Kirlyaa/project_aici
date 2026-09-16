@@ -1,8 +1,6 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useRef, useMemo, useState } from 'react';
 import FlashToast from '@/Components/FlashToast';
-import StudentLockBanner from '@/Components/StudentLockBanner';
-import { useStudentLock } from '@/Hooks/useStudentLock';
 import { SessionStatus } from '@/types/session';
 
 type DateStatus = SessionStatus | 'normal';
@@ -22,6 +20,7 @@ interface Student {
     id: number;
     name: string;
     email: string;
+    class?: string | null;
 }
 
 interface Module {
@@ -36,7 +35,7 @@ interface Props {
     student: Student;
     sessions: SessionData[];
     modules: Module[];
-    readOnly?: boolean;
+    students: Student[];
 }
 
 const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -57,9 +56,18 @@ function getSessionForDate(sessions: SessionData[], year: number, month: number,
     return sessions.find(s => (s.date ?? '').startsWith(iso));
 }
 
-export default function CalendarManager({ studentId, student, sessions, modules, readOnly = false }: Props) {
-    const { lock } = useStudentLock({ studentId, page: 'calendar' });
-    const isReadOnly = readOnly || lock?.locked === true;
+// R8: blok warna penuh per status, libur = BIRU
+const STATUS_BG: Record<SessionStatus, string> = {
+    hadir: 'bg-green-500 text-white',
+    libur: 'bg-blue-500 text-white',
+    absen: 'bg-red-500 text-white',
+    reschedule: 'bg-yellow-400 text-gray-900',
+    'akan-datang': 'bg-purple-400 text-white',
+};
+
+export default function SuperAdminCalendarManager({ studentId, student, sessions, modules, students }: Props) {
+    const { props } = usePage();
+    const csvErrors: string[] = (props as any).csv_errors ?? [];
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
@@ -68,6 +76,8 @@ export default function CalendarManager({ studentId, student, sessions, modules,
     const [dropdownModule, setDropdownModule] = useState<number | undefined>(undefined);
     const [dropdownTitle, setDropdownTitle] = useState('');
     const [saving, setSaving] = useState(false);
+    const [showCsvPanel, setShowCsvPanel] = useState(false);
+    const csvInputRef = useRef<HTMLInputElement>(null);
 
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -85,15 +95,6 @@ export default function CalendarManager({ studentId, student, sessions, modules,
 
     const prevMonth = () => setCurrentMonth(new Date(year, month - 1));
     const nextMonth = () => setCurrentMonth(new Date(year, month + 1));
-
-    // R8: blok warna penuh per status, libur = BIRU
-    const STATUS_BG: Record<SessionStatus, string> = {
-        hadir: 'bg-green-500 text-white',
-        libur: 'bg-blue-500 text-white',
-        absen: 'bg-red-500 text-white',
-        reschedule: 'bg-yellow-400 text-gray-900',
-        'akan-datang': 'bg-purple-400 text-white',
-    };
 
     const openDateEditor = (date: number) => {
         const existing = getSessionForDate(sessions, year, month, date);
@@ -127,7 +128,7 @@ export default function CalendarManager({ studentId, student, sessions, modules,
 
         if (dropdownStatus === 'normal') {
             if (existing) {
-                router.delete(`/tutor/calendar/${existing.id}`, {
+                router.delete(`/superadmin/calendar/${existing.id}`, {
                     preserveScroll: true,
                     onFinish,
                 });
@@ -147,16 +148,31 @@ export default function CalendarManager({ studentId, student, sessions, modules,
         };
 
         if (existing) {
-            router.put(`/tutor/calendar/${existing.id}`, payload, {
+            router.put(`/superadmin/calendar/${existing.id}`, payload, {
                 preserveScroll: true,
                 onFinish,
             });
         } else {
-            router.post('/tutor/calendar', payload, {
+            router.post('/superadmin/calendar', payload, {
                 preserveScroll: true,
                 onFinish,
             });
         }
+    };
+
+    const handleCsvUpload = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const file = csvInputRef.current?.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('csv_file', file);
+        router.post(`/superadmin/calendar/import-csv`, formData, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                if (csvInputRef.current) csvInputRef.current.value = '';
+            },
+        });
     };
 
     const calendarDays: (number | null)[] = [];
@@ -181,109 +197,152 @@ export default function CalendarManager({ studentId, student, sessions, modules,
     return (
         <div className="min-h-screen bg-gray-50">
             <FlashToast />
-            <Head title="Kelola Kalender" />
+            <Head title="Kelola Kalender — SuperAdmin" />
 
             <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <Link href="/tutor" className="text-gray-600 hover:text-gray-900">
+                            <Link href="/superadmin" className="text-gray-600 hover:text-gray-900">
                                 <i className="bi bi-arrow-left text-xl" />
                             </Link>
                             <div>
                                 <h1 className="font-bold text-lg">AICI</h1>
-                                <p className="text-xs text-gray-500">Kelola Kalender</p>
+                                <p className="text-xs text-gray-500">Kelola Kalender — SuperAdmin</p>
                             </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {/* Pilih murid lain */}
+                            <select
+                                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                value={studentId}
+                                onChange={e => router.get(`/superadmin/calendar/${e.target.value}`)}
+                            >
+                                {students.map(s => (
+                                    <option key={s.id} value={s.id}>{s.name} {s.class ? `(${s.class})` : ''}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>
             </nav>
 
             <div className="max-w-6xl mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Kelola Kalender Murid</h1>
-                    <p className="text-gray-600">Tandai tanggal libur, absen, reschedule, hadir, atau akan datang</p>
+                <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-1">Kelola Kalender Murid</h1>
+                        <p className="text-gray-600">Tandai tanggal libur, absen, reschedule, hadir, atau akan datang</p>
+                    </div>
+                    {/* R10: tombol Import CSV */}
+                    <button
+                        onClick={() => setShowCsvPanel(v => !v)}
+                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors text-sm"
+                    >
+                        <i className="bi bi-file-earmark-arrow-up" /> Import CSV
+                    </button>
                 </div>
 
-                <StudentLockBanner lock={lock} studentName={student.name} />
+                {/* R10: Panel Import CSV */}
+                {showCsvPanel && (
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+                        <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <i className="bi bi-file-earmark-arrow-up text-teal-600" /> Import Jadwal via CSV
+                        </h3>
+                        <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm font-mono text-gray-700 whitespace-pre">
+{`Format CSV (baris pertama = header):
+tanggal,status,judul,modul,email_murid
+
+Contoh:
+2025-09-01,hadir,Pengenalan Robotika,Robot Dasar,murid@email.com
+2025-09-08,libur,Libur Nasional,,,
+2025-09-15,akan-datang,Sesi Coding,,murid@email.com
+
+Keterangan:
+- tanggal: YYYY-MM-DD
+- status: hadir | absen | reschedule | libur | akan-datang
+- judul & modul: opsional
+- email_murid: harus terdaftar di sistem`}
+                        </div>
+                        <form onSubmit={handleCsvUpload} className="flex items-center gap-3">
+                            <input
+                                ref={csvInputRef}
+                                type="file"
+                                accept=".csv,.txt"
+                                className="text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-teal-50 file:text-teal-700 file:font-medium hover:file:bg-teal-100"
+                            />
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 text-sm"
+                            >
+                                Upload & Import
+                            </button>
+                        </form>
+                        {csvErrors.length > 0 && (
+                            <div className="mt-4 p-4 bg-red-50 rounded-lg">
+                                <p className="font-semibold text-red-700 mb-2">Error per baris:</p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    {csvErrors.map((err, i) => (
+                                        <li key={i} className="text-sm text-red-600">{err}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="grid lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <button
-                                onClick={prevMonth}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
+                            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                                 <i className="bi bi-chevron-left" />
                             </button>
-                            <h2 className="text-xl font-bold text-gray-900">
-                                {months[month]} {year}
-                            </h2>
-                            <button
-                                onClick={nextMonth}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
+                            <h2 className="text-xl font-bold text-gray-900">{months[month]} {year}</h2>
+                            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                                 <i className="bi bi-chevron-right" />
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-7 gap-2 mb-2">
+                        <div className="grid grid-cols-7 gap-1 mb-2">
                             {days.map(day => (
-                                <div key={day} className="text-center font-semibold text-gray-600 text-sm py-2">
-                                    {day}
-                                </div>
+                                <div key={day} className="text-center font-semibold text-gray-600 text-sm py-2">{day}</div>
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-7 gap-2">
+                        {/* R8: blok warna penuh */}
+                        <div className="grid grid-cols-7 gap-1">
                             {calendarDays.map((date, idx) => {
                                 if (date === null) {
                                     return <div key={idx} className="aspect-square" />;
                                 }
                                 const session = getSessionForDate(sessions, year, month, date);
-                                const colorClass = session ? STATUS_BG[session.status] : 'bg-gray-50 text-gray-700 hover:bg-teal-50';
+                                const colorClass = session ? STATUS_BG[session.status] : 'bg-gray-50 hover:bg-teal-50 text-gray-700';
                                 return (
                                     <button
                                         key={date}
                                         onClick={() => openDateEditor(date)}
-                                        disabled={isReadOnly}
-                                        title={session ? `${session.title} (${session.status})` : (isReadOnly ? 'Hanya bisa dilihat' : undefined)}
-                                        className={`aspect-square rounded-lg transition-all flex flex-col items-center justify-center relative font-medium text-sm p-1 ${colorClass} ${
-                                            isReadOnly ? 'cursor-default' : 'hover:opacity-90'
-                                        }`}
+                                        className={`aspect-square rounded-lg transition-all flex items-center justify-center font-medium text-sm ${colorClass} border border-transparent hover:border-teal-400`}
                                     >
-                                        <span className="font-bold text-xs">{date}</span>
-                                        {session && (
-                                            <span className="text-[10px] leading-tight truncate max-w-full text-center opacity-90 hidden sm:block">
-                                                {session.status}
-                                            </span>
-                                        )}
+                                        {date}
                                     </button>
                                 );
                             })}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-8 pt-6 border-t border-gray-200">
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-green-500 inline-block flex-shrink-0" />
-                                <span className="text-gray-700">Hadir</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-blue-500 inline-block flex-shrink-0" />
-                                <span className="text-gray-700">Libur</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-red-500 inline-block flex-shrink-0" />
-                                <span className="text-gray-700">Absen</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-yellow-400 inline-block flex-shrink-0" />
-                                <span className="text-gray-700">Reschedule</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-purple-400 inline-block flex-shrink-0" />
-                                <span className="text-gray-700">Akan Datang</span>
-                            </div>
+                        {/* Legenda */}
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-6 pt-4 border-t border-gray-200">
+                            {[
+                                { label: 'Hadir', cls: 'bg-green-500' },
+                                { label: 'Libur', cls: 'bg-blue-500' },
+                                { label: 'Absen', cls: 'bg-red-500' },
+                                { label: 'Reschedule', cls: 'bg-yellow-400' },
+                                { label: 'Akan Datang', cls: 'bg-purple-400' },
+                                { label: 'Normal', cls: 'bg-gray-100 border border-gray-300' },
+                            ].map(({ label, cls }) => (
+                                <div key={label} className="flex items-center gap-1.5 text-xs">
+                                    <div className={`w-4 h-4 rounded ${cls} flex-shrink-0`} />
+                                    <span className="text-gray-700">{label}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -300,88 +359,38 @@ export default function CalendarManager({ studentId, student, sessions, modules,
                         </div>
 
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <i className="bi bi-collection text-blue-600 text-xl" />
-                                Modul Tersedia
-                            </h3>
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                                {modules.length === 0 ? (
-                                    <p className="text-sm text-gray-500 italic">Belum ada modul.</p>
-                                ) : (
-                                    modules.map(m => (
-                                        <div key={m.id} className="p-3 bg-gray-50 rounded-lg text-sm flex gap-3">
-                                            <div className="w-12 h-12 rounded bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                                {m.image?.startsWith('data:') || m.image?.startsWith('http') ? (
-                                                    <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <span className="text-xl">{m.image || '📘'}</span>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-900">{m.name}</p>
-                                                {m.module_type && (
-                                                    <p className="text-xs text-gray-600">{m.module_type}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                                 <i className="bi bi-bar-chart text-orange-600 text-xl" />
                                 Ringkasan Bulan Ini
                             </h3>
                             <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-sm">Total Sesi</span>
-                                    <span className="font-bold text-gray-900">{monthSessions.length}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-check-circle-fill text-green-600" /> Hadir
-                                    </span>
-                                    <span className="font-bold text-green-600">{statusCounts.hadir}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-bookmark-fill text-orange-600" /> Libur
-                                    </span>
-                                    <span className="font-bold text-orange-600">{statusCounts.libur}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-x-circle-fill text-red-600" /> Absen
-                                    </span>
-                                    <span className="font-bold text-red-600">{statusCounts.absen}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-arrow-clockwise text-yellow-600" /> Reschedule
-                                    </span>
-                                    <span className="font-bold text-yellow-600">{statusCounts.reschedule}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <i className="bi bi-calendar-check-fill text-blue-600" /> Akan Datang
-                                    </span>
-                                    <span className="font-bold text-blue-600">{statusCounts['akan-datang']}</span>
-                                </div>
+                                {[
+                                    { label: 'Total Sesi', value: monthSessions.length, color: 'text-gray-900' },
+                                    { label: 'Hadir', value: statusCounts.hadir, color: 'text-green-600' },
+                                    { label: 'Libur', value: statusCounts.libur, color: 'text-blue-600' },
+                                    { label: 'Absen', value: statusCounts.absen, color: 'text-red-600' },
+                                    { label: 'Reschedule', value: statusCounts.reschedule, color: 'text-yellow-600' },
+                                    { label: 'Akan Datang', value: statusCounts['akan-datang'], color: 'text-purple-600' },
+                                ].map(({ label, value, color }) => (
+                                    <div key={label} className="flex justify-between items-center">
+                                        <span className="text-gray-600 text-sm">{label}</span>
+                                        <span className={`font-bold ${color}`}>{value}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
                         <Link
-                            href="/tutor"
+                            href="/superadmin"
                             className="block text-center px-4 py-2 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
                         >
-                            <i className="bi bi-arrow-left mr-2" /> Kembali
+                            <i className="bi bi-arrow-left mr-2" /> Kembali ke Dashboard
                         </Link>
                     </div>
                 </div>
             </div>
 
+            {/* Modal edit tanggal */}
             {showDropdown && selectedDate !== null && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
@@ -441,9 +450,8 @@ export default function CalendarManager({ studentId, student, sessions, modules,
                             <div className="flex gap-2 pt-4">
                                 <button
                                     onClick={saveDateMark}
-                                    disabled={saving || isReadOnly}
-                                    title={isReadOnly ? 'Murid ini sedang dibuka oleh tutor lain' : undefined}
-                                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={saving}
+                                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50"
                                 >
                                     {saving ? 'Menyimpan...' : 'Simpan'}
                                 </button>

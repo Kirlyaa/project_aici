@@ -38,6 +38,8 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error'   => $request->session()->get('error'),
             ],
+            'supportEmail' => config('app.support_email'),
+            'gradeScale' => \App\Models\GradeEntry::MAX_SCORE,
         ];
     }
 }

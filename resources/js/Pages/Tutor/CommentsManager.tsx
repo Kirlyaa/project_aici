@@ -35,7 +35,6 @@ const GRADE_RANGES = ['<4', '4-4.99', '5'] as const;
 
 const emptyTemplateForm = {
     grade_range: '<4' as (typeof GRADE_RANGES)[number],
-    category: 'umum',
     template: '',
 };
 
@@ -46,8 +45,6 @@ export default function CommentsManager() {
     const isReadOnly = lock?.locked === true;
 
     const [commentForm, setCommentForm] = useState({
-        general: '',
-        strengths: '',
         notes: '',
     });
 
@@ -57,8 +54,6 @@ export default function CommentsManager() {
     });
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState({
-        tutor_comment: '',
-        strengths: '',
         notes: '',
     });
 
@@ -68,16 +63,14 @@ export default function CommentsManager() {
 
     const savePersonalComment = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!commentForm.general.trim() && !commentForm.strengths.trim() && !commentForm.notes.trim()) return;
+        if (!commentForm.notes.trim()) return;
 
         router.post('/tutor/comments', {
             student_id: studentId,
             semester: selectedSemester,
-            tutor_comment: commentForm.general,
-            strengths: commentForm.strengths,
             notes: commentForm.notes,
         }, {
-            onSuccess: () => setCommentForm({ general: '', strengths: '', notes: '' }),
+            onSuccess: () => setCommentForm({ notes: '' }),
         });
     };
 
@@ -88,13 +81,11 @@ export default function CommentsManager() {
         router.post('/tutor/comments', {
             student_id: studentId,
             semester: comment.semester,
-            tutor_comment: editForm.tutor_comment,
-            strengths: editForm.strengths,
             notes: editForm.notes,
         }, {
             onSuccess: () => {
                 setEditingId(null);
-                setEditForm({ tutor_comment: '', strengths: '', notes: '' });
+                setEditForm({ notes: '' });
             },
         });
     };
@@ -113,7 +104,7 @@ export default function CommentsManager() {
 
     const openTemplateEdit = (t: Template) => {
         setEditingTemplateId(t.id);
-        setTemplateForm({ grade_range: t.grade_range as (typeof GRADE_RANGES)[number], category: t.category, template: t.template });
+        setTemplateForm({ grade_range: t.grade_range as (typeof GRADE_RANGES)[number], template: t.template });
         setShowSystemTemplateForm(true);
     };
 
@@ -121,12 +112,18 @@ export default function CommentsManager() {
         e.preventDefault();
         if (!templateForm.template.trim()) return;
 
+        const payload = {
+            grade_range: templateForm.grade_range,
+            category: 'umum',
+            template: templateForm.template,
+        };
+
         if (editingTemplateId !== null) {
-            router.put(`/tutor/comment-templates/${editingTemplateId}`, templateForm, {
+            router.put(`/tutor/comment-templates/${editingTemplateId}`, payload, {
                 onSuccess: () => setShowSystemTemplateForm(false),
             });
         } else {
-            router.post('/tutor/comment-templates', templateForm, {
+            router.post('/tutor/comment-templates', payload, {
                 onSuccess: () => setShowSystemTemplateForm(false),
             });
         }
@@ -177,29 +174,17 @@ export default function CommentsManager() {
                             </h3>
 
                             <form onSubmit={saveTemplate} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Range Nilai</label>
-                                        <select
-                                            value={templateForm.grade_range}
-                                            onChange={e => setTemplateForm({ ...templateForm, grade_range: e.target.value as (typeof GRADE_RANGES)[number] })}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            {GRADE_RANGES.map(r => (
-                                                <option key={r} value={r}>{r === '<4' ? 'Di bawah 4' : r === '4-4.99' ? '4 - 4.99' : '5 (Sempurna)'}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Kategori</label>
-                                        <input
-                                            type="text"
-                                            value={templateForm.category}
-                                            onChange={e => setTemplateForm({ ...templateForm, category: e.target.value })}
-                                            placeholder="umum"
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Range Nilai</label>
+                                    <select
+                                        value={templateForm.grade_range}
+                                        onChange={e => setTemplateForm({ ...templateForm, grade_range: e.target.value as (typeof GRADE_RANGES)[number] })}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        {GRADE_RANGES.map(r => (
+                                            <option key={r} value={r}>{r === '<4' ? 'Di bawah 4' : r === '4-4.99' ? '4 - 4.99' : '5 (Sempurna)'}</option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div>
@@ -240,33 +225,7 @@ export default function CommentsManager() {
                         Tambah Komentar Personal
                     </h2>
                     <form onSubmit={savePersonalComment} className="space-y-4">
-                        {/* Analisis Umum */}
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
-                                <i className="bi bi-journal-text text-teal-600" /> Analisis Umum
-                            </label>
-                            <textarea
-                                value={commentForm.general}
-                                onChange={e => setCommentForm({ ...commentForm, general: e.target.value })}
-                                placeholder="Analisis umum mengenai perkembangan dan pemahaman konsep murid..."
-                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none h-20"
-                            />
-                        </div>
-
-                        {/* Kelebihan */}
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
-                                <i className="bi bi-check-circle-fill text-emerald-600" /> Kelebihan
-                            </label>
-                            <textarea
-                                value={commentForm.strengths}
-                                onChange={e => setCommentForm({ ...commentForm, strengths: e.target.value })}
-                                placeholder="Kelebihan yang menonjol (misal: aktif bertanya, logika coding cepat, perakitan teliti)..."
-                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none h-20"
-                            />
-                        </div>
-
-                        {/* Catatan / Area Peningkatan */}
+                        {/* Catatan & Rekomendasi */}
                         <div>
                             <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
                                 <i className="bi bi-exclamation-triangle-fill text-amber-600" /> Catatan & Rekomendasi
@@ -382,8 +341,6 @@ export default function CommentsManager() {
                                                 onClick={() => {
                                                     setEditingId(comment.id);
                                                     setEditForm({
-                                                        tutor_comment: comment.tutorComment ?? '',
-                                                        strengths: comment.strengths ?? '',
                                                         notes: comment.notes ?? '',
                                                     });
                                                 }}
@@ -417,23 +374,7 @@ export default function CommentsManager() {
                                 {editingId === comment.id ? (
                                     <div className="space-y-3 pt-2">
                                         <div>
-                                            <label className="block text-xs font-semibold text-gray-700 mb-1">Analisis Umum:</label>
-                                            <textarea
-                                                value={editForm.tutor_comment}
-                                                onChange={e => setEditForm({ ...editForm, tutor_comment: e.target.value })}
-                                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none h-16"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-700 mb-1">Kelebihan:</label>
-                                            <textarea
-                                                value={editForm.strengths}
-                                                onChange={e => setEditForm({ ...editForm, strengths: e.target.value })}
-                                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none h-16"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-700 mb-1">Catatan:</label>
+                                            <label className="block text-xs font-semibold text-gray-700 mb-1">Catatan & Rekomendasi:</label>
                                             <textarea
                                                 value={editForm.notes}
                                                 onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
@@ -460,24 +401,10 @@ export default function CommentsManager() {
                                 ) : (
                                     /* Tutor Comment (Display Mode) */
                                     <div className="space-y-2">
-                                        {comment.tutorComment && (
-                                            <div className="bg-[#f2f8f8] border-l-4 border-[#034d52] p-3 rounded-r-lg">
-                                                <p className="text-xs font-bold text-gray-900 mb-0.5">Analisis Umum</p>
-                                                <p className="text-xs text-gray-700">{comment.tutorComment}</p>
-                                            </div>
-                                        )}
-                                        {comment.strengths && (
-                                            <div className="bg-[#f0faf2] border-l-4 border-emerald-600 p-3 rounded-r-lg">
-                                                <p className="text-xs font-bold text-emerald-800 mb-0.5 flex items-center gap-1">
-                                                    <i className="bi bi-check-circle-fill text-emerald-600" /> Kelebihan
-                                                </p>
-                                                <p className="text-xs text-gray-700">{comment.strengths}</p>
-                                            </div>
-                                        )}
                                         {comment.notes && (
                                             <div className="bg-[#fffdf2] border-l-4 border-amber-600 p-3 rounded-r-lg">
                                                 <p className="text-xs font-bold text-amber-800 mb-0.5 flex items-center gap-1">
-                                                    <i className="bi bi-exclamation-triangle-fill text-amber-600" /> Catatan
+                                                    <i className="bi bi-exclamation-triangle-fill text-amber-600" /> Catatan & Rekomendasi
                                                 </p>
                                                 <p className="text-xs text-gray-700">{comment.notes}</p>
                                             </div>

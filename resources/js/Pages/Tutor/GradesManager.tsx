@@ -55,7 +55,9 @@ const getCategoryColor = (cat: string): string => {
 };
 
 export default function GradesManager() {
-    const { studentId, student, gradeEntries, modules, averages } = usePage().props as unknown as Props;
+    const pageProps = usePage().props as unknown as Props & { gradeScale?: number };
+    const { studentId, student, gradeEntries, modules, averages } = pageProps;
+    const gradeScale = pageProps.gradeScale ?? 5;
 
     const { lock } = useStudentLock({ studentId, page: 'grades' });
     const isReadOnly = lock?.locked === true;
@@ -362,8 +364,8 @@ export default function GradesManager() {
                                     const avgValue = categoryValues.length > 0 
                                         ? categoryValues.reduce((a, b) => a + b, 0) / categoryValues.length 
                                         : 0;
-                                    const percentage = (avgValue / 5) * 100;
-                                    const barHeight = (avgValue / 5) * 200;
+                                    const percentage = (avgValue / gradeScale) * 100;
+                                    const barHeight = (avgValue / gradeScale) * 200;
 
                                     return (
                                         <div key={cat} className="flex flex-col items-center gap-2">
@@ -399,7 +401,7 @@ export default function GradesManager() {
                                     const avgValue = categoryValues.length > 0 
                                         ? categoryValues.reduce((a, b) => a + b, 0) / categoryValues.length 
                                         : 0;
-                                    const percentage = (avgValue / 5) * 100;
+                                    const percentage = (avgValue / gradeScale) * 100;
 
                                     return (
                                         <div key={cat}>

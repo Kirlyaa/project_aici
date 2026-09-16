@@ -17,8 +17,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'contact_person',
     'contact_phone',
     'status',
-    'total_students',
-    'total_tutors',
     'notes',
 ])]
 class School extends Model

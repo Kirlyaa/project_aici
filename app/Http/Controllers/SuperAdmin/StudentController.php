@@ -40,6 +40,7 @@ class StudentController extends Controller
                     'createdAt' => $u->created_at?->toDateString(),
                     'tutorName' => $u->tutor?->name,
                     'tutorId' => $u->tutor_id,
+                    'class' => $u->class,
                     'sessionsCount' => $u->learning_sessions_count,
                     'gradesCount' => $u->grade_entries_count,
                 ];
@@ -69,6 +70,7 @@ class StudentController extends Controller
             'role' => 'user',
             'status' => $validated['status'] ?? 'aktif',
             'tutor_id' => $validated['tutor_id'] ?? null,
+            'class' => $validated['class'] ?? null,
         ]);
         return back()->with('success', 'Murid berhasil ditambahkan.');
     }
@@ -82,6 +84,7 @@ class StudentController extends Controller
             'role' => 'user',
             'status' => $validated['status'] ?? $student->status,
             'tutor_id' => $validated['tutor_id'] ?? null,
+            'class' => $validated['class'] ?? $student->class,
         ]);
         if (! empty($validated['password'])) {
             $student->update(['password' => Hash::make($validated['password'])]);

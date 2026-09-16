@@ -25,7 +25,7 @@ class StoreModuleRequest extends FormRequest
             'image' => ['nullable', 'string', 'max:255'],
             'tools' => ['nullable', 'array'],
             'tools.*' => ['string', 'max:255'],
-            'module_type' => ['required', Rule::in([4, 5])],
+            'module_type' => ['required', Rule::in(['robot', 'coding', 'general'])],
             'format' => ['nullable', 'string', 'max:50'],
             'size' => ['nullable', 'string', 'max:50'],
         ];
