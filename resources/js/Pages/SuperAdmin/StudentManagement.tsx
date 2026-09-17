@@ -244,25 +244,75 @@ export default function StudentManagement() {
                                                 </button>
                                             </td>
                                             <td className="px-4 py-4">
-                                                <div className="flex items-center justify-center gap-2">
+                                                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                                    {/* Detail & Kelola Akun */}
+                                                    <Link
+                                                        href={`/superadmin/students/${student.id}`}
+                                                        className="p-1.5 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+                                                        title="Detail & Ringkasan Siswa"
+                                                    >
+                                                        <i className="bi bi-eye-fill" />
+                                                    </Link>
+
+                                                    {/* Kelola Nilai (Tutor & SuperAdmin) */}
+                                                    <Link
+                                                        href={`/tutor/grades/${student.id}`}
+                                                        className="p-1.5 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                                                        title="Input & Kelola Nilai"
+                                                    >
+                                                        <i className="bi bi-pencil-square" />
+                                                    </Link>
+
+                                                    {/* Kelola Komentar (Tutor & SuperAdmin) */}
+                                                    <Link
+                                                        href={`/tutor/comments/${student.id}`}
+                                                        className="p-1.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                                                        title="Komentar Tutor & Evaluasi"
+                                                    >
+                                                        <i className="bi bi-chat-left-text" />
+                                                    </Link>
+
+                                                    {/* Laporan Nilai Siswa */}
+                                                    <Link
+                                                        href={`/superadmin/students/${student.id}/report`}
+                                                        className="p-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                                                        title="Lihat Laporan Nilai Siswa"
+                                                    >
+                                                        <i className="bi bi-bar-chart-line" />
+                                                    </Link>
+
+                                                    {/* PDF Rapor */}
+                                                    <Link
+                                                        href={`/superadmin/students/${student.id}/pdf`}
+                                                        className="p-1.5 text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors"
+                                                        title="Lihat & Cetak PDF Rapor"
+                                                    >
+                                                        <i className="bi bi-file-earmark-pdf" />
+                                                    </Link>
+
+                                                    {/* Kelola Kalender */}
                                                     <Link
                                                         href={`/superadmin/calendar/${student.id}`}
-                                                        className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
-                                                        title="Kelola Kalender"
+                                                        className="p-1.5 text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+                                                        title="Kelola Kalender Jadwal"
                                                     >
                                                         <i className="bi bi-calendar3" />
                                                     </Link>
+
+                                                    {/* Edit Info Akun */}
                                                     <button
                                                         onClick={() => openModal(student)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Edit"
+                                                        className="p-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                                        title="Edit Akun"
                                                     >
                                                         <i className="bi bi-pencil-fill" />
                                                     </button>
+
+                                                    {/* Hapus Akun */}
                                                     <button
                                                         onClick={() => deleteStudent(student.id)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Hapus"
+                                                        className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                                        title="Hapus Akun"
                                                     >
                                                         <i className="bi bi-trash-fill" />
                                                     </button>

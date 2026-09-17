@@ -14,6 +14,27 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ExportController extends Controller
 {
     /**
+     * Sanitize cell content to prevent CSV Formula Injection (=, +, -, @, \t, \r)
+     */
+    private static function sanitize(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        if (preg_match('/^[=\+\-@\t\r]/', $value)) {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+
+    private static function putCsv($file, array $row): void
+    {
+        fputcsv($file, array_map([self::class, 'sanitize'], $row));
+    }
+
+    /**
      * Export students to CSV
      */
     public function students(Request $request): StreamedResponse
@@ -43,7 +64,7 @@ class ExportController extends Controller
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
 
             // Header row
-            fputcsv($file, [
+            self::putCsv($file, [
                 'ID',
                 'Nama',
                 'Email',
@@ -59,7 +80,7 @@ class ExportController extends Controller
             $query->with(['school', 'tutor'])->chunk(500, function ($students) use ($file) {
                 foreach ($students as $student) {
                     $avgGrade = $student->gradeEntries()->avg('average') ?? 0;
-                    fputcsv($file, [
+                    self::putCsv($file, [
                         $student->id,
                         $student->name,
                         $student->email,
@@ -106,7 +127,7 @@ class ExportController extends Controller
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            fputcsv($file, [
+            self::putCsv($file, [
                 'ID',
                 'Nama',
                 'Email',
@@ -117,7 +138,7 @@ class ExportController extends Controller
             ]);
 
             foreach ($tutors as $tutor) {
-                fputcsv($file, [
+                self::putCsv($file, [
                     $tutor->id,
                     $tutor->name,
                     $tutor->email,
@@ -155,7 +176,7 @@ class ExportController extends Controller
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            fputcsv($file, [
+            self::putCsv($file, [
                 'ID',
                 'Nama Sekolah',
                 'Kota',
@@ -171,7 +192,7 @@ class ExportController extends Controller
             ]);
 
             foreach ($schools as $school) {
-                fputcsv($file, [
+                self::putCsv($file, [
                     $school->id,
                     $school->name,
                     $school->city ?? '-',
@@ -219,12 +240,12 @@ class ExportController extends Controller
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            fputcsv($file, ["Laporan Nilai Siswa: {$student->name}"]);
-            fputcsv($file, ["Email: {$student->email}"]);
-            fputcsv($file, ["Tanggal Export: " . date('Y-m-d H:i:s')]);
-            fputcsv($file, []);
+            self::putCsv($file, ["Laporan Nilai Siswa: {$student->name}"]);
+            self::putCsv($file, ["Email: {$student->email}"]);
+            self::putCsv($file, ["Tanggal Export: " . date('Y-m-d H:i:s')]);
+            self::putCsv($file, []);
 
-            fputcsv($file, [
+            self::putCsv($file, [
                 'Pertemuan',
                 'Modul',
                 'Tanggal',
@@ -238,7 +259,7 @@ class ExportController extends Controller
             ]);
 
             foreach ($grades as $grade) {
-                fputcsv($file, [
+                self::putCsv($file, [
                     $grade->meeting_number,
                     $grade->module?->name ?? 'General',
                     $grade->meeting_date?->toDateString() ?? '-',
@@ -283,12 +304,12 @@ class ExportController extends Controller
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            fputcsv($file, ["Komentar Siswa: {$student->name}"]);
-            fputcsv($file, ["Email: {$student->email}"]);
-            fputcsv($file, ["Tanggal Export: " . date('Y-m-d H:i:s')]);
-            fputcsv($file, []);
+            self::putCsv($file, ["Komentar Siswa: {$student->name}"]);
+            self::putCsv($file, ["Email: {$student->email}"]);
+            self::putCsv($file, ["Tanggal Export: " . date('Y-m-d H:i:s')]);
+            self::putCsv($file, []);
 
-            fputcsv($file, [
+            self::putCsv($file, [
                 'Semester',
                 'Tahun Akademik',
                 'Rata-rata Nilai',
@@ -300,7 +321,7 @@ class ExportController extends Controller
             ]);
 
             foreach ($comments as $comment) {
-                fputcsv($file, [
+                self::putCsv($file, [
                     $comment->semester,
                     $comment->academic_year ?? '-',
                     $comment->average_grade ?? '-',

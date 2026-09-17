@@ -252,9 +252,9 @@ export default function TutorDashboard() {
                                             <p className="text-sm text-gray-600 mb-1">Absen</p>
                                             <p className="text-2xl font-bold text-red-600">{currentStudent.absen}</p>
                                         </div>
-                                        <div className="p-4 bg-yellow-50 rounded-lg">
+                                        <div className="p-4 bg-blue-50 rounded-lg">
                                             <p className="text-sm text-gray-600 mb-1">Akan Datang</p>
-                                            <p className="text-2xl font-bold text-yellow-600">{currentStudent.akanDatang}</p>
+                                            <p className="text-2xl font-bold text-blue-600">{currentStudent.akanDatang}</p>
                                         </div>
                                     </div>
                                 </div>

@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         // Call tutor seeder
         $this->call([
             TutorSeeder::class,
+            ClassroomSeeder::class,
             CommentTemplateSeeder::class,
             LearningSessionSeeder::class,
             AiraLearningSessionSeeder::class,

@@ -13,9 +13,13 @@ export default function Profil() {
     const auth = (props as any).auth;
     const studentStats = (props as any).studentStats;
     const gradeScale: number = (props as any).gradeScale ?? 5;
+    const pdfRanges: Array<{ key: string; label: string; start: number; end: number }> =
+        (props as any).pdfRanges ?? [];
 
     const userName = studentStats?.name || auth?.user?.name || 'Siswa AICI';
     const [activeTab, setActiveTab] = useState<'robot' | 'focus'>('robot');
+    const [showPdfModal, setShowPdfModal] = useState(false);
+    const [selectedRange, setSelectedRange] = useState<string>('all');
 
     const scores = studentStats?.scores ?? {
         interaction: 0,
@@ -199,16 +203,107 @@ export default function Profil() {
 
                 {/* Red Action Button at Bottom Left */}
                 <div className="pt-2">
-                    <a
-                        href="/profil/pdf"
-                        target="_blank"
+                    <button
+                        type="button"
+                        onClick={() => setShowPdfModal(true)}
                         className="inline-flex items-center gap-2 bg-[#b91c1c] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-red-800 transition-colors text-xs sm:text-sm shadow-md"
                     >
-                        <i className="bi bi-file-earmark-text-fill text-base" />
-                        Lihat Detail Lengkap
-                    </a>
+                        <i className="bi bi-file-earmark-pdf-fill text-base" />
+                        Cetak Rapor PDF / Detail Lengkap
+                    </button>
                 </div>
             </div>
+
+            {/* Modal Pilihan Rentang Pertemuan PDF */}
+            {showPdfModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-150">
+                        <div className="flex items-center justify-between border-b pb-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                    <i className="bi bi-file-earmark-pdf-fill text-lg" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-base text-gray-900">Pilih Periode Rapor PDF</h3>
+                                    <p className="text-xs text-gray-500">Pilih rentang pertemuan nilai yang ingin dihitung & dicetak</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowPdfModal(false)}
+                                className="text-gray-400 hover:text-gray-600 p-1"
+                            >
+                                <i className="bi bi-x-lg" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                                Rentang Pertemuan Tersedia
+                            </label>
+
+                            {pdfRanges.length > 0 ? (
+                                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                    {pdfRanges.map(r => (
+                                        <label
+                                            key={r.key}
+                                            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                                selectedRange === r.key
+                                                    ? 'border-red-600 bg-red-50/70 text-red-900 ring-1 ring-red-500'
+                                                    : 'border-gray-200 hover:bg-gray-50 text-gray-800'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="radio"
+                                                    name="pdf_range"
+                                                    value={r.key}
+                                                    checked={selectedRange === r.key}
+                                                    onChange={() => setSelectedRange(r.key)}
+                                                    className="w-4 h-4 text-red-600 focus:ring-red-500"
+                                                />
+                                                <div>
+                                                    <p className="font-bold text-xs">{r.label}</p>
+                                                    <p className="text-[11px] text-gray-500">
+                                                        {r.key === 'all'
+                                                            ? 'Rata-rata kumulatif seluruh pertemuan murid'
+                                                            : `Rata-rata 4 pertemuan (${r.start} s/d ${r.end})`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-600">
+                                                {r.key === 'all' ? 'Semua' : '4 Pertemuan'}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-gray-50 rounded-xl text-center text-xs text-gray-500">
+                                    Belum ada data pertemuan nilai untuk murid ini.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-2 border-t">
+                            <button
+                                type="button"
+                                onClick={() => setShowPdfModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50"
+                            >
+                                Batal
+                            </button>
+                            <a
+                                href={`/profil/pdf?range=${selectedRange}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => setShowPdfModal(false)}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-sm inline-flex items-center gap-1.5"
+                            >
+                                <i className="bi bi-printer-fill" /> Buka & Cetak PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </UserLayout>
     );
 }

@@ -244,45 +244,58 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
 
                 {/* R10: Panel Import CSV */}
                 {showCsvPanel && (
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-                        <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                            <i className="bi bi-file-earmark-arrow-up text-teal-600" /> Import Jadwal via CSV
-                        </h3>
-                        <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm font-mono text-gray-700 whitespace-pre">
-{`Format CSV (baris pertama = header):
-tanggal,status,judul,modul,email_murid
-
-Contoh:
-2025-09-01,hadir,Pengenalan Robotika,Robot Dasar,murid@email.com
-2025-09-08,libur,Libur Nasional,,,
-2025-09-15,akan-datang,Sesi Coding,,murid@email.com
-
-Keterangan:
-- tanggal: YYYY-MM-DD
-- status: hadir | absen | reschedule | libur | akan-datang
-- judul & modul: opsional
-- email_murid: harus terdaftar di sistem`}
+                    <div className="bg-white rounded-xl border border-teal-100 shadow-sm p-6 mb-6">
+                        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                            <h3 className="font-bold text-gray-900 flex items-center gap-2 text-base">
+                                <i className="bi bi-file-earmark-arrow-up text-teal-600 text-lg" /> Import Jadwal Kalender Secara Massal (CSV)
+                            </h3>
+                            <a
+                                href="/superadmin/calendar/template"
+                                download
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition"
+                            >
+                                <i className="bi bi-download" /> Download Template CSV
+                            </a>
                         </div>
-                        <form onSubmit={handleCsvUpload} className="flex items-center gap-3">
+                        
+                        <p className="text-sm text-gray-600 mb-3">
+                            Fitur ini memungkinkan Anda memasukkan puluhan atau ratusan jadwal pertemuan murid sekaligus dalam 1 kali upload file spreadsheet / CSV.
+                        </p>
+
+                        <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-700 leading-relaxed overflow-x-auto">
+                            <div className="font-bold text-slate-800 mb-1 font-sans">Format Kolom Header (Baris Pertama):</div>
+                            <div className="text-teal-700 font-bold mb-2">tanggal,status,judul,modul,email_murid</div>
+                            <div className="text-slate-600 font-sans space-y-1">
+                                <div>• <strong>tanggal</strong>: Format <code className="bg-slate-200 px-1 py-0.5 rounded">YYYY-MM-DD</code> (contoh: 2026-10-05) atau <code className="bg-slate-200 px-1 py-0.5 rounded">DD/MM/YYYY</code></div>
+                                <div>• <strong>status</strong>: <code className="bg-slate-200 px-1 py-0.5 rounded">hadir</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">absen</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">reschedule</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">libur</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">akan-datang</code></div>
+                                <div>• <strong>judul</strong>: Nama topik/judul sesi (bebas atau boleh kosong)</div>
+                                <div>• <strong>modul</strong>: Nama modul (opsional, jika cocok akan otomatis dihubungkan)</div>
+                                <div>• <strong>email_murid</strong>: Alamat email murid yang terdaftar di sistem</div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleCsvUpload} className="flex flex-wrap items-center gap-3">
                             <input
                                 ref={csvInputRef}
                                 type="file"
                                 accept=".csv,.txt"
-                                className="text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-teal-50 file:text-teal-700 file:font-medium hover:file:bg-teal-100"
+                                className="text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-50 file:text-teal-700 file:font-semibold hover:file:bg-teal-100 cursor-pointer"
                             />
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 text-sm"
+                                className="px-5 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 text-sm shadow-sm transition"
                             >
-                                Upload & Import
+                                <i className="bi bi-cloud-arrow-up mr-1.5" /> Upload & Impor Sekarang
                             </button>
                         </form>
                         {csvErrors.length > 0 && (
-                            <div className="mt-4 p-4 bg-red-50 rounded-lg">
-                                <p className="font-semibold text-red-700 mb-2">Error per baris:</p>
-                                <ul className="list-disc list-inside space-y-1">
+                            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="font-semibold text-red-700 mb-2 flex items-center gap-1.5 text-sm">
+                                    <i className="bi bi-exclamation-triangle-fill" /> Rincian Peringatan / Baris yang Dilewati:
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto">
                                     {csvErrors.map((err, i) => (
-                                        <li key={i} className="text-sm text-red-600">{err}</li>
+                                        <li key={i} className="text-xs text-red-600">{err}</li>
                                     ))}
                                 </ul>
                             </div>

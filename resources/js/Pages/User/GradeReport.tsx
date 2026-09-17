@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import UserLayout from '@/Layouts/UserLayout';
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, BarChart, Bar } from 'recharts';
 
@@ -49,7 +49,8 @@ interface Props {
 }
 
 export default function GradeReport() {
-    const { gradeEntries, stats, byModule, student } = usePage().props as unknown as Props;
+    const { gradeEntries, stats, byModule, student, auth } = usePage().props as unknown as Props & { auth: any };
+    const isSuperAdmin = auth?.user?.role === 'superadmin';
 
     // Data untuk chart - trend nilai
     const chartData = gradeEntries
@@ -78,11 +79,51 @@ export default function GradeReport() {
 
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* SuperAdmin Back & Quick Links Bar */}
+                    {isSuperAdmin && (
+                        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-blue-200 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href={`/superadmin/students/${student.id}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-lg transition"
+                                >
+                                    <i className="bi bi-arrow-left" /> Detail Siswa
+                                </Link>
+                                <Link
+                                    href="/superadmin/students"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-lg transition"
+                                >
+                                    <i className="bi bi-people" /> Semua Murid
+                                </Link>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href={`/tutor/grades/${student.id}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+                                >
+                                    <i className="bi bi-pencil-square" /> Edit Nilai
+                                </Link>
+                                <Link
+                                    href={`/tutor/comments/${student.id}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition"
+                                >
+                                    <i className="bi bi-chat-left-text" /> Kelola Komentar
+                                </Link>
+                                <Link
+                                    href={`/superadmin/students/${student.id}/pdf`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg transition"
+                                >
+                                    <i className="bi bi-file-earmark-pdf" /> PDF Rapor
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-4xl font-bold text-gray-900 mb-2">Laporan Nilai</h1>
                         <p className="text-gray-600">
-                            Pantau progres pembelajaran Anda {student.name}
+                            Pantau progres pembelajaran {student.name}
                         </p>
                     </div>
 

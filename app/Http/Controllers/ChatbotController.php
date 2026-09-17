@@ -102,7 +102,8 @@ class ChatbotController extends Controller
         try {
             $response = Http::timeout(15)->withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post('https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':generateContent?key=' . $apiKey, [
+                'x-goog-api-key' => $apiKey,
+            ])->post('https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':generateContent', [
                 'contents' => $messages,
                 'systemInstruction' => [
                     'parts' => [['text' => $systemInstruction]],

@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import Card from '@/Components/UI/Card';
 import ProgressBar from '@/Components/UI/ProgressBar';
 
@@ -13,10 +13,20 @@ interface Props {
         averagePercentage: number;
         comment: { system: string | null; notes: string | null };
     };
+    filterInfo?: {
+        selectedRange: string;
+        activeLabel: string;
+        meetingCount: number;
+        availableRanges: Array<{ key: string; label: string; start: number; end: number }>;
+    };
 }
 
 export default function ProfilPDF() {
-    const { auth, studentStats } = usePage().props as any as { auth: any; studentStats: Props['studentStats'] };
+    const { auth, studentStats, filterInfo } = usePage().props as any as {
+        auth: any;
+        studentStats: Props['studentStats'];
+        filterInfo?: Props['filterInfo'];
+    };
 
     const userName = studentStats?.name || auth?.user?.name || 'Siswa AICI';
     const stats = studentStats ?? {
@@ -31,6 +41,7 @@ export default function ProfilPDF() {
     };
 
     const { attendance, scores } = stats;
+    const isSuperAdmin = auth?.user?.role === 'superadmin';
 
     return (
         <>
@@ -38,20 +49,63 @@ export default function ProfilPDF() {
 
             <div className="bg-white min-h-screen">
                 <div className="max-w-4xl mx-auto p-8">
+                    {/* SuperAdmin Navigation Banner */}
+                    {isSuperAdmin && (
+                        <div className="print:hidden mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href="/superadmin/students"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-800 text-xs font-semibold rounded-lg transition"
+                                >
+                                    <i className="bi bi-arrow-left" /> Kelola Murid
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() => window.history.back()}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-800 text-xs font-semibold rounded-lg transition"
+                                >
+                                    Kembali
+                                </button>
+                            </div>
+                            <span className="text-xs font-medium text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200">
+                                Mode Tinjau SuperAdmin
+                            </span>
+                        </div>
+                    )}
+
                     {/* Header Card */}
                     <Card className="p-6 mb-6 bg-gradient-to-r from-teal-600 to-teal-700 text-white">
-                        <p className="text-teal-100 text-sm mb-1">Peserta Program</p>
-                        <h1 className="text-3xl font-bold mb-1">{userName}</h1>
-                        <p className="text-teal-100 mb-4">{stats.class ?? 'Belum ada kelas'}</p>
-                        <div className="flex flex-wrap gap-2">
-                            {stats.level && (
-                                <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
-                                    <i className="bi bi-trophy-fill"></i> {stats.level}
-                                </span>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <p className="text-teal-100 text-sm mb-1">Peserta Program</p>
+                                <h1 className="text-3xl font-bold mb-1">{userName}</h1>
+                                <p className="text-teal-100 mb-4">{stats.class ?? 'Belum ada kelas'}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {stats.level && (
+                                        <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+                                            <i className="bi bi-trophy-fill"></i> {stats.level}
+                                        </span>
+                                    )}
+                                    <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+                                        <i className="bi bi-check-circle-fill"></i> {stats.totalSessions} Sesi Total
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Periode Pertemuan Badge */}
+                            {filterInfo && (
+                                <div className="bg-white/10 border border-white/20 rounded-xl p-3.5 backdrop-blur-sm self-start sm:self-auto text-right">
+                                    <span className="text-[11px] font-semibold text-teal-200 uppercase tracking-wider block">
+                                        Periode Laporan Nilai
+                                    </span>
+                                    <p className="text-lg font-bold text-white mt-0.5">
+                                        {filterInfo.activeLabel}
+                                    </p>
+                                    <p className="text-xs text-teal-100 mt-0.5">
+                                        Basis perhitungan: {filterInfo.meetingCount} Pertemuan
+                                    </p>
+                                </div>
                             )}
-                            <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
-                                <i className="bi bi-check-circle-fill"></i> {stats.totalSessions} Sesi Total
-                            </span>
                         </div>
                     </Card>
 
@@ -178,10 +232,40 @@ export default function ProfilPDF() {
                     )}
 
                     {/* Footer */}
-                    <div className="text-center text-sm text-gray-500 mt-8 pb-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 mt-8 pb-8 border-t pt-4">
                         <p>Catatan ini dibuat pada {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} oleh sistem AICI</p>
-                        <p className="mt-1">Artificial Intelligence Center Indonesia</p>
+                        <p className="mt-1 sm:mt-0 font-medium">Artificial Intelligence Center Indonesia</p>
                     </div>
+
+                    {/* Filter switcher untuk preview langsung di halaman jika bukan mode print */}
+                    {filterInfo && filterInfo.availableRanges.length > 0 && (
+                        <div className="print:hidden fixed bottom-6 right-6 bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl p-4 rounded-2xl flex items-center gap-3 z-50">
+                            <i className="bi bi-funnel-fill text-teal-600 text-lg" />
+                            <div className="text-xs">
+                                <p className="font-bold text-gray-800">Ubah Periode Rapor:</p>
+                                <select
+                                    value={filterInfo.selectedRange}
+                                    onChange={(e) => {
+                                        const currentPath = window.location.pathname;
+                                        window.location.href = `${currentPath}?range=${e.target.value}`;
+                                    }}
+                                    className="mt-1 px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-teal-500 font-semibold"
+                                >
+                                    {filterInfo.availableRanges.map(r => (
+                                        <option key={r.key} value={r.key}>
+                                            {r.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                onClick={() => window.print()}
+                                className="ml-2 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                            >
+                                <i className="bi bi-printer" /> Print
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </>

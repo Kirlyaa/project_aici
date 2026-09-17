@@ -232,6 +232,47 @@ export default function SuperAdminDashboard() {
                         </div>
                     </div>
 
+                    {/* Classroom Management */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <i className="bi bi-building-fill" />
+                                Kelola Kelas
+                            </h2>
+                            <p className="text-indigo-100 text-sm mt-1">Atur nama kelas, foto, dan distribusi murid.</p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                                <p className="text-sm font-semibold text-indigo-900">Manajemen Kelas Terpadu</p>
+                                <p className="text-xs text-indigo-700 mt-1">
+                                    Buat kelas baru, sesuaikan foto & deskripsi, masukkan murid atau pindahkan murid antar kelas dengan mudah.
+                                </p>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <ul className="space-y-2 text-xs text-gray-600">
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-indigo-600" /> Atur foto sampul & nama kelas
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-indigo-600" /> Masukkan murid tanpa kelas
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-indigo-600" /> Pindahkan atau keluarkan murid
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <Link
+                                href="/superadmin/classes"
+                                className="block text-center mt-6 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                            >
+                                <i className="bi bi-arrow-right mr-2" /> Buka Manajemen Kelas
+                            </Link>
+                        </div>
+                    </div>
+
                     {/* Master Database Modul */}
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">

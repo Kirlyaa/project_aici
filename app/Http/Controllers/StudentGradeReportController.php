@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\GradeEntry;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -12,9 +14,16 @@ class StudentGradeReportController extends Controller
     /**
      * Show student's grade report
      */
-    public function show(): Response
+    public function show(Request $request, ?User $student = null): Response
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+
+        // If accessed by superadmin/tutor with a specific student parameter
+        if ($student && $student->exists) {
+            abort_if(!$currentUser->managesStudent($student->id), 403);
+        } else {
+            $student = $currentUser;
+        }
 
         // Get all grade entries for this student
         $gradeEntries = GradeEntry::where('student_id', $student->id)

@@ -104,4 +104,104 @@ class StudentController extends Controller
         $student->update(['status' => $next]);
         return back()->with('success', "Status murid diubah menjadi {$next}.");
     }
+
+    /**
+     * Show comprehensive student account detail for Super Admin.
+     */
+    public function show($student): Response
+    {
+        $resolvedStudent = $student instanceof User && $student->exists 
+            ? $student 
+            : User::findOrFail(is_object($student) ? $student->id : $student);
+
+        abort_if($resolvedStudent->role !== 'user', 404);
+
+        $gradeEntries = \App\Models\GradeEntry::where('student_id', $resolvedStudent->id)
+            ->with('module')
+            ->orderBy('meeting_number', 'asc')
+            ->get();
+
+        $interactionAvg = round((float) ($gradeEntries->avg('interaksi') ?? 0), 2);
+        $focusAvg       = round((float) ($gradeEntries->avg('fokus') ?? 0), 2);
+        $robotAvg       = round((float) ($gradeEntries->filter(fn($g) => $g->robot_building !== null)->avg('robot_building') ?? 0), 2);
+        $toolsAvg       = round((float) ($gradeEntries->avg('tools_management') ?? 0), 2);
+        $codingAvg      = round((float) ($gradeEntries->avg('coding') ?? 0), 2);
+
+        $overallAvg = round((float) ($gradeEntries->avg('average') ?? 0), 2);
+        $overallPercentage = $overallAvg > 0 ? min(100, round(($overallAvg / \App\Models\GradeEntry::MAX_SCORE) * 100, 1)) : 0;
+
+        $sessions = $resolvedStudent->learningSessions()
+            ->with('modules')
+            ->orderByDesc('date')
+            ->get();
+
+        $hadir = $sessions->where('status', 'hadir')->count();
+        $absen = $sessions->where('status', 'absen')->count();
+        $reschedule = $sessions->where('status', 'reschedule')->count();
+        $attendancePct = $sessions->count() > 0 ? round(($hadir / $sessions->count()) * 100, 1) : 0;
+
+        $latestComment = \App\Models\StudentComment::where('student_id', $resolvedStudent->id)->latest()->first();
+
+        return Inertia::render('SuperAdmin/StudentDetail', [
+            'student' => [
+                'id' => $resolvedStudent->id,
+                'name' => $resolvedStudent->name,
+                'email' => $resolvedStudent->email,
+                'status' => $resolvedStudent->status ?? 'aktif',
+                'class' => $resolvedStudent->class,
+                'classroomName' => $resolvedStudent->classroom?->name,
+                'tutorName' => $resolvedStudent->tutor?->name,
+                'createdAt' => $resolvedStudent->created_at?->format('d M Y'),
+            ],
+            'stats' => [
+                'totalSessions' => $sessions->count(),
+                'completedSessions' => $hadir,
+                'attendance' => [
+                    'hadir' => $hadir,
+                    'absen' => $absen,
+                    'reschedule' => $reschedule,
+                    'percentage' => $attendancePct,
+                ],
+                'overallAvg' => $overallAvg,
+                'averagePercentage' => $overallPercentage,
+                'highestScore' => round((float) ($gradeEntries->max('average') ?? 0), 2),
+                'lowestScore' => round((float) ($gradeEntries->min('average') ?? 0), 2),
+                'scores' => [
+                    'interaction' => $interactionAvg,
+                    'focus' => $focusAvg,
+                    'robotBuilding' => $robotAvg,
+                    'tools' => $toolsAvg,
+                    'coding' => $codingAvg,
+                ],
+            ],
+            'recentSessions' => $sessions->map(fn($s) => [
+                'id' => $s->id,
+                'title' => $s->title,
+                'date' => $s->date?->format('d M Y') ?? $s->date_string,
+                'status' => $s->status,
+                'module' => $s->modules->pluck('name')->join(', '),
+            ])->values()->all(),
+            'recentGrades' => $gradeEntries->map(fn($g) => [
+                'id' => $g->id,
+                'meetingNumber' => $g->meeting_number,
+                'moduleName' => $g->module?->name ?? 'Umum',
+                'moduleType' => $g->module_type,
+                'average' => (float) $g->average,
+                'date' => $g->meeting_date?->format('d M Y'),
+                'grades' => [
+                    'fokus' => (float) $g->fokus,
+                    'robotBuilding' => $g->robot_building !== null ? (float) $g->robot_building : null,
+                    'tools' => (float) $g->tools_management,
+                    'interaction' => (float) $g->interaksi,
+                    'coding' => (float) $g->coding,
+                ],
+            ])->values()->all(),
+            'latestComment' => $latestComment ? [
+                'system' => $latestComment->system_comment,
+                'notes' => $latestComment->notes,
+                'semester' => $latestComment->semester,
+                'updatedAt' => $latestComment->updated_at?->format('d M Y H:i'),
+            ] : null,
+        ]);
+    }
 }

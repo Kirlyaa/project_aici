@@ -40,7 +40,8 @@ const emptyTemplateForm = {
 };
 
 export default function CommentsManager() {
-    const { studentId, student, comments, templates } = usePage().props as unknown as Props;
+    const { studentId, student, comments, templates, auth } = usePage().props as unknown as Props & { auth: any };
+    const isSuperAdmin = auth?.user?.role === 'superadmin';
 
     const { lock } = useStudentLock({ studentId, page: 'comments' });
     const isReadOnly = lock?.locked === true;
@@ -149,14 +150,30 @@ export default function CommentsManager() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <Link href="/tutor" className="text-gray-600 hover:text-gray-900">
+                            <Link href={isSuperAdmin ? `/superadmin/students/${studentId}` : '/tutor'} className="text-gray-600 hover:text-gray-900">
                                 <i className="bi bi-arrow-left text-xl" />
                             </Link>
                             <div>
                                 <h1 className="font-bold text-lg">AICI</h1>
-                                <p className="text-xs text-gray-500">Kelola Komentar: {student.name}</p>
+                                <p className="text-xs text-gray-500">Kelola Komentar: {student.name} {isSuperAdmin ? '(Mode SuperAdmin)' : ''}</p>
                             </div>
                         </div>
+                        {isSuperAdmin && (
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href="/superadmin/students"
+                                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg transition"
+                                >
+                                    Daftar Murid
+                                </Link>
+                                <Link
+                                    href={`/superadmin/students/${studentId}/report`}
+                                    className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition"
+                                >
+                                    Lihat Rapor
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
             </nav>

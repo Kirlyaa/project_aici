@@ -107,72 +107,125 @@ class CalendarController extends Controller
     }
 
     /**
-     * R10: Import jadwal via CSV.
+     * Download template file CSV untuk import jadwal.
+     */
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="template_import_jadwal.csv"',
+        ];
+
+        $callback = function () {
+            $file = fopen('php://output', 'w');
+            // Header kolom
+            fputcsv($file, ['tanggal', 'status', 'judul', 'modul', 'email_murid']);
+
+            // Baris contoh
+            fputcsv($file, ['2026-10-05', 'akan-datang', 'Pengenalan Robotik A', 'Modul 1 – Pengenalan Robotika', 'aira@aici.id']);
+            fputcsv($file, ['2026-10-12', 'akan-datang', 'Sensor & Aktuator', 'Modul 2 – Sensor & Aktuator', 'aira@aici.id']);
+            fputcsv($file, ['2026-10-19', 'libur', 'Libur Nasional', '', 'aira@aici.id']);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * R10: Import jadwal via CSV (Mendukung pemisah koma / titik koma dan header fleksibel).
      * Format: tanggal,status,judul,modul,email_murid
      */
     public function importCsv(Request $request): RedirectResponse
     {
         $request->validate([
-            'csv_file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+            'csv_file' => ['required', 'file', 'max:5120'], // mimes dihandle manual agar mendukung berbagai sistem OS/Excel
         ]);
 
         $file = $request->file('csv_file');
-        $handle = fopen($file->getRealPath(), 'r');
+        $filePath = $file->getRealPath();
 
+        // Deteksi delimiter (koma ',' atau titik koma ';')
+        $firstLine = fgets(fopen($filePath, 'r'));
+        $delimiter = strpos($firstLine, ';') !== false && strpos($firstLine, ',') === false ? ';' : ',';
+
+        $handle = fopen($filePath, 'r');
         $errors = [];
         $imported = 0;
         $row = 0;
 
-        // Skip header row
-        fgetcsv($handle);
+        // Skip baris header
+        fgetcsv($handle, 0, $delimiter);
 
-        DB::transaction(function () use ($handle, &$errors, &$imported, &$row) {
-            while (($data = fgetcsv($handle)) !== false) {
+        DB::transaction(function () use ($handle, $delimiter, &$errors, &$imported, &$row) {
+            while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $row++;
+
+                // Abaikan baris kosong
+                if (empty($data) || (count($data) === 1 && trim($data[0]) === '')) {
+                    continue;
+                }
+
                 if (count($data) < 5) {
-                    $errors[] = "Baris {$row}: Format tidak valid (kurang kolom).";
+                    $errors[] = "Baris {$row}: Format tidak lengkap (wajib 5 kolom: tanggal, status, judul, modul, email_murid).";
                     continue;
                 }
 
-                [$tanggal, $status, $judul, $modulNama, $emailMurid] = array_map('trim', $data);
+                [$tanggal, $status, $judul, $modulNama, $emailMurid] = array_map(fn($v) => trim((string)$v), array_slice($data, 0, 5));
 
-                // Validasi tanggal
-                if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
-                    $errors[] = "Baris {$row}: Format tanggal tidak valid ({$tanggal}). Gunakan YYYY-MM-DD.";
+                // Normalisasi & validasi tanggal (support format YYYY-MM-DD atau DD/MM/YYYY)
+                $dateCarbon = null;
+                try {
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+                        $dateCarbon = \Carbon\Carbon::createFromFormat('Y-m-d', $tanggal);
+                    } elseif (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $tanggal)) {
+                        $dateCarbon = \Carbon\Carbon::createFromFormat('d/m/Y', $tanggal);
+                    } elseif (preg_match('/^\d{2}-\d{2}-\d{4}$/', $tanggal)) {
+                        $dateCarbon = \Carbon\Carbon::createFromFormat('d-m-Y', $tanggal);
+                    }
+                } catch (\Exception $e) {
+                    $dateCarbon = null;
+                }
+
+                if (! $dateCarbon) {
+                    $errors[] = "Baris {$row}: Format tanggal '{$tanggal}' tidak valid. Gunakan format YYYY-MM-DD (contoh: 2026-10-05).";
                     continue;
                 }
 
-                // Validasi status
+                $isoDate = $dateCarbon->toDateString();
+
+                // Normalisasi & validasi status
+                $statusNormalized = strtolower(str_replace(' ', '-', $status));
                 $validStatuses = ['hadir', 'absen', 'reschedule', 'libur', 'akan-datang'];
-                if (! in_array($status, $validStatuses, true)) {
-                    $errors[] = "Baris {$row}: Status tidak valid ({$status}).";
+                if (! in_array($statusNormalized, $validStatuses, true)) {
+                    $errors[] = "Baris {$row}: Status '{$status}' tidak valid. Pilihan: " . implode(', ', $validStatuses);
                     continue;
                 }
 
-                // Cari murid
+                // Validasi murid
                 $student = User::where('email', $emailMurid)->where('role', 'user')->first();
                 if (! $student) {
-                    $errors[] = "Baris {$row}: Murid dengan email {$emailMurid} tidak ditemukan.";
+                    $errors[] = "Baris {$row}: Murid dengan email '{$emailMurid}' tidak ditemukan.";
                     continue;
                 }
 
-                // Buat sesi
+                // Buat sesi pembelajaran
                 $session = LearningSession::create([
                     'user_id' => $student->id,
                     'tutor_id' => null,
-                    'title' => $judul ?: 'Sesi ' . $tanggal,
-                    'date_string' => $tanggal,
-                    'date' => $tanggal,
-                    'status' => $status,
+                    'title' => $judul ?: ('Sesi ' . $isoDate),
+                    'date_string' => $isoDate,
+                    'date' => $isoDate,
+                    'status' => $statusNormalized,
                 ]);
 
-                // Attach modul jika ada
-                if ($modulNama) {
-                    $modul = Module::where('name', $modulNama)->first();
+                // Hubungkan modul jika terisi
+                if (! empty($modulNama)) {
+                    $modul = Module::where('name', 'like', "%{$modulNama}%")->first();
                     if ($modul) {
                         $session->modules()->sync([$modul->id]);
                     } else {
-                        $errors[] = "Baris {$row}: Modul '{$modulNama}' tidak ditemukan, sesi tetap dibuat tanpa modul.";
+                        $errors[] = "Baris {$row}: Modul '{$modulNama}' tidak ditemukan, sesi dibuat tanpa modul.";
                     }
                 }
 
@@ -182,9 +235,9 @@ class CalendarController extends Controller
 
         fclose($handle);
 
-        $message = "{$imported} sesi berhasil diimport.";
+        $message = "Sukses mengimpor {$imported} jadwal sesi secara massal.";
         if (! empty($errors)) {
-            $message .= ' ' . count($errors) . ' baris gagal.';
+            $message .= " (Terdapat " . count($errors) . " peringatan/baris dilewati).";
             return back()->with('success', $message)->with('csv_errors', $errors);
         }
 

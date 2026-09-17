@@ -50,10 +50,43 @@ class ProfileController extends Controller
 
             $latestComment = \App\Models\StudentComment::where('student_id', $user->id)->latest()->first();
 
-            // ponytail: class/level tidak punya sumber di DB saat ini; tampil kosong sampai ada tabel kelas/level
+            // Ambil nomor pertemuan murid untuk generate opsi filter per 4 pertemuan & all
+            $allMeetingNumbers = \App\Models\GradeEntry::where('student_id', $user->id)
+                ->whereNotNull('meeting_number')
+                ->pluck('meeting_number')
+                ->unique()
+                ->sort()
+                ->values();
+
+            $maxMeeting = $allMeetingNumbers->max() ?? 0;
+            $pdfRanges = [];
+
+            if ($maxMeeting > 0) {
+                for ($start = 1; $start <= $maxMeeting; $start += 4) {
+                    $end = min($start + 3, $maxMeeting);
+                    $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
+                    if ($hasData) {
+                        $pdfRanges[] = [
+                            'key' => "{$start}-{$end}",
+                            'label' => "Pertemuan {$start} - {$end}",
+                            'start' => $start,
+                            'end' => $end,
+                        ];
+                    }
+                }
+
+                $pdfRanges[] = [
+                    'key' => 'all',
+                    'label' => "Semua Pertemuan (1 - {$maxMeeting})",
+                    'start' => 1,
+                    'end' => $maxMeeting,
+                ];
+            }
+
             return Inertia::render('User/Profil', [
                 'mustVerifyEmail' => $user instanceof MustVerifyEmail,
                 'status' => session('status'),
+                'pdfRanges' => $pdfRanges,
                 'studentStats' => [
                     'name' => $user->name,
                     'email' => $user->email,
@@ -147,11 +180,67 @@ class ProfileController extends Controller
     /**
      * Data profil untuk halaman cetak PDF.
      */
-    public function pdf(Request $request): Response
+    public function pdf(Request $request, ?\App\Models\User $student = null): Response
     {
-        $user = $request->user();
+        $currentUser = $request->user();
 
-        $gradeEntries = \App\Models\GradeEntry::where('student_id', $user->id)->get();
+        if ($student && $student->exists) {
+            abort_if(!$currentUser->managesStudent($student->id), 403);
+            $user = $student;
+        } else {
+            $user = $currentUser;
+        }
+
+        // Ambil semua nomor pertemuan murid untuk generate opsi range (per 4 pertemuan)
+        $allMeetingNumbers = \App\Models\GradeEntry::where('student_id', $user->id)
+            ->whereNotNull('meeting_number')
+            ->pluck('meeting_number')
+            ->unique()
+            ->sort()
+            ->values();
+
+        $maxMeeting = $allMeetingNumbers->max() ?? 0;
+        $ranges = [];
+
+        if ($maxMeeting > 0) {
+            // Generate range blok per 4 pertemuan: 1-4, 5-8, 9-12, dst.
+            for ($start = 1; $start <= $maxMeeting; $start += 4) {
+                $end = min($start + 3, $maxMeeting);
+                $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
+                if ($hasData) {
+                    $ranges[] = [
+                        'key' => "{$start}-{$end}",
+                        'label' => "Pertemuan {$start} - {$end}",
+                        'start' => $start,
+                        'end' => $end,
+                    ];
+                }
+            }
+
+            // Opsi Keseluruhan (1 - terakhir)
+            $ranges[] = [
+                'key' => 'all',
+                'label' => "Semua Pertemuan (1 - {$maxMeeting})",
+                'start' => 1,
+                'end' => $maxMeeting,
+            ];
+        }
+
+        // Filter berdasarkan parameter range jika ada
+        $selectedRangeKey = $request->query('range', 'all');
+        $query = \App\Models\GradeEntry::where('student_id', $user->id);
+        $activeRangeLabel = 'Semua Pertemuan';
+
+        if ($selectedRangeKey !== 'all' && preg_match('/^(\d+)-(\d+)$/', $selectedRangeKey, $matches)) {
+            $from = (int) $matches[1];
+            $to = (int) $matches[2];
+            $query->whereBetween('meeting_number', [$from, $to]);
+            $activeRangeLabel = "Pertemuan {$from} - {$to}";
+        } elseif ($maxMeeting > 0) {
+            $activeRangeLabel = "Semua Pertemuan (1 - {$maxMeeting})";
+        }
+
+        $gradeEntries = $query->orderBy('meeting_number', 'asc')->get();
 
         $scores = [
             'interaction'  => round((float) ($gradeEntries->avg('interaksi') ?? 0), 2),
@@ -182,11 +271,16 @@ class ProfileController extends Controller
                 'attendance' => ['hadir' => $hadir, 'absen' => $absen, 'reschedule' => $reschedule, 'percentage' => $attendancePct],
                 'scores' => $scores,
                 'averagePercentage' => $overallPct,
-                // R9: sessions tidak dikirim ke PDF lagi
                 'comment' => [
                     'system' => $latestComment?->system_comment,
                     'notes'  => $latestComment?->notes,
                 ],
+            ],
+            'filterInfo' => [
+                'selectedRange' => $selectedRangeKey,
+                'activeLabel' => $activeRangeLabel,
+                'meetingCount' => $gradeEntries->count(),
+                'availableRanges' => $ranges,
             ],
         ]);
     }

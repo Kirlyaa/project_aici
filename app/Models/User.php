@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'tutor_id', 'school_id', 'avatar', 'class'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'tutor_id', 'school_id', 'classroom_id', 'avatar', 'class'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -79,6 +79,11 @@ class User extends Authenticatable
         return $this->belongsTo(\App\Models\School::class);
     }
 
+    public function classroom()
+    {
+        return $this->belongsTo(Classroom::class, 'classroom_id');
+    }
+
     public function notifications()
     {
         return $this->hasMany(\App\Models\Notification::class);
@@ -90,14 +95,10 @@ class User extends Authenticatable
     }
 
     /**
-     * Semua tutor aktif (dan superadmin) boleh mengakses semua murid.
-     *
-     * Catatan penting: method ini TIDAK boleh mengubah data apa pun.
-     * Sebelumnya ada auto-assign tutor_id yang membuat siapa pun yang
-     * pertama kali membuka murid otomatis menjadi tutor pemilik murid
-     * tersebut, sehingga tutor lain terkunci (403). Sekarang kepemilikan
-     * murid diatur eksplisit oleh superadmin lewat halaman Students,
-     * dan proteksi antar-tutor ditangani StudentLock (bukan hak akses).
+     * Cek otorisasi pengelolaan murid:
+     * - Superadmin mengelola semua murid.
+     * - Tutor hanya boleh mengelola murid yang ditugaskan langsung (tutor_id)
+     *   atau murid yang belum memiliki tutor khusus (unassigned).
      */
     public function managesStudent(int|User $student): bool
     {
@@ -109,9 +110,13 @@ class User extends Authenticatable
             return false;
         }
 
-        $studentId = $student instanceof User ? $student->id : (int) $student;
-        $studentUser = $student instanceof User ? $student : User::find($studentId);
+        $studentUser = $student instanceof User ? $student : User::find($student);
 
-        return (bool) $studentUser && $studentUser->role === 'user';
+        if (!$studentUser || $studentUser->role !== 'user') {
+            return false;
+        }
+
+        // Jika murid sudah punya assigned tutor, hanya tutor tersebut atau superadmin yang berhak
+        return $studentUser->tutor_id === null || (int) $studentUser->tutor_id === (int) $this->id;
     }
 }
