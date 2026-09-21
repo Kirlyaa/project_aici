@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             CommentTemplateSeeder::class,
             LearningSessionSeeder::class,
             AiraLearningSessionSeeder::class,
-            AiraGradeEntrySeeder::class,
+            RaporSeeder::class,
             AiraStudentCommentSeeder::class,
         ]);
     }

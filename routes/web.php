@@ -159,6 +159,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/calendar', [SuperAdminCalendarController::class, 'store'])->name('calendar.store');
         Route::put('/calendar/{session}', [SuperAdminCalendarController::class, 'update'])->name('calendar.update');
         Route::delete('/calendar/{session}', [SuperAdminCalendarController::class, 'destroy'])->name('calendar.destroy');
+        Route::delete('/calendar/{studentId}/clear-all', [SuperAdminCalendarController::class, 'clearAll'])->name('calendar.clear-all');
         Route::post('/calendar/import-csv', [SuperAdminCalendarController::class, 'importCsv'])->name('calendar.import-csv');
         
         // Module Management

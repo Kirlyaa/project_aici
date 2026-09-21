@@ -21,9 +21,14 @@ class CalendarController extends Controller
         $tutor = Auth::user();
         $student = User::findOrFail($studentId);
 
-        // Tutor hanya lihat sesi yang tutor_id = dirinya sendiri
+        // Tutor melihat sesi binaannya (atau sesi tanpa tutor spesifik), SuperAdmin melihat semua sesi murid
         $sessions = LearningSession::where('user_id', $studentId)
-            ->where('tutor_id', $tutor->id)
+            ->when($tutor->role !== 'superadmin', function ($q) use ($tutor) {
+                $q->where(function ($sub) use ($tutor) {
+                    $sub->where('tutor_id', $tutor->id)
+                        ->orWhereNull('tutor_id');
+                });
+            })
             ->with('modules')
             ->orderBy('date')
             ->get()

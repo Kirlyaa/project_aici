@@ -107,13 +107,44 @@ class CalendarController extends Controller
     }
 
     /**
+     * Hapus semua jadwal sesi kalender untuk murid tertentu (atau semua murid jika diminta).
+     */
+    public function clearAll(Request $request, int $studentId): RedirectResponse
+    {
+        $deleteAll = $request->boolean('all_students', false);
+
+        $count = DB::transaction(function () use ($studentId, $deleteAll) {
+            $query = LearningSession::query();
+            if (! $deleteAll) {
+                $query->where('user_id', $studentId);
+            }
+
+            $sessions = $query->get();
+            $deletedCount = $sessions->count();
+
+            foreach ($sessions as $session) {
+                $session->modules()->detach();
+                $session->delete();
+            }
+
+            return $deletedCount;
+        });
+
+        $msg = $deleteAll
+            ? "Seluruh jadwal sesi kalender ({$count} jadwal) dari semua murid berhasil dihapus."
+            : "Seluruh jadwal sesi kalender ({$count} jadwal) untuk murid ini berhasil dihapus.";
+
+        return back()->with('success', $msg);
+    }
+
+    /**
      * Download template file CSV untuk import jadwal.
      */
     public function downloadTemplate()
     {
         $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="template_import_jadwal.csv"',
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template_bulk_jadwal_kalender.csv"',
         ];
 
         $callback = function () {
@@ -121,10 +152,13 @@ class CalendarController extends Controller
             // Header kolom
             fputcsv($file, ['tanggal', 'status', 'judul', 'modul', 'email_murid']);
 
-            // Baris contoh
-            fputcsv($file, ['2026-10-05', 'akan-datang', 'Pengenalan Robotik A', 'Modul 1 – Pengenalan Robotika', 'aira@aici.id']);
-            fputcsv($file, ['2026-10-12', 'akan-datang', 'Sensor & Aktuator', 'Modul 2 – Sensor & Aktuator', 'aira@aici.id']);
-            fputcsv($file, ['2026-10-19', 'libur', 'Libur Nasional', '', 'aira@aici.id']);
+            // Baris contoh lengkap berbagai status
+            fputcsv($file, ['2026-10-05', 'hadir', 'Pengenalan Robotik Dasar', 'Modul 1 – Pengenalan Robotika', 'student@aici.id']);
+            fputcsv($file, ['2026-10-12', 'hadir', 'Sensor & Motor Driver', 'Modul 2 – Sensor & Aktuator', 'student@aici.id']);
+            fputcsv($file, ['2026-10-19', 'libur', 'Libur Nasional', '', 'student@aici.id']);
+            fputcsv($file, ['2026-10-26', 'reschedule', 'Pemrograman Pergerakan Robot', 'Modul 3 – Kontrol Motor', 'student@aici.id']);
+            fputcsv($file, ['2026-11-02', 'akan-datang', 'Navigasi Line Follower', 'Modul 4 – Algoritma Garis', 'student@aici.id']);
+            fputcsv($file, ['2026-11-09', 'akan-datang', 'Proyek Akhir & Presentasi', 'Modul 5 – Final Project Robotika', 'student@aici.id']);
 
             fclose($file);
         };
@@ -209,24 +243,38 @@ class CalendarController extends Controller
                     continue;
                 }
 
-                // Buat sesi pembelajaran
+                // Format date string yang ramah dibaca (contoh: Sabtu, 24 Oktober 2026)
+                $humanDateString = $dateCarbon->translatedFormat('l, d F Y');
+
+                // Buat sesi pembelajaran (otomatis kaitkan ke tutor murid jika ada)
                 $session = LearningSession::create([
                     'user_id' => $student->id,
-                    'tutor_id' => null,
+                    'tutor_id' => $student->tutor_id,
                     'title' => $judul ?: ('Sesi ' . $isoDate),
-                    'date_string' => $isoDate,
+                    'date_string' => $humanDateString,
                     'date' => $isoDate,
                     'status' => $statusNormalized,
                 ]);
 
-                // Hubungkan modul jika terisi
+                // Hubungkan modul jika terisi di CSV
                 if (! empty($modulNama)) {
-                    $modul = Module::where('name', 'like', "%{$modulNama}%")->first();
-                    if ($modul) {
-                        $session->modules()->sync([$modul->id]);
-                    } else {
-                        $errors[] = "Baris {$row}: Modul '{$modulNama}' tidak ditemukan, sesi dibuat tanpa modul.";
+                    // 1. Cari exact match atau kemiripan kata kunci
+                    $modul = Module::where('name', $modulNama)
+                        ->orWhere('name', 'like', "%{$modulNama}%")
+                        ->first();
+
+                    // 2. Jika tidak ditemukan, otomatis buat modul baru persis seperti seeder
+                    if (! $modul) {
+                        $isCoding = preg_match('/coding|program|ai|algoritma|scratch|python/i', $modulNama);
+                        $modul = Module::create([
+                            'name' => $modulNama,
+                            'module_type' => $isCoding ? 'coding' : 'robot',
+                            'format' => 'PDF',
+                            'size' => '4.2 MB',
+                        ]);
                     }
+
+                    $session->modules()->sync([$modul->id]);
                 }
 
                 $imported++;

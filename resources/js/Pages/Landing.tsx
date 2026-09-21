@@ -12,12 +12,13 @@ export default function Landing() {
             <nav className="bg-white border-b border-gray-100 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 rounded-lg bg-teal-600 flex items-center justify-center">
-                                <i className="bi bi-robot text-white text-lg" />
-                            </div>
-                            <span className="text-xl font-bold text-gray-900">AICI</span>
-                        </div>
+                        <Link href="/" className="flex items-center gap-2">
+                            <img
+                                src="/images/logo-aici.png"
+                                alt="AICI - Artificial Intelligence Center Indonesia"
+                                className="h-10 w-auto object-contain"
+                            />
+                        </Link>
                         <div className="hidden md:flex items-center gap-8">
                             <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium">Fitur</a>
                             <a href="#programs" className="text-gray-600 hover:text-gray-900 font-medium">Program</a>
@@ -271,11 +272,14 @@ export default function Landing() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid md:grid-cols-4 gap-8 mb-8">
                         <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center">
-                                    <i className="bi bi-robot text-white" />
+                            <div className="mb-4">
+                                <div className="inline-block bg-white px-2.5 py-1 rounded-lg">
+                                    <img
+                                        src="/images/logo-aici.png"
+                                        alt="AICI Logo"
+                                        className="h-7 w-auto object-contain"
+                                    />
                                 </div>
-                                <span className="font-bold text-white">AICI</span>
                             </div>
                             <p className="text-sm">Platform pembelajaran robotika dan coding berbasis AI untuk masa depan.</p>
                         </div>

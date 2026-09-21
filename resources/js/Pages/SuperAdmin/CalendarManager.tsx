@@ -77,6 +77,9 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
     const [dropdownTitle, setDropdownTitle] = useState('');
     const [saving, setSaving] = useState(false);
     const [showCsvPanel, setShowCsvPanel] = useState(false);
+    const [showClearModal, setShowClearModal] = useState(false);
+    const [clearAllStudents, setClearAllStudents] = useState(false);
+    const [clearing, setClearing] = useState(false);
     const csvInputRef = useRef<HTMLInputElement>(null);
 
     const year = currentMonth.getFullYear();
@@ -175,6 +178,19 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
         });
     };
 
+    const handleClearCalendar = () => {
+        setClearing(true);
+        router.delete(`/superadmin/calendar/${studentId}/clear-all`, {
+            data: { all_students: clearAllStudents },
+            preserveScroll: true,
+            onFinish: () => {
+                setClearing(false);
+                setShowClearModal(false);
+                setClearAllStudents(false);
+            },
+        });
+    };
+
     const calendarDays: (number | null)[] = [];
     for (let i = daysInPrevMonth - firstDay + 1; i <= daysInPrevMonth; i++) {
         calendarDays.push(null);
@@ -203,12 +219,16 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <Link href="/superadmin" className="text-gray-600 hover:text-gray-900">
+                            <Link href="/superadmin" className="text-gray-600 hover:text-gray-900 mr-1" title="Kembali ke Dashboard">
                                 <i className="bi bi-arrow-left text-xl" />
                             </Link>
-                            <div>
-                                <h1 className="font-bold text-lg">AICI</h1>
-                                <p className="text-xs text-gray-500">Kelola Kalender — SuperAdmin</p>
+                            <img
+                                src="/images/logo-aici.png"
+                                alt="AICI Logo"
+                                className="h-8 w-auto object-contain"
+                            />
+                            <div className="border-l border-gray-300 pl-3">
+                                <p className="text-xs font-semibold text-gray-600">Kelola Kalender</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -233,13 +253,29 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                         <h1 className="text-3xl font-bold text-gray-900 mb-1">Kelola Kalender Murid</h1>
                         <p className="text-gray-600">Tandai tanggal libur, absen, reschedule, hadir, atau akan datang</p>
                     </div>
-                    {/* R10: tombol Import CSV */}
-                    <button
-                        onClick={() => setShowCsvPanel(v => !v)}
-                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors text-sm"
-                    >
-                        <i className="bi bi-file-earmark-arrow-up" /> Import CSV
-                    </button>
+                    {/* Aksi Bulk: Hapus Semua Jadwal & Import CSV */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowClearModal(true)}
+                            disabled={sessions.length === 0}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                                sessions.length === 0
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                                    : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 shadow-sm'
+                            }`}
+                            title={sessions.length === 0 ? 'Belum ada jadwal yang tersimpan' : 'Hapus semua jadwal kalender'}
+                        >
+                            <i className="bi bi-trash3" /> Hapus Semua Jadwal
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowCsvPanel(v => !v)}
+                            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors text-sm shadow-sm"
+                        >
+                            <i className="bi bi-file-earmark-arrow-up" /> Import CSV
+                        </button>
+                    </div>
                 </div>
 
                 {/* R10: Panel Import CSV */}
@@ -476,6 +512,70 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                                     Batal
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Konfirmasi Hapus Semua Jadwal */}
+            {showClearModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                <i className="bi bi-exclamation-triangle-fill text-xl" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Hapus Semua Jadwal Kalender</h3>
+                                <p className="text-xs text-gray-500">Tindakan ini permanen dan tidak dapat dibatalkan</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700 space-y-1">
+                            <p className="font-semibold">Perhatian:</p>
+                            <p>
+                                Anda akan menghapus seluruh data jadwal sesi kalender ({sessions.length} jadwal) untuk murid{' '}
+                                <strong className="font-bold">{student.name}</strong>.
+                            </p>
+                        </div>
+
+                        <div className="mb-5">
+                            <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={clearAllStudents}
+                                    onChange={e => setClearAllStudents(e.target.checked)}
+                                    className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                />
+                                <span>Hapus juga seluruh jadwal untuk <strong>semua murid</strong> di sistem</span>
+                            </label>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowClearModal(false)}
+                                disabled={clearing}
+                                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition disabled:opacity-50 text-sm"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleClearCalendar}
+                                disabled={clearing}
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                            >
+                                {clearing ? (
+                                    <>
+                                        <i className="bi bi-arrow-repeat animate-spin" /> Menghapus...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="bi bi-trash3" /> Ya, Hapus Semua
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>

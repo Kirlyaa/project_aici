@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import FlashToast from '@/Components/FlashToast';
 
 interface Student {
@@ -31,10 +31,73 @@ export default function TutorDashboard() {
         ? rawStudents
         : (rawStudents?.data || []);
     const classes: ClassGroup[] = (props.classes as ClassGroup[]) ?? [];
+    const propStudentId = (props.selectedStudentId as number | null) || null;
 
-    // R4: dua level — pilih kelas dulu, lalu murid
-    const [selectedClass, setSelectedClass] = useState<string | null>(null);
-    const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
+    // Helper penentuan kelas & murid awal
+    const getInitialSelection = () => {
+        if (typeof window === 'undefined') {
+            return { class: null, student: null };
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const paramStudentId = params.get('student') ? parseInt(params.get('student')!, 10) : null;
+        const targetStudentId = propStudentId || paramStudentId;
+
+        if (targetStudentId) {
+            const found = students.find(s => s.id === targetStudentId);
+            if (found) {
+                return { class: found.class, student: found.id };
+            }
+        }
+
+        const savedStudentId = sessionStorage.getItem('tutor_selected_student_id');
+        if (savedStudentId) {
+            const found = students.find(s => s.id === parseInt(savedStudentId, 10));
+            if (found) {
+                return { class: found.class, student: found.id };
+            }
+        }
+
+        const savedClass = sessionStorage.getItem('tutor_selected_class');
+        if (savedClass && classes.some(c => c.name === savedClass)) {
+            return { class: savedClass, student: null };
+        }
+
+        return { class: null, student: null };
+    };
+
+    const initial = getInitialSelection();
+    // R4: dua level — pilih kelas dulu, lalu murid (dengan auto-restore pilihan murid/kelas)
+    const [selectedClass, setSelectedClass] = useState<string | null>(initial.class);
+    const [selectedStudent, setSelectedStudent] = useState<number | null>(initial.student);
+
+    // Sinkronisasi pilihan aktif ke sessionStorage
+    useEffect(() => {
+        if (selectedStudent) {
+            sessionStorage.setItem('tutor_selected_student_id', String(selectedStudent));
+            if (selectedClass) {
+                sessionStorage.setItem('tutor_selected_class', selectedClass);
+            }
+        } else {
+            sessionStorage.removeItem('tutor_selected_student_id');
+            if (selectedClass) {
+                sessionStorage.setItem('tutor_selected_class', selectedClass);
+            } else {
+                sessionStorage.removeItem('tutor_selected_class');
+            }
+        }
+    }, [selectedClass, selectedStudent]);
+
+    // Handle jika props selectedStudentId berubah
+    useEffect(() => {
+        if (propStudentId) {
+            const found = students.find(s => s.id === propStudentId);
+            if (found) {
+                setSelectedClass(found.class);
+                setSelectedStudent(found.id);
+            }
+        }
+    }, [propStudentId, students]);
 
     const studentsInClass = selectedClass
         ? students.filter(s => s.class === selectedClass)
@@ -52,12 +115,13 @@ export default function TutorDashboard() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center">
-                                <i className="bi bi-mortarboard-fill text-white" />
-                            </div>
-                            <div>
-                                <h1 className="font-bold text-lg">AICI</h1>
-                                <p className="text-xs text-gray-500">Dashboard Tutor</p>
+                            <img
+                                src="/images/logo-aici.png"
+                                alt="AICI Logo"
+                                className="h-10 w-auto object-contain"
+                            />
+                            <div className="border-l border-gray-300 pl-3">
+                                <span className="text-[11px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">Tutor</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">

@@ -14,7 +14,7 @@ class TutorSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@aici.id'],
             [
-                'name' => 'Faris Sukirman',
+                'name' => 'Super Admin AICI',
                 'email' => 'admin@aici.id',
                 'password' => Hash::make('admin123'),
                 'role' => 'superadmin',

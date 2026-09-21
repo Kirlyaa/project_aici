@@ -77,6 +77,24 @@ class SuperAdminStudentGovernanceTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_superadmin_redirected_when_accessing_grades_without_student_param(): void
+    {
+        $response = $this->actingAs($this->admin)->get('/nilai');
+        $response->assertRedirect('/superadmin/students');
+        $response->assertSessionHas('warning');
+    }
+
+    public function test_superadmin_cannot_view_report_of_non_student_role(): void
+    {
+        $otherTutor = User::factory()->create([
+            'role' => 'tutor',
+            'status' => 'aktif',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get("/superadmin/students/{$otherTutor->id}/report");
+        $response->assertNotFound();
+    }
+
     public function test_superadmin_can_view_student_pdf_report(): void
     {
         GradeEntry::create([

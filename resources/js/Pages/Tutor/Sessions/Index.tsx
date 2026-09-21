@@ -138,13 +138,16 @@ export default function TutorSessions() {
             <Head title="Kelola Sesi" />
 
             {/* Tutor Navbar */}
-            <nav className="bg-teal-700 text-white px-6 py-4 flex items-center justify-between">
+            <nav className="bg-teal-700 text-white px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                        <i className="bi bi-cpu-fill" />
+                    <div className="bg-white px-2 py-0.5 rounded flex items-center">
+                        <img
+                            src="/images/logo-aici.png"
+                            alt="AICI Logo"
+                            className="h-7 w-auto object-contain"
+                        />
                     </div>
-                    <span className="font-bold text-lg">AICI</span>
-                    <span className="text-teal-200 text-sm">/ Tutor Panel</span>
+                    <span className="text-teal-200 text-sm font-medium">/ Tutor Panel</span>
                 </div>
                 <div className="flex items-center gap-4">
                     <Link href="/tutor/sessions" className="text-sm text-white font-medium border-b border-white pb-0.5">Sesi</Link>

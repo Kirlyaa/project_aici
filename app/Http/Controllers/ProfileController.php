@@ -35,6 +35,28 @@ class ProfileController extends Controller
             // Clamp ke 0-100 agar tidak melebihi 100% jika data seeder lama masih 0-10
             $overallPercentage = $overallAvg > 0 ? min(100, round(($overallAvg / GradeEntry::MAX_SCORE) * 100, 1)) : 0;
 
+            // Dataset nilai per pertemuan untuk grafik interaktif per pertemuan
+            $meetingScores = \App\Models\GradeEntry::where('student_id', $user->id)
+                ->with('module')
+                ->orderBy('meeting_number', 'asc')
+                ->orderBy('meeting_date', 'asc')
+                ->get()
+                ->map(function ($g) {
+                    return [
+                        'id' => $g->id,
+                        'meetingNumber' => $g->meeting_number,
+                        'moduleName' => $g->module?->name,
+                        'date' => $g->meeting_date ? $g->meeting_date->format('d M Y') : null,
+                        'scores' => [
+                            'interaction' => round((float) ($g->interaksi ?? 0), 1),
+                            'focus' => round((float) ($g->fokus ?? 0), 1),
+                            'robotBuilding' => $g->robot_building !== null ? round((float) $g->robot_building, 1) : 0,
+                            'tools' => round((float) ($g->tools_management ?? 0), 1),
+                            'coding' => round((float) ($g->coding ?? 0), 1),
+                        ],
+                    ];
+                })->values()->toArray();
+
             $completedSessions = $user->learningSessions()->where('status', 'hadir')->count();
             $totalSessions = $user->learningSessions()->count();
 
@@ -103,6 +125,7 @@ class ProfileController extends Controller
                         'tools' => $toolsAvg,
                         'coding' => $codingAvg,
                     ],
+                    'meetingScores' => $meetingScores,
                     'comment' => [
                         'system' => $latestComment?->system_comment,
                         'notes'  => $latestComment?->notes,
@@ -180,14 +203,35 @@ class ProfileController extends Controller
     /**
      * Data profil untuk halaman cetak PDF.
      */
-    public function pdf(Request $request, ?\App\Models\User $student = null): Response
+    public function pdf(Request $request, ?\App\Models\User $student = null): Response|\Illuminate\Http\RedirectResponse
     {
         $currentUser = $request->user();
 
+        // Support route model binding or raw route parameter
+        $routeStudentParam = $request->route('student');
+        if ((!$student || !$student->exists) && $routeStudentParam) {
+            $student = is_numeric($routeStudentParam) ? \App\Models\User::find($routeStudentParam) : $student;
+        }
+
         if ($student && $student->exists) {
             abort_if(!$currentUser->managesStudent($student->id), 403);
+            abort_if($student->role !== 'user', 404);
             $user = $student;
         } else {
+            // Guard: Jika parameter diberikan tapi tidak ditemukan
+            if ($routeStudentParam) {
+                abort(404);
+            }
+
+            // Guard: Jika non-siswa mengakses rute ini langsung tanpa parameter student, arahkan ke panel yang tepat
+            if ($currentUser->role === 'superadmin') {
+                return redirect()->route('superadmin.students')
+                    ->with('error', 'Silakan pilih murid terlebih dahulu untuk mencetak rapor PDF.');
+            }
+            if ($currentUser->role === 'tutor') {
+                return redirect()->route('tutor.dashboard')
+                    ->with('error', 'Silakan pilih murid terlebih dahulu untuk mencetak rapor PDF.');
+            }
             $user = $currentUser;
         }
 
@@ -226,21 +270,42 @@ class ProfileController extends Controller
             ];
         }
 
-        // Filter berdasarkan parameter range jika ada
-        $selectedRangeKey = $request->query('range', 'all');
+        // Filter berdasarkan parameter range (default: 4 pertemuan pertama "1-4" sesuai siklus rapor)
+        $defaultRangeKey = !empty($ranges) ? $ranges[0]['key'] : 'all';
+        $selectedRangeKey = $request->query('range', $defaultRangeKey);
         $query = \App\Models\GradeEntry::where('student_id', $user->id);
-        $activeRangeLabel = 'Semua Pertemuan';
+        $activeRangeLabel = 'Pertemuan 1 - 4';
 
         if ($selectedRangeKey !== 'all' && preg_match('/^(\d+)-(\d+)$/', $selectedRangeKey, $matches)) {
             $from = (int) $matches[1];
             $to = (int) $matches[2];
             $query->whereBetween('meeting_number', [$from, $to]);
             $activeRangeLabel = "Pertemuan {$from} - {$to}";
-        } elseif ($maxMeeting > 0) {
+        } elseif ($selectedRangeKey === 'all' && $maxMeeting > 0) {
             $activeRangeLabel = "Semua Pertemuan (1 - {$maxMeeting})";
         }
 
         $gradeEntries = $query->orderBy('meeting_number', 'asc')->get();
+
+        // 4 Pertemuan individual untuk grafik per pertemuan dan catatan tutor masing-masing
+        $meetingReports = $gradeEntries->map(function ($entry) {
+            return [
+                'id' => $entry->id,
+                'meetingNumber' => $entry->meeting_number,
+                'moduleName' => $entry->module?->name ?? ($entry->module_type === 'coding' ? 'Modul Coding' : 'Modul Robotika'),
+                'moduleType' => $entry->module_type,
+                'date' => $entry->meeting_date ? $entry->meeting_date->format('d M Y') : null,
+                'scores' => [
+                    'interaction' => round((float) ($entry->interaksi ?? 0), 1),
+                    'focus' => round((float) ($entry->fokus ?? 0), 1),
+                    'robotBuilding' => $entry->robot_building !== null ? round((float) $entry->robot_building, 1) : null,
+                    'tools' => round((float) ($entry->tools_management ?? 0), 1),
+                    'coding' => round((float) ($entry->coding ?? 0), 1),
+                ],
+                'average' => round((float) ($entry->average ?? 0), 2),
+                'tutorNotes' => $entry->notes,
+            ];
+        })->values()->toArray();
 
         $scores = [
             'interaction'  => round((float) ($gradeEntries->avg('interaksi') ?? 0), 2),
@@ -260,7 +325,18 @@ class ProfileController extends Controller
         $reschedule = $sessions->where('status', 'reschedule')->count();
         $attendancePct = $sessions->count() > 0 ? round(($hadir / $sessions->count()) * 100, 1) : 0;
 
-        $latestComment = \App\Models\StudentComment::where('student_id', $user->id)->latest()->first();
+        // Ambil komentar yang paling relevan dengan periode pertemuan yang difilter
+        $latestMeetingDate = $gradeEntries->pluck('meeting_date')->filter()->sortDesc()->first();
+        $targetSemester = $latestMeetingDate ? $latestMeetingDate->format('Y-m') : null;
+
+        $matchingComment = null;
+        if ($targetSemester) {
+            $matchingComment = \App\Models\StudentComment::where('student_id', $user->id)
+                ->where('semester', $targetSemester)
+                ->first();
+        }
+
+        $activeComment = $matchingComment ?? \App\Models\StudentComment::where('student_id', $user->id)->latest()->first();
 
         return Inertia::render('User/ProfilPDF', [
             'studentStats' => [
@@ -270,10 +346,12 @@ class ProfileController extends Controller
                 'totalSessions' => $sessions->count(),
                 'attendance' => ['hadir' => $hadir, 'absen' => $absen, 'reschedule' => $reschedule, 'percentage' => $attendancePct],
                 'scores' => $scores,
+                'overallAvg' => $overallAvg,
                 'averagePercentage' => $overallPct,
+                'meetings' => $meetingReports,
                 'comment' => [
-                    'system' => $latestComment?->system_comment,
-                    'notes'  => $latestComment?->notes,
+                    'system' => $activeComment?->system_comment,
+                    'notes'  => $activeComment?->notes,
                 ],
             ],
             'filterInfo' => [

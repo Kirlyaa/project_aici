@@ -34,8 +34,7 @@ class DashboardController extends Controller
             })
             ->withCount(['learningSessions', 'gradeEntries'])
             ->orderBy('name')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
 
         // R4: daftar kelas untuk tampilan dua level (kelas -> murid)
         $classes = User::where('role', 'user')
@@ -47,7 +46,7 @@ class DashboardController extends Controller
             ->map(fn($r) => ['name' => $r->class_name, 'total' => (int) $r->total]);
 
         $stats = [
-            'total_students' => $students->total(),
+            'total_students' => $students->count(),
             'total_sessions' => LearningSession::query()
                 ->when($tutor->role !== 'superadmin', fn($q) => $q->where('tutor_id', $tutor->id))
                 ->count(),
@@ -57,7 +56,7 @@ class DashboardController extends Controller
             'pending_count' => $students->where('status', 'pending')->count(),
         ];
 
-        $studentData = $students->through(function (User $s) {
+        $studentData = $students->map(function (User $s) {
             $avg = (float) ($s->gradeEntries()->avg('average') ?? 0);
 
             // Ringkasan kehadiran asli dari tabel learning_sessions (bukan hardcoded)
@@ -83,7 +82,7 @@ class DashboardController extends Controller
                 'libur' => (int) ($byStatus['libur'] ?? 0),
                 'akanDatang' => (int) ($byStatus['akan-datang'] ?? 0),
             ];
-        })->withQueryString();
+        });
 
         return Inertia::render('Tutor/Dashboard', [
             'students' => $studentData,
@@ -95,6 +94,7 @@ class DashboardController extends Controller
                 'email' => $tutor->email,
             ],
             'classes' => $classes,
+            'selectedStudentId' => $request->integer('student') ?: null,
         ]);
     }
 }

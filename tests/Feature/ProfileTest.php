@@ -10,13 +10,19 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();
 
         $response = $this
             ->actingAs($user)
-            ->get('/profile');
+            ->get('/profil');
 
         $response->assertOk();
     }
@@ -27,14 +33,14 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
+            ->patch('/profil', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
             ]);
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+            ->assertRedirect('/profil');
 
         $user->refresh();
 
@@ -49,14 +55,14 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
+            ->patch('/profil', [
                 'name' => 'Test User',
                 'email' => $user->email,
             ]);
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+            ->assertRedirect('/profil');
 
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
@@ -67,7 +73,7 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->delete('/profile', [
+            ->delete('/profil', [
                 'password' => 'password',
             ]);
 
@@ -85,15 +91,42 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->from('/profile')
-            ->delete('/profile', [
+            ->from('/profil')
+            ->delete('/profil', [
                 'password' => 'wrong-password',
             ]);
 
         $response
             ->assertSessionHasErrors('password')
-            ->assertRedirect('/profile');
+            ->assertRedirect('/profil');
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_student_profile_displays_four_meetings_range_and_stats(): void
+    {
+        $this->seed(\Database\Seeders\TutorSeeder::class);
+        $this->seed(\Database\Seeders\AiraLearningSessionSeeder::class);
+        $this->seed(\Database\Seeders\AiraGradeEntrySeeder::class);
+        $this->seed(\Database\Seeders\AiraStudentCommentSeeder::class);
+
+        $aira = User::where('email', 'aira@aici.id')->first();
+        $this->assertNotNull($aira);
+
+        $response = $this->actingAs($aira)->get('/profil');
+        $response->assertOk();
+
+        $page = $response->viewData('page');
+        $pdfRanges = $page['props']['pdfRanges'];
+        $this->assertNotEmpty($pdfRanges);
+        $this->assertSame('1-4', $pdfRanges[0]['key']);
+        $this->assertSame('Pertemuan 1 - 4', $pdfRanges[0]['label']);
+
+        // Test PDF route
+        $pdfResponse = $this->actingAs($aira)->get('/profil/pdf?range=1-4');
+        $pdfResponse->assertOk();
+        $pdfPage = $pdfResponse->viewData('page');
+        $this->assertSame('Pertemuan 1 - 4', $pdfPage['props']['filterInfo']['activeLabel']);
+        $this->assertSame(4, $pdfPage['props']['filterInfo']['meetingCount']);
     }
 }

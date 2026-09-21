@@ -27,6 +27,7 @@
     },
     "dependencies": {
         "bootstrap-icons": "^1.13.1",
+        "html2pdf.js": "^0.14.0",
         "react-is": "^19.2.8",
         "recharts": "^3.10.1"
     }

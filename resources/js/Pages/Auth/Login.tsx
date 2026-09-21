@@ -22,14 +22,18 @@ export default function Login() {
             {/* Main Card Container */}
             <div className="w-full max-w-md">
                 {/* Top Section - Logo & Branding */}
-                <div className="text-center mb-10">
-                    <div className="flex justify-center mb-4">
-                        <div className="w-20 h-20 bg-gradient-to-br from-teal-600 to-teal-700 rounded-3xl flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform">
-                            <i className="bi bi-mortarboard-fill text-white text-4xl" />
+                <div className="text-center mb-8">
+                    <div className="flex justify-center mb-3">
+                        <div className="p-3 bg-white rounded-2xl shadow-md border border-gray-100 transform hover:scale-105 transition-transform inline-block">
+                            <img
+                                src="/images/logo-aici.png"
+                                alt="AICI Logo"
+                                className="h-16 w-auto object-contain"
+                            />
                         </div>
                     </div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">AICI</h1>
-                    <p className="text-gray-600 text-sm mt-2 font-medium">Akademi Inovasi Coding Indonesia</p>
+                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">Portal Pembelajaran</h1>
+                    <p className="text-gray-500 text-xs mt-1 font-medium">Artificial Intelligence Center Indonesia</p>
                 </div>
 
                 {/* Login Card */}

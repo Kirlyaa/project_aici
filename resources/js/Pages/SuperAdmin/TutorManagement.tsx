@@ -98,12 +98,16 @@ export default function TutorManagement() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <Link href="/superadmin" className="text-gray-600 hover:text-gray-900">
+                            <Link href="/superadmin" className="text-gray-600 hover:text-gray-900 mr-1" title="Kembali ke Dashboard">
                                 <i className="bi bi-arrow-left text-xl" />
                             </Link>
-                            <div>
-                                <h1 className="font-bold text-lg">AICI</h1>
-                                <p className="text-xs text-gray-500">Kelola Tutor</p>
+                            <img
+                                src="/images/logo-aici.png"
+                                alt="AICI Logo"
+                                className="h-8 w-auto object-contain"
+                            />
+                            <div className="border-l border-gray-300 pl-3">
+                                <p className="text-xs font-semibold text-gray-600">Kelola Tutor</p>
                             </div>
                         </div>
                     </div>

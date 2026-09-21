@@ -50,12 +50,13 @@ export default function SuperAdminDashboard() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-teal-600 flex items-center justify-center">
-                                <i className="bi bi-shield-check text-white text-lg" />
-                            </div>
-                            <div>
-                                <h1 className="font-bold text-lg">AICI</h1>
-                                <p className="text-xs text-gray-500">Super Admin Control Center</p>
+                            <img
+                                src="/images/logo-aici.png"
+                                alt="AICI Logo"
+                                className="h-10 w-auto object-contain"
+                            />
+                            <div className="border-l border-gray-300 pl-3">
+                                <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-medium">Super Admin</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">

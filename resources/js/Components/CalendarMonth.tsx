@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { SessionItem } from '@/types/session';
 
 interface Props {
@@ -9,8 +9,29 @@ const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 
 const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
 export default function CalendarMonth({ sessions }: Props) {
-    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+    const today = new Date();
+    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+    // Kumpulkan daftar tahun dari sesi dan rentang tahun lampau & mendatang
+    const availableYears = useMemo(() => {
+        const yearsSet = new Set<number>();
+
+        for (let y = today.getFullYear() - 3; y <= today.getFullYear() + 3; y++) {
+            yearsSet.add(y);
+        }
+
+        sessions.forEach(s => {
+            if (s.date) {
+                const y = parseInt(s.date.substring(0, 4), 10);
+                if (!isNaN(y)) {
+                    yearsSet.add(y);
+                }
+            }
+        });
+
+        return Array.from(yearsSet).sort((a, b) => a - b);
+    }, [sessions, today.getFullYear()]);
 
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -86,15 +107,39 @@ export default function CalendarMonth({ sessions }: Props) {
     return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
-                <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
-                    <i className="bi bi-chevron-left" />
-                </button>
-                <h3 className="text-lg font-bold text-gray-900">
-                    {months[currentMonth]} {currentYear}
-                </h3>
-                <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
-                    <i className="bi bi-chevron-right" />
-                </button>
+                <div className="flex items-center gap-1">
+                    <button
+                        type="button"
+                        onClick={prevMonth}
+                        className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition"
+                        title="Bulan sebelumnya"
+                    >
+                        <i className="bi bi-chevron-left" />
+                    </button>
+                    <h3 className="text-lg font-bold text-gray-900 min-w-28 text-center">
+                        {months[currentMonth]}
+                    </h3>
+                    <button
+                        type="button"
+                        onClick={nextMonth}
+                        className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition"
+                        title="Bulan berikutnya"
+                    >
+                        <i className="bi bi-chevron-right" />
+                    </button>
+                </div>
+
+                <select
+                    value={currentYear}
+                    onChange={e => setCurrentYear(Number(e.target.value))}
+                    className="text-sm font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                >
+                    {availableYears.map(year => (
+                        <option key={year} value={year}>
+                            {year}
+                        </option>
+                    ))}
+                </select>
             </div>
 
             <div className="grid grid-cols-7 gap-2 mb-4">

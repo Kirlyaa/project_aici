@@ -36,9 +36,28 @@ class ClassroomSeeder extends Seeder
             ]
         );
 
-        // Ambil salah satu tutor jika ada
-        $tutor = User::where('role', 'tutor')->first();
-        $tutorId = $tutor?->id;
+        // Ambil tutor spesifik
+        $tutorAiya = User::where('email', 'aiya@aici.id')->first();
+        $tutorBudi = User::where('email', 'budi@aici.id')->first();
+        $tutorSiti = User::where('email', 'siti@aici.id')->first();
+
+        $tutorAiyaId = $tutorAiya?->id;
+        $tutorBudiId = $tutorBudi?->id ?? $tutorAiyaId;
+        $tutorSitiId = $tutorSiti?->id ?? $tutorAiyaId;
+
+        // Hubungkan Aira ke Kelas A (Tutor Aiya)
+        User::where('email', 'aira@aici.id')->update([
+            'classroom_id' => $classA->id,
+            'class' => $classA->name,
+            'tutor_id' => $tutorAiyaId,
+        ]);
+
+        // Hubungkan Faris ke Kelas B (Tutor Budi)
+        User::where('email', 'student@aici.id')->update([
+            'classroom_id' => $classB->id,
+            'class' => $classB->name,
+            'tutor_id' => $tutorBudiId,
+        ]);
 
         // Data 3 murid untuk Kelas A
         $studentsClassA = [
@@ -52,12 +71,12 @@ class ClassroomSeeder extends Seeder
                 ['email' => $s['email']],
                 [
                     'name' => $s['name'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make('password123'),
                     'role' => 'user',
                     'status' => 'aktif',
                     'classroom_id' => $classA->id,
                     'class' => $classA->name,
-                    'tutor_id' => $tutorId,
+                    'tutor_id' => $tutorAiyaId,
                 ]
             );
         }
@@ -74,12 +93,12 @@ class ClassroomSeeder extends Seeder
                 ['email' => $s['email']],
                 [
                     'name' => $s['name'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make('password123'),
                     'role' => 'user',
                     'status' => 'aktif',
                     'classroom_id' => $classB->id,
                     'class' => $classB->name,
-                    'tutor_id' => $tutorId,
+                    'tutor_id' => $tutorBudiId,
                 ]
             );
         }
@@ -96,12 +115,12 @@ class ClassroomSeeder extends Seeder
                 ['email' => $s['email']],
                 [
                     'name' => $s['name'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make('password123'),
                     'role' => 'user',
                     'status' => 'aktif',
                     'classroom_id' => $classC->id,
                     'class' => $classC->name,
-                    'tutor_id' => $tutorId,
+                    'tutor_id' => $tutorSitiId,
                 ]
             );
         }
@@ -117,12 +136,12 @@ class ClassroomSeeder extends Seeder
                 ['email' => $s['email']],
                 [
                     'name' => $s['name'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make('password123'),
                     'role' => 'user',
                     'status' => 'aktif',
                     'classroom_id' => null,
                     'class' => null,
-                    'tutor_id' => $tutorId,
+                    'tutor_id' => $tutorAiyaId,
                 ]
             );
         }

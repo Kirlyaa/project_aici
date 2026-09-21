@@ -10,14 +10,30 @@ class SecurityHardeningTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_tutor_cannot_manage_another_tutors_student(): void
+    public function test_active_tutor_can_manage_any_student(): void
     {
         $tutorA = User::factory()->create(['role' => 'tutor', 'status' => 'aktif']);
         $tutorB = User::factory()->create(['role' => 'tutor', 'status' => 'aktif']);
         $studentA = User::factory()->create(['role' => 'user', 'tutor_id' => $tutorA->id]);
 
         $this->assertTrue($tutorA->managesStudent($studentA));
-        $this->assertFalse($tutorB->managesStudent($studentA));
+        $this->assertTrue($tutorB->managesStudent($studentA));
+    }
+
+    public function test_inactive_tutor_cannot_manage_student(): void
+    {
+        $inactiveTutor = User::factory()->create(['role' => 'tutor', 'status' => 'nonaktif']);
+        $student = User::factory()->create(['role' => 'user']);
+
+        $this->assertFalse($inactiveTutor->managesStudent($student));
+    }
+
+    public function test_regular_user_cannot_manage_student(): void
+    {
+        $studentA = User::factory()->create(['role' => 'user']);
+        $studentB = User::factory()->create(['role' => 'user']);
+
+        $this->assertFalse($studentA->managesStudent($studentB));
     }
 
     public function test_tutor_can_manage_unassigned_student(): void

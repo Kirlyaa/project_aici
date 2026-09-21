@@ -97,8 +97,8 @@ class User extends Authenticatable
     /**
      * Cek otorisasi pengelolaan murid:
      * - Superadmin mengelola semua murid.
-     * - Tutor hanya boleh mengelola murid yang ditugaskan langsung (tutor_id)
-     *   atau murid yang belum memiliki tutor khusus (unassigned).
+     * - Tutor aktif dapat mengelola murid di platform AICI (kolaboratif & tutor pengganti),
+     *   eksklusivitas saat pengeditan dijaga oleh StudentLock.
      */
     public function managesStudent(int|User $student): bool
     {
@@ -116,7 +116,6 @@ class User extends Authenticatable
             return false;
         }
 
-        // Jika murid sudah punya assigned tutor, hanya tutor tersebut atau superadmin yang berhak
-        return $studentUser->tutor_id === null || (int) $studentUser->tutor_id === (int) $this->id;
+        return true;
     }
 }

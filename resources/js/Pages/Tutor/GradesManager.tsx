@@ -177,12 +177,16 @@ export default function GradesManager() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <Link href={isSuperAdmin ? `/superadmin/students/${studentId}` : '/tutor'} className="text-gray-600 hover:text-gray-900">
+                            <Link href={isSuperAdmin ? `/superadmin/students/${studentId}` : `/tutor?student=${studentId}`} className="text-gray-600 hover:text-gray-900 mr-1" title="Kembali">
                                 <i className="bi bi-arrow-left text-xl" />
                             </Link>
-                            <div>
-                                <h1 className="font-bold text-lg">AICI</h1>
-                                <p className="text-xs text-gray-500">Input Nilai {isSuperAdmin ? '(Mode SuperAdmin)' : ''}</p>
+                            <img
+                                src="/images/logo-aici.png"
+                                alt="AICI Logo"
+                                className="h-8 w-auto object-contain"
+                            />
+                            <div className="border-l border-gray-300 pl-3">
+                                <p className="text-xs font-semibold text-gray-600">Input Nilai {isSuperAdmin ? '(Mode SuperAdmin)' : ''}</p>
                             </div>
                         </div>
                         {isSuperAdmin && (
@@ -507,7 +511,7 @@ export default function GradesManager() {
                         <i className="bi bi-plus-lg" /> Tambah Pertemuan
                     </button>
                     <Link
-                        href="/tutor"
+                        href={isSuperAdmin ? `/superadmin/students/${studentId}` : `/tutor?student=${studentId}`}
                         className="flex-1 text-center px-6 py-3 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
                     >
                         <i className="bi bi-arrow-left mr-2" /> Kembali
