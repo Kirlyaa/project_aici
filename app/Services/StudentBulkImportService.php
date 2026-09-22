@@ -85,13 +85,25 @@ class StudentBulkImportService
                 $errors[] = "Baris {$rowNumber}: Password minimal 6 karakter.";
             }
 
-            // Parse Jadwal jika diisi
-            $parsedDate = null;
+            // Parse Jadwal jika diisi (Multi-tanggal dipisahkan koma)
+            $parsedDates = [];
             if ($scheduleRaw !== '') {
-                $parsedDate = $this->parseDate($scheduleRaw);
-                if (! $parsedDate) {
-                    $errors[] = "Baris {$rowNumber}: Format jadwal/tanggal '{$scheduleRaw}' tidak valid (Gunakan format YYYY-MM-DD atau DD/MM/YYYY).";
+                $rawDates = array_filter(
+                    array_map('trim', explode(',', $scheduleRaw)),
+                    fn($d) => $d !== ''
+                );
+
+                foreach ($rawDates as $rawDate) {
+                    $dateObj = $this->parseDate($rawDate);
+                    if (! $dateObj) {
+                        $errors[] = "Baris {$rowNumber}: Tanggal '{$rawDate}' tidak valid (Gunakan format YYYY-MM-DD atau DD/MM/YYYY).";
+                    } else {
+                        $parsedDates[] = $dateObj;
+                    }
                 }
+
+                // Urutkan tanggal dari paling awal ke paling akhir (ascending)
+                usort($parsedDates, fn(Carbon $a, Carbon $b) => $a->timestamp <=> $b->timestamp);
             }
 
             $validRows[] = [
@@ -101,7 +113,7 @@ class StudentBulkImportService
                 'password' => $password,
                 'class_name' => $className,
                 'module_name' => $moduleName,
-                'schedule_date' => $parsedDate,
+                'schedule_dates' => $parsedDates,
                 'tutor_identifier' => $tutorIdentifier,
             ];
         }
@@ -183,21 +195,28 @@ class StudentBulkImportService
                     }
                 }
 
-                // 5. Buat Jadwal Pertemuan / LearningSession jika tanggal ada
-                if ($item['schedule_date']) {
-                    /** @var Carbon $dateCarbon */
-                    $dateCarbon = $item['schedule_date'];
-                    $session = LearningSession::create([
-                        'user_id' => $student->id,
-                        'tutor_id' => $tutorId,
-                        'title' => $item['module_name'] !== '' ? "Sesi: {$item['module_name']}" : "Sesi Pembelajaran {$student->name}",
-                        'date_string' => $dateCarbon->translatedFormat('l, d F Y'),
-                        'date' => $dateCarbon->toDateString(),
-                        'status' => 'akan-datang',
-                    ]);
+                // 5. Buat Jadwal Pertemuan / LearningSession (Looping Dinamis Multi-Tanggal)
+                if (! empty($item['schedule_dates'])) {
+                    $totalDates = count($item['schedule_dates']);
+                    foreach ($item['schedule_dates'] as $index => $dateCarbon) {
+                        /** @var Carbon $dateCarbon */
+                        $meetingNumber = $index + 1;
+                        $sessionTitle = $item['module_name'] !== ''
+                            ? "Pertemuan {$meetingNumber}: {$item['module_name']}"
+                            : "Pertemuan {$meetingNumber}: Sesi Pembelajaran {$student->name}";
 
-                    if ($module) {
-                        $session->modules()->sync([$module->id]);
+                        $session = LearningSession::create([
+                            'user_id' => $student->id,
+                            'tutor_id' => $tutorId,
+                            'title' => $sessionTitle,
+                            'date_string' => $dateCarbon->translatedFormat('l, d F Y'),
+                            'date' => $dateCarbon->toDateString(),
+                            'status' => 'akan-datang',
+                        ]);
+
+                        if ($module) {
+                            $session->modules()->sync([$module->id]);
+                        }
                     }
                 }
 
@@ -248,8 +267,24 @@ class StudentBulkImportService
 
         // Contoh baris data
         $sampleData = [
-            ['Ahmad Fauzan', 'fauzan@student.aici.id', 'password123', 'Robotik Dasar A', 'Modul 1 – Pengenalan Robotika', '2026-10-15', 'tutor@aici.id'],
-            ['Clarissa Putri', 'clarissa@student.aici.id', 'password123', 'Coding AI Pemula', 'Modul AI & Machine Learning Dasar', '2026-10-18', 'tutor@aici.id'],
+            [
+                'Ahmad Fauzan',
+                'fauzan@student.aici.id',
+                'password123',
+                'Robotik Dasar A',
+                'Modul 1 – Pengenalan Robotika',
+                '2026-10-15, 2026-10-22, 2026-10-29, 2026-11-05, 2026-11-12, 2026-11-19, 2026-11-26, 2026-12-03',
+                'tutor@aici.id',
+            ],
+            [
+                'Clarissa Putri',
+                'clarissa@student.aici.id',
+                'password123',
+                'Coding AI Pemula',
+                'Modul AI & Machine Learning Dasar',
+                '2026-10-18, 2026-10-25, 2026-11-01, 2026-11-08',
+                'tutor@aici.id',
+            ],
         ];
 
         $rowIndex = 2;
