@@ -141,6 +141,12 @@ class DashboardController extends Controller
 
         // School Status Distribution — REMOVED (R7)
 
+        // All active tutors for chat widget
+        $tutorsList = User::where('role', 'tutor')
+            ->orderBy('name')
+            ->select('id', 'name', 'email')
+            ->get();
+
         return Inertia::render('SuperAdmin/Dashboard', [
             'stats' => [
                 'totalUsers' => $totalUsers,
@@ -163,6 +169,7 @@ class DashboardController extends Controller
             'recentStudents' => $recentStudents,
             'recentTutors' => $recentTutors,
             'recentModules' => $recentModules,
+            'tutorsList' => $tutorsList,
         ]);
     }
 }

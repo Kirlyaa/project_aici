@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('learning_sessions', function (Blueprint $table) {
-            //
+            $table->text('admin_note_for_tutor')->nullable()->after('description');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('learning_sessions', function (Blueprint $table) {
-            //
+            $table->dropColumn('admin_note_for_tutor');
         });
     }
 };

@@ -12,6 +12,7 @@ interface SessionData {
     date: string;
     status: SessionStatus;
     description?: string | null;
+    admin_note_for_tutor?: string | null;
     tools?: string[] | null;
     module_ids: number[];
 }
@@ -75,6 +76,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
     const [dropdownStatus, setDropdownStatus] = useState<DateStatus>('akan-datang');
     const [dropdownModule, setDropdownModule] = useState<number | undefined>(undefined);
     const [dropdownTitle, setDropdownTitle] = useState('');
+    const [dropdownAdminNote, setDropdownAdminNote] = useState('');
     const [saving, setSaving] = useState(false);
     const [showCsvPanel, setShowCsvPanel] = useState(false);
     const [showClearModal, setShowClearModal] = useState(false);
@@ -107,10 +109,12 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
             setDropdownStatus(existing.status);
             setDropdownModule(existing.module_ids[0]);
             setDropdownTitle(existing.title);
+            setDropdownAdminNote(existing.admin_note_for_tutor ?? '');
         } else {
             setDropdownStatus('akan-datang');
             setDropdownModule(undefined);
             setDropdownTitle('');
+            setDropdownAdminNote('');
         }
     };
 
@@ -147,6 +151,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
             date_string: formatDateString(year, month, selectedDate),
             date: isoDate,
             status: dropdownStatus,
+            admin_note_for_tutor: dropdownAdminNote.trim() || null,
             module_ids: dropdownModule ? [dropdownModule] : [],
         };
 
@@ -493,6 +498,22 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                                             </select>
                                         </div>
                                     )}
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Catatan Khusus untuk Tutor (Per Pertemuan)
+                                        </label>
+                                        <textarea
+                                            rows={3}
+                                            value={dropdownAdminNote}
+                                            onChange={e => setDropdownAdminNote(e.target.value)}
+                                            placeholder="Contoh: Fokuskan murid pada pemahaman sensor ultrasonik..."
+                                            className="w-full px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Catatan ini akan langsung terlihat oleh tutor yang mengajar sesi ini.
+                                        </p>
+                                    </div>
                                 </>
                             )}
 

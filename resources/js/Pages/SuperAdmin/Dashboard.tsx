@@ -1,7 +1,20 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import FlashToast from '@/Components/FlashToast';
+import AdminTutorChatWidget from '@/Components/AdminTutorChatWidget';
 
 interface Props {
+    auth?: {
+        user?: {
+            id: number;
+            name: string;
+            role: string;
+        };
+    };
+    tutorsList?: Array<{
+        id: number;
+        name: string;
+        email: string;
+    }>;
     stats: {
         totalUsers: number;
         totalStudents: number;
@@ -38,7 +51,7 @@ interface Props {
 }
 
 export default function SuperAdminDashboard() {
-    const { stats, recentStudents, recentTutors, recentModules } = usePage().props as unknown as Props;
+    const { stats, recentStudents, recentTutors, recentModules, tutorsList = [], auth } = usePage().props as unknown as Props;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -78,6 +91,13 @@ export default function SuperAdminDashboard() {
             </nav>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Real-time Tutor Chat Widget */}
+                {tutorsList.length > 0 && (
+                    <AdminTutorChatWidget
+                        tutors={tutorsList}
+                        currentUserId={auth?.user?.id ?? 1}
+                    />
+                )}
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Super Admin</h1>

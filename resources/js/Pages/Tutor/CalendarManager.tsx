@@ -14,6 +14,7 @@ interface SessionData {
     date: string;
     status: SessionStatus;
     description?: string | null;
+    admin_note_for_tutor?: string | null;
     tools?: string[] | null;
     module_ids: number[];
 }
@@ -69,6 +70,7 @@ export default function CalendarManager({ studentId, student, sessions, modules,
     const [dropdownStatus, setDropdownStatus] = useState<DateStatus>('akan-datang');
     const [dropdownModule, setDropdownModule] = useState<number | undefined>(undefined);
     const [dropdownTitle, setDropdownTitle] = useState('');
+    const [dropdownAdminNote, setDropdownAdminNote] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
     const year = currentMonth.getFullYear();
@@ -105,10 +107,12 @@ export default function CalendarManager({ studentId, student, sessions, modules,
             setDropdownStatus(existing.status);
             setDropdownModule(existing.module_ids[0]);
             setDropdownTitle(existing.title);
+            setDropdownAdminNote(existing.admin_note_for_tutor || null);
         } else {
             setDropdownStatus('akan-datang');
             setDropdownModule(undefined);
             setDropdownTitle('');
+            setDropdownAdminNote(null);
         }
     };
 
@@ -374,6 +378,18 @@ export default function CalendarManager({ studentId, student, sessions, modules,
                         </h3>
 
                         <div className="space-y-4">
+                            {dropdownAdminNote && (
+                                <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-xl">
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 mb-1">
+                                        <i className="bi bi-pin-angle-fill text-amber-600" />
+                                        <span>Catatan Khusus Super Admin untuk Sesi Ini:</span>
+                                    </div>
+                                    <p className="text-xs text-amber-900 whitespace-pre-wrap leading-relaxed">
+                                        {dropdownAdminNote}
+                                    </p>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
                                 <select

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SuperAdmin\StoreUserRequest;
 use App\Models\User;
+use App\Services\StudentBulkImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends Controller
 {
@@ -203,5 +205,42 @@ class StudentController extends Controller
                 'updatedAt' => $latestComment->updated_at?->format('d M Y H:i'),
             ] : null,
         ]);
+    }
+
+    /**
+     * Download template Excel untuk bulk insert siswa baru.
+     */
+    public function downloadTemplate(StudentBulkImportService $importService): StreamedResponse
+    {
+        return $importService->downloadTemplate();
+    }
+
+    /**
+     * Import data siswa baru secara massal dari file Excel / Spreadsheet.
+     */
+    public function importExcel(Request $request, StudentBulkImportService $importService): RedirectResponse
+    {
+        $request->validate([
+            'file' => [
+                'required',
+                'file',
+                'max:10240',
+                'mimes:xlsx,xls,csv',
+            ],
+        ], [
+            'file.required' => 'Silakan pilih file Excel / CSV terlebih dahulu.',
+            'file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau .csv.',
+            'file.max' => 'Ukuran file tidak boleh melebihi 10MB.',
+        ]);
+
+        $result = $importService->import($request->file('file'));
+
+        if (! $result['success']) {
+            return back()
+                ->with('error', 'Gagal mengimpor data siswa baru.')
+                ->with('import_errors', $result['errors']);
+        }
+
+        return back()->with('success', "Berhasil mengimpor {$result['imported_count']} data siswa baru.");
     }
 }

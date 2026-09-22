@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'date',
     'status',
     'description',
+    'admin_note_for_tutor',
     'tools',
 ])]
 class LearningSession extends Model

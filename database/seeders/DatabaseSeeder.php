@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             AiraLearningSessionSeeder::class,
             RaporSeeder::class,
             AiraStudentCommentSeeder::class,
+            TutorChatAndNoteSeeder::class,
         ]);
     }
 }

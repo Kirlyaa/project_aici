@@ -31,6 +31,7 @@ class CalendarController extends Controller
                     'date' => $s->date?->toDateString(),
                     'status' => $s->status,
                     'description' => $s->description,
+                    'admin_note_for_tutor' => $s->admin_note_for_tutor,
                     'tools' => $s->tools,
                     'module_ids' => $s->modules->pluck('id'),
                 ];
@@ -65,6 +66,7 @@ class CalendarController extends Controller
                 'date' => $validated['date'],
                 'status' => $validated['status'],
                 'description' => $validated['description'] ?? null,
+                'admin_note_for_tutor' => $validated['admin_note_for_tutor'] ?? null,
                 'tools' => $validated['tools'] ?? null,
             ]);
 
@@ -88,6 +90,7 @@ class CalendarController extends Controller
                 'date' => $validated['date'],
                 'status' => $validated['status'],
                 'description' => $validated['description'] ?? null,
+                'admin_note_for_tutor' => $validated['admin_note_for_tutor'] ?? null,
                 'tools' => $validated['tools'] ?? null,
             ]);
 

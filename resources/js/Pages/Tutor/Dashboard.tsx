@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import FlashToast from '@/Components/FlashToast';
+import TutorLiveChatBanner from '@/Components/TutorLiveChatBanner';
 
 interface Student {
     id: number;
@@ -143,6 +144,9 @@ export default function TutorDashboard() {
             </nav>
 
             <div className="max-w-7xl mx-auto px-4 py-8">
+                {/* Banner Notifikasi & Chat Real-Time dari Super Admin */}
+                <TutorLiveChatBanner />
+
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Tutor</h1>

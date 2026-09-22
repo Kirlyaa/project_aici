@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserSessionController;
 use App\Http\Controllers\StudentGradeReportController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\TutorChatController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\Tutor\DashboardController;
 use App\Http\Controllers\Tutor\CalendarController;
@@ -28,7 +29,19 @@ Route::get('/', function () {
     return redirect('/landing');
 });
 
-Route::get('/landing', fn() => Inertia::render('Landing'))->name('landing');
+Route::get('/landing', function () {
+    $stats = [
+        'yearsExperience' => '5+',
+        'activeStudents' => \App\Models\User::where('role', 'user')->where('status', 'aktif')->count(),
+        'totalModules' => \App\Models\Module::count(),
+        'partnerCount' => \App\Models\Classroom::count(),
+    ];
+
+    return Inertia::render('Landing', [
+        'stats' => $stats,
+    ]);
+})->name('landing');
+
 Route::get('/faq', fn() => Inertia::render('FAQ'))->name('faq');
 
 Route::middleware(['auth', 'active', 'throttle:15,1'])->group(function () {
@@ -46,6 +59,15 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::patch('/notifications/mark-all/read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::delete('/notifications/delete-all/read', [NotificationController::class, 'deleteAllRead'])->name('notifications.delete-all-read');
+
+    // Chat SuperAdmin <-> Tutor
+    Route::get('/api/tutor-chats', [TutorChatController::class, 'index'])->name('tutor-chats.index');
+    Route::post('/api/tutor-chats', [TutorChatController::class, 'store'])->name('tutor-chats.store');
+    Route::put('/api/tutor-chats/{id}', [TutorChatController::class, 'update'])->name('tutor-chats.update');
+    Route::delete('/api/tutor-chats/{id}', [TutorChatController::class, 'destroy'])->name('tutor-chats.destroy');
+    Route::post('/api/tutor-chats/mark-read', [TutorChatController::class, 'markAsRead'])->name('tutor-chats.mark-read');
+    Route::get('/api/tutor-chats/active-alerts', [TutorChatController::class, 'getActiveAlerts'])->name('tutor-chats.active-alerts');
+    Route::get('/api/tutor-chats/read-history', [TutorChatController::class, 'getReadHistory'])->name('tutor-chats.read-history');
 });
 
 Route::get('/dashboard', function () {
@@ -135,6 +157,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('/tutors/{tutor}/toggle-status', [TutorController::class, 'toggleStatus'])->name('tutors.toggle-status');
         
         // Student Management
+        Route::get('/students/template', [StudentController::class, 'downloadTemplate'])->name('students.template');
+        Route::post('/students/import-excel', [StudentController::class, 'importExcel'])->name('students.import-excel');
         Route::get('/students', [StudentController::class, 'index'])->name('students');
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
         Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');

@@ -27,6 +27,7 @@ class StoreLearningSessionRequest extends FormRequest
             'date' => ['required', 'date'],
             'status' => ['required', Rule::in(['hadir', 'absen', 'reschedule', 'libur', 'akan-datang'])],
             'description' => ['nullable', 'string'],
+            'admin_note_for_tutor' => ['nullable', 'string'],
             'tools' => ['nullable', 'array'],
             'tools.*' => ['string', 'max:255'],
             'module_ids' => ['nullable', 'array'],

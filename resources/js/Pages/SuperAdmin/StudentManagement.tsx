@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import FlashToast from '@/Components/FlashToast';
 
 interface Student {
     id: number;
@@ -30,12 +31,21 @@ interface Props {
     search: string;
     filterStatus: string;
     tutors: Tutor[];
+    flash?: { success?: string; error?: string };
+    import_errors?: string[];
 }
 
 export default function StudentManagement() {
     const { students, search, filterStatus: initialFilterStatus, tutors } = usePage().props as unknown as Props;
+    const pageProps = usePage().props as unknown as Props;
+    const importErrors = pageProps.import_errors || [];
 
     const [showModal, setShowModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const [editingId, setEditingId] = useState<number | null>(null);
     const [formData, setFormData] = useState({
         name: '',
@@ -102,6 +112,29 @@ export default function StudentManagement() {
         router.patch(`/superadmin/students/${id}/toggle-status`);
     };
 
+    const handleImportSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!importFile) return;
+
+        const formData = new FormData();
+        formData.append('file', importFile);
+
+        setIsUploading(true);
+        router.post('/superadmin/students/import-excel', formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowImportModal(false);
+                setImportFile(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
+            onFinish: () => {
+                setIsUploading(false);
+            },
+        });
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Head title="Kelola Murid" />
@@ -133,6 +166,23 @@ export default function StudentManagement() {
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Kelola Akun Murid</h1>
                     <p className="text-gray-600">Tambah, edit, atau hapus akun murid AICI</p>
                 </div>
+
+                <FlashToast />
+
+                {/* Import Errors Alert if any */}
+                {importErrors.length > 0 && (
+                    <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700">
+                        <div className="flex items-center gap-2 font-semibold mb-2">
+                            <i className="bi bi-exclamation-triangle-fill text-lg text-red-600" />
+                            <span>Terdapat kendala saat impor Excel:</span>
+                        </div>
+                        <ul className="list-disc list-inside text-xs sm:text-sm space-y-1">
+                            {importErrors.map((err, idx) => (
+                                <li key={idx}>{err}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {/* Search & Filter Bar */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
@@ -170,14 +220,30 @@ export default function StudentManagement() {
                     </div>
                 </div>
 
-                {/* Add New Student Button */}
-                <div className="mb-6">
+                {/* Add New Student Button & Bulk Import Actions */}
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                     <button
                         onClick={() => openModal()}
-                        className="px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-2"
+                        className="px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-2 shadow-sm transition"
                     >
                         <i className="bi bi-plus-lg" /> Tambah Murid Baru
                     </button>
+
+                    <div className="flex items-center gap-2">
+                        <a
+                            href="/superadmin/students/template"
+                            className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm text-sm transition"
+                        >
+                            <i className="bi bi-download text-teal-600" /> Download Template Excel
+                        </a>
+                        <button
+                            type="button"
+                            onClick={() => setShowImportModal(true)}
+                            className="px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 flex items-center gap-2 shadow-sm text-sm transition"
+                        >
+                            <i className="bi bi-file-earmark-spreadsheet" /> Bulk Insert Excel
+                        </button>
+                    </div>
                 </div>
 
                 {/* Students Table */}
@@ -463,6 +529,88 @@ export default function StudentManagement() {
                                 >
                                     {editingId ? 'Update' : 'Tambah'} Murid
                                 </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Bulk Insert Excel */}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <i className="bi bi-file-earmark-spreadsheet text-emerald-600 text-xl" />
+                                Bulk Insert Siswa Baru (.xlsx / .csv)
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowImportModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <i className="bi bi-x-lg text-lg" />
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-4">
+                            Unggah file Excel untuk mendaftarkan akun siswa baru secara massal, sekaligus menghubungkannya dengan <strong>Kelas</strong>, <strong>Modul</strong>, <strong>Jadwal</strong>, dan <strong>Tutor</strong>.
+                        </p>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 mb-4 space-y-1">
+                            <p className="font-semibold flex items-center gap-1.5">
+                                <i className="bi bi-info-circle-fill" /> Urutan Kolom Template:
+                            </p>
+                            <p>1. Nama Lengkap | 2. Email | 3. Password | 4. Kelas | 5. Modul | 6. Jadwal (YYYY-MM-DD) | 7. Tutor</p>
+                        </div>
+
+                        <form onSubmit={handleImportSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih File Excel / CSV</label>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".xlsx,.xls,.csv"
+                                    onChange={e => setImportFile(e.target.files?.[0] || null)}
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-gray-200 rounded-lg cursor-pointer p-1"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2">
+                                <a
+                                    href="/superadmin/students/template"
+                                    className="text-xs text-teal-600 hover:text-teal-700 font-semibold flex items-center gap-1"
+                                >
+                                    <i className="bi bi-download" /> Download Template
+                                </a>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowImportModal(false)}
+                                        className="px-4 py-2 text-sm border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={!importFile || isUploading}
+                                        className={`px-5 py-2 text-sm bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 flex items-center gap-2 ${
+                                            !importFile || isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                    >
+                                        {isUploading ? (
+                                            <>
+                                                <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                                                Mengimpor...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-cloud-arrow-up" /> Upload & Proses
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
