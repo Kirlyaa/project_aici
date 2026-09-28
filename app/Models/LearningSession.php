@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'user_id',
     'tutor_id',
+    'classroom_id',
     'title',
     'date_string',
     'date',
@@ -46,6 +47,11 @@ class LearningSession extends Model
     public function tutor()
     {
         return $this->belongsTo(User::class, 'tutor_id');
+    }
+
+    public function classroom()
+    {
+        return $this->belongsTo(Classroom::class, 'classroom_id');
     }
 
     public function gradeEntries()

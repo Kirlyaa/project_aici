@@ -21,12 +21,16 @@ class StoreStudentCommentRequest extends FormRequest
         return [
             'student_id' => ['required', 'integer', 'exists:users,id'],
             'semester' => ['required', 'string', 'max:20'],
+            'meeting_range' => ['nullable', 'string', 'max:20'],
             'academic_year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
             'tutor_comment' => ['nullable', 'string'],
             'strengths' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
             'admin_note' => ['nullable', 'string'],
             'system_comment' => ['nullable', 'string'],
+            'meeting_comments' => ['nullable', 'array'],
+            'meeting_comments.*.grade_entry_id' => ['required_with:meeting_comments', 'integer', 'exists:grade_entries,id'],
+            'meeting_comments.*.notes' => ['nullable', 'string'],
         ];
     }
 }

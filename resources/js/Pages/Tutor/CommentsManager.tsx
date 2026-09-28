@@ -6,6 +6,7 @@ import { useStudentLock, LockInfo } from '@/Hooks/useStudentLock';
 interface Comment {
     id: number;
     semester: string;
+    meetingRange?: string;
     academic_year: number | null;
     systemComment: string | null;
     tutorComment: string | null;
@@ -16,6 +17,15 @@ interface Comment {
     moduleNames: string[] | null;
     isSystemGenerated: boolean;
     lastUpdated: string | null;
+}
+
+interface GradeEntryItem {
+    id: number;
+    meetingNumber: number;
+    moduleName: string;
+    moduleType?: string;
+    meetingDate?: string;
+    notes?: string | null;
 }
 
 interface Template {
@@ -29,6 +39,7 @@ interface Props {
     studentId: number;
     student: { id: number; name: string; email: string };
     comments: Comment[];
+    gradeEntries?: GradeEntryItem[];
     templates: Template[];
 }
 
@@ -40,16 +51,58 @@ const emptyTemplateForm = {
 };
 
 export default function CommentsManager() {
-    const { studentId, student, comments, templates, auth } = usePage().props as unknown as Props & { auth: any };
+    const { studentId, student, comments, gradeEntries = [], templates, auth } = usePage().props as unknown as Props & { auth: any };
     const isSuperAdmin = auth?.user?.role === 'superadmin';
 
     const { lock } = useStudentLock({ studentId, page: 'comments' });
     const isReadOnly = lock?.locked === true;
 
+    // Menentukan siklus pertemuan yang tersedia berdasarkan gradeEntries
+    const maxMeeting = gradeEntries.length > 0
+        ? Math.max(...gradeEntries.map(g => g.meetingNumber))
+        : 4;
+
+    const availableRanges: { key: string; label: string; start: number; end: number }[] = [];
+    for (let s = 1; s <= Math.max(maxMeeting, 4); s += 4) {
+        const e = s + 3;
+        availableRanges.push({
+            key: `${s}-${e}`,
+            label: `Pertemuan ${s} - ${e}`,
+            start: s,
+            end: e,
+        });
+    }
+
+    const [selectedRange, setSelectedRange] = useState<string>(availableRanges[0]?.key ?? '1-4');
+
+    // Komentar siklus yang aktif sesuai selectedRange
+    const currentCycleComment = comments.find(c => (c.meetingRange || '1-4') === selectedRange);
+
     const [commentForm, setCommentForm] = useState({
-        notes: '',
-        admin_note: '',
+        notes: currentCycleComment?.notes ?? '',
+        admin_note: currentCycleComment?.adminNote ?? '',
     });
+
+    // Sinkronisasi form saat siklus berganti
+    const handleRangeChange = (rangeKey: string) => {
+        setSelectedRange(rangeKey);
+        const match = comments.find(c => (c.meetingRange || '1-4') === rangeKey);
+        setCommentForm({
+            notes: match?.notes ?? '',
+            admin_note: match?.adminNote ?? '',
+        });
+    };
+
+    // State untuk komentar per pertemuan (GradeEntry notes)
+    const [meetingNotes, setMeetingNotes] = useState<{ [gradeEntryId: number]: string }>(() => {
+        const initial: { [key: number]: string } = {};
+        gradeEntries.forEach(g => {
+            initial[g.id] = g.notes || '';
+        });
+        return initial;
+    });
+
+    const [isSavingAll, setIsSavingAll] = useState(false);
 
     const [selectedSemester] = useState(() => {
         const now = new Date();
@@ -65,17 +118,29 @@ export default function CommentsManager() {
     const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
     const [templateForm, setTemplateForm] = useState(emptyTemplateForm);
 
-    const savePersonalComment = (e: React.FormEvent) => {
+    const saveAllComments = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!commentForm.notes.trim() && !commentForm.admin_note.trim()) return;
+        setIsSavingAll(true);
+
+        const meetingCommentsPayload = Object.entries(meetingNotes).map(([id, note]) => ({
+            grade_entry_id: Number(id),
+            notes: note,
+        }));
 
         router.post('/tutor/comments', {
             student_id: studentId,
             semester: selectedSemester,
+            meeting_range: selectedRange,
             notes: commentForm.notes,
             admin_note: commentForm.admin_note,
+            meeting_comments: meetingCommentsPayload,
         }, {
-            onSuccess: () => setCommentForm({ notes: '', admin_note: '' }),
+            onSuccess: () => {
+                setIsSavingAll(false);
+            },
+            onError: () => {
+                setIsSavingAll(false);
+            },
         });
     };
 
@@ -86,6 +151,7 @@ export default function CommentsManager() {
         router.post('/tutor/comments', {
             student_id: studentId,
             semester: comment.semester,
+            meeting_range: comment.meetingRange ?? '1-4',
             notes: editForm.notes,
             admin_note: editForm.admin_note,
         }, {
@@ -244,53 +310,168 @@ export default function CommentsManager() {
                     </div>
                 )}
 
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-                    <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i className="bi bi-chat-left-text text-orange-600" />
-                        Tambah Komentar Personal
-                    </h2>
-                    <form onSubmit={savePersonalComment} className="space-y-4">
-                        {/* Catatan & Rekomendasi */}
+                {/* Tabs Siklus Pertemuan (1-4, 5-8, dst.) */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
-                                <i className="bi bi-exclamation-triangle-fill text-amber-600" /> Catatan & Rekomendasi
-                            </label>
-                            <textarea
-                                value={commentForm.notes}
-                                onChange={e => setCommentForm({ ...commentForm, notes: e.target.value })}
-                                placeholder="Catatan evaluasi atau hal yang perlu ditingkatkan di sesi berikutnya..."
-                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none h-20"
-                            />
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Pilih Siklus Evaluasi:</span>
+                            <div className="flex flex-wrap gap-2 mt-1.5">
+                                {availableRanges.map(range => (
+                                    <button
+                                        key={range.key}
+                                        type="button"
+                                        onClick={() => handleRangeChange(range.key)}
+                                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                                            selectedRange === range.key
+                                                ? 'bg-teal-600 text-white shadow-xs'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        <i className="bi bi-calendar4-week" />
+                                        {range.label}
+                                        {comments.some(c => (c.meetingRange || '1-4') === range.key) && (
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                            Status: <span className="font-semibold text-gray-800">{currentCycleComment ? 'Sudah dievaluasi' : 'Belum dievaluasi'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Form Input Komentar Komprehensif: 3 Level */}
+                <form onSubmit={saveAllComments} className="space-y-6 mb-8">
+                    {/* Level 1 & 3: Komentar Siklus / Evaluasi Umum & Catatan Admin */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                            <h2 className="font-bold text-gray-900 flex items-center gap-2 text-base">
+                                <i className="bi bi-card-checklist text-teal-600 text-lg" />
+                                Evaluasi Siklus ({selectedRange})
+                            </h2>
+                            <span className="text-xs text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full font-medium">
+                                Tampil di Rapor PDF & Profil
+                            </span>
                         </div>
 
-                        {/* Catatan ke Admin (hanya tutor & admin yang bisa lihat) */}
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
-                                <i className="bi bi-shield-lock-fill text-indigo-600" /> Catatan ke Admin
-                                <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px] font-medium">Tutor & Admin Only</span>
-                            </label>
-                            <textarea
-                                value={commentForm.admin_note}
-                                onChange={e => setCommentForm({ ...commentForm, admin_note: e.target.value })}
-                                placeholder="Catatan khusus untuk admin (tidak terlihat oleh murid)..."
-                                className="w-full border border-indigo-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-16 bg-indigo-50/30"
-                            />
+                        <div className="space-y-4">
+                            {/* Catatan Evaluasi Umum */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
+                                    <i className="bi bi-chat-quote-fill text-amber-600" />
+                                    Catatan Umum & Rekomendasi (Terlihat oleh Murid & Ortu di Rapor)
+                                </label>
+                                <textarea
+                                    value={commentForm.notes}
+                                    onChange={e => setCommentForm({ ...commentForm, notes: e.target.value })}
+                                    placeholder="Tuliskan evaluasi perkembangan belajar, kelebihan, dan hal yang perlu ditingkatkan murid pada siklus ini..."
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none h-24"
+                                />
+                            </div>
+
+                            {/* Catatan ke Admin */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
+                                    <i className="bi bi-shield-lock-fill text-indigo-600" />
+                                    Catatan Khusus ke Admin
+                                    <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px] font-semibold">Tutor & Admin Only</span>
+                                </label>
+                                <textarea
+                                    value={commentForm.admin_note}
+                                    onChange={e => setCommentForm({ ...commentForm, admin_note: e.target.value })}
+                                    placeholder="Catatan internal yang hanya dapat dilihat oleh sesama tutor dan admin..."
+                                    className="w-full border border-indigo-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-16 bg-indigo-50/20"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Level 2: Komentar Per Pertemuan */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                            <div>
+                                <h2 className="font-bold text-gray-900 flex items-center gap-2 text-base">
+                                    <i className="bi bi-calendar-check text-blue-600 text-lg" />
+                                    Komentar Per Pertemuan Murid
+                                </h2>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    Komentar spesifik untuk tiap modul yang muncul saat siswa menggeser grafik pertemuan di Profil
+                                </p>
+                            </div>
+                            <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
+                                {gradeEntries.length} Pertemuan Tercatat
+                            </span>
                         </div>
 
+                        {gradeEntries.length === 0 ? (
+                            <div className="text-center py-6 text-gray-400 text-sm italic">
+                                Belum ada input nilai/pertemuan untuk murid ini.
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {gradeEntries
+                                    .filter(g => {
+                                        const currentRangeObj = availableRanges.find(r => r.key === selectedRange);
+                                        if (!currentRangeObj) return true;
+                                        return g.meetingNumber >= currentRangeObj.start && g.meetingNumber <= currentRangeObj.end;
+                                    })
+                                    .map(g => (
+                                        <div key={g.id} className="p-3.5 bg-gray-50/70 border border-gray-200 rounded-xl space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2 py-0.5 bg-teal-100 text-teal-800 text-xs font-bold rounded">
+                                                        Pertemuan {g.meetingNumber}
+                                                    </span>
+                                                    <span className="text-xs font-semibold text-gray-800">
+                                                        {g.moduleName}
+                                                    </span>
+                                                    {g.moduleType && (
+                                                        <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded capitalize">
+                                                            {g.moduleType}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {g.meetingDate && (
+                                                    <span className="text-[11px] text-gray-500">
+                                                        {g.meetingDate}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <textarea
+                                                value={meetingNotes[g.id] ?? ''}
+                                                onChange={e => setMeetingNotes({ ...meetingNotes, [g.id]: e.target.value })}
+                                                placeholder={`Catatan tutor untuk Pertemuan ${g.meetingNumber} (${g.moduleName})...`}
+                                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-16 bg-white"
+                                            />
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Tombol Simpan Komprehensif */}
+                    <div className="flex justify-end">
                         <button
                             type="submit"
-                            disabled={isReadOnly}
-                            className="px-5 py-2.5 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm shadow-sm"
+                            disabled={isReadOnly || isSavingAll}
+                            className="px-6 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm shadow-md transition"
                             title={isReadOnly ? 'Halaman dikunci oleh tutor lain (read-only)' : undefined}
                         >
-                            <i className="bi bi-check-lg" /> Simpan Komentar
+                            {isSavingAll ? (
+                                <>
+                                    <span className="inline-block animate-spin mr-1">⏳</span>
+                                    Menyimpan...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-save2-fill" /> Simpan Semua Evaluasi ({selectedRange})
+                                </>
+                            )}
                         </button>
-                    </form>
-                    <p className="text-xs text-gray-500 mt-3">
-                        <i className="bi bi-info-circle mr-1" />
-                        Gunakan {'{modules}'} untuk nama modul, {'{average}'} untuk nilai, dan {'{student}'} untuk nama murid
-                    </p>
-                </div>
+                    </div>
+                </form>
 
                 {/* System Comment Templates Section */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">

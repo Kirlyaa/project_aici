@@ -28,7 +28,7 @@ class StudentController extends Controller
                 });
             })
             ->when($status !== 'Semua', fn($q) => $q->where('status', $status))
-            ->with(['tutor:id,name'])
+            ->with(['tutor:id,name', 'classroom:id,name'])
             ->withCount(['learningSessions', 'gradeEntries'])
             ->orderByDesc('created_at')
             ->paginate(15)
@@ -42,7 +42,9 @@ class StudentController extends Controller
                     'createdAt' => $u->created_at?->toDateString(),
                     'tutorName' => $u->tutor?->name,
                     'tutorId' => $u->tutor_id,
-                    'class' => $u->class,
+                    'class' => $u->classroom?->name ?? $u->class,
+                    'classroomId' => $u->classroom_id,
+                    'classroomName' => $u->classroom?->name,
                     'sessionsCount' => $u->learning_sessions_count,
                     'gradesCount' => $u->grade_entries_count,
                 ];
@@ -54,17 +56,36 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $classrooms = \App\Models\Classroom::orderBy('name')
+            ->get(['id', 'name', 'tutor_id'])
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'tutor_id' => $c->tutor_id,
+            ]);
+
         return Inertia::render('SuperAdmin/StudentManagement', [
             'students' => $students,
             'search' => $search,
             'filterStatus' => $status,
             'tutors' => $tutors,
+            'classrooms' => $classrooms,
         ]);
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $classroomId = $validated['classroom_id'] ?? null;
+        $className = $validated['class'] ?? null;
+
+        if ($classroomId) {
+            $classroom = \App\Models\Classroom::find($classroomId);
+            if ($classroom) {
+                $className = $classroom->name;
+            }
+        }
+
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -72,7 +93,8 @@ class StudentController extends Controller
             'role' => 'user',
             'status' => $validated['status'] ?? 'aktif',
             'tutor_id' => $validated['tutor_id'] ?? null,
-            'class' => $validated['class'] ?? null,
+            'classroom_id' => $classroomId,
+            'class' => $className,
         ]);
         return back()->with('success', 'Murid berhasil ditambahkan.');
     }
@@ -80,13 +102,26 @@ class StudentController extends Controller
     public function update(StoreUserRequest $request, User $student): RedirectResponse
     {
         $validated = $request->validated();
+        $classroomId = array_key_exists('classroom_id', $validated) ? $validated['classroom_id'] : $student->classroom_id;
+        $className = $validated['class'] ?? $student->class;
+
+        if ($classroomId) {
+            $classroom = \App\Models\Classroom::find($classroomId);
+            if ($classroom) {
+                $className = $classroom->name;
+            }
+        } elseif (array_key_exists('classroom_id', $validated) && $classroomId === null) {
+            $className = null;
+        }
+
         $student->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => 'user',
             'status' => $validated['status'] ?? $student->status,
             'tutor_id' => $validated['tutor_id'] ?? null,
-            'class' => $validated['class'] ?? $student->class,
+            'classroom_id' => $classroomId,
+            'class' => $className,
         ]);
         if (! empty($validated['password'])) {
             $student->update(['password' => Hash::make($validated['password'])]);
@@ -201,6 +236,8 @@ class StudentController extends Controller
             'latestComment' => $latestComment ? [
                 'system' => $latestComment->system_comment,
                 'notes' => $latestComment->notes,
+                'adminNote' => $latestComment->admin_note,
+                'meetingRange' => $latestComment->meeting_range ?? '1-4',
                 'semester' => $latestComment->semester,
                 'updatedAt' => $latestComment->updated_at?->format('d M Y H:i'),
             ] : null,

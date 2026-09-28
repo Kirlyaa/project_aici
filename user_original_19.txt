@@ -1,0 +1,605 @@
+[Terminal 153ec2ac-a0b1-4f16-bb19-0484e3435803 notification: command completed. The terminal has been cleaned up.]
+Terminal output:
+PS C:\laragon\www\project_aici> php artisan tinker --execute="echo 'Classrooms: ' . \App\Models\Classroom::count() . ', Tutors: ' . \App\Models\User::where('role', 'tutor')->count() . ', Students: ' . \App\Models\User::where('role', 'user')->count() . PHP_EOL;"
+Classrooms: 3, Tutors: 3, Students: 14
+PS C:\laragon\www\project_aici> php artisan route:list | Select-String "superadmin"
+
+ GET|HEAD superadmin . superadmin.dashboard ΓÇ║ SuperAdmin\DashboardController
+ POST superadmin/calendar superadmin.calendar.store ΓÇ║ SuperAdmin\CalendΓÇª
+ POST superadmin/calendar/import-csv superadmin.calendar.import-csv ΓÇ║ SΓÇª
+ GET|HEAD superadmin/calendar/template superadmin.calendar.template ΓÇ║ 
+SuperΓÇª
+ PUT superadmin/calendar/{session} superadmin.calendar.update ΓÇ║ SuperAΓÇª
+ DELETE superadmin/calendar/{session} superadmin.calendar.destroy ΓÇ║ SuperΓÇª
+ GET|HEAD superadmin/calendar/{studentId} superadmin.calendar ΓÇ║ 
+SuperAdmin\ΓÇª
+ DELETE superadmin/calendar/{studentId}/clear-all superadmin.calendar.cleΓÇª
+ GET|HEAD superadmin/classes superadmin.classes ΓÇ║ 
+SuperAdmin\ClassroomContrΓÇª
+ POST superadmin/classes superadmin.classes.store ΓÇ║ SuperAdmin\ClassrooΓÇª
+ DELETE superadmin/classes/students/{student}/remove superadmin.classes.rΓÇª
+ POST superadmin/classes/transfer superadmin.classes.transfer ΓÇ║ SuperAdΓÇª
+ PUT superadmin/classes/{classroom} superadmin.classes.update ΓÇ║ SuperAΓÇª
+ DELETE superadmin/classes/{classroom} superadmin.classes.destroy ΓÇ║ SuperΓÇª
+ POST superadmin/classes/{classroom}/assign superadmin.classes.assign ΓÇª
+ GET|HEAD superadmin/export/students superadmin.export.students ΓÇ║ 
+ExportConΓÇª
+ GET|HEAD superadmin/export/tutors superadmin.export.tutors ΓÇ║ 
+ExportControlΓÇª
+ GET|HEAD superadmin/modules superadmin.modules ΓÇ║ 
+SuperAdmin\ModuleControllΓÇª
+ POST superadmin/modules superadmin.modules.store ΓÇ║ SuperAdmin\ModuleCoΓÇª
+ DELETE superadmin/modules/{moduleId}/force-delete superadmin.modules.forΓÇª
+ PATCH superadmin/modules/{moduleId}/restore superadmin.modules.restore ΓÇª
+ PUT superadmin/modules/{module} superadmin.modules.update ΓÇ║ SuperAdmiΓÇª
+ DELETE superadmin/modules/{module} superadmin.modules.destroy ΓÇ║ SuperAdmΓÇª
+ GET|HEAD superadmin/students superadmin.students ΓÇ║ 
+SuperAdmin\StudentContrΓÇª
+ POST superadmin/students superadmin.students.store ΓÇ║ SuperAdmin\StudenΓÇª
+ POST superadmin/students/import-excel superadmin.students.import-excelΓÇª
+ GET|HEAD superadmin/students/template superadmin.students.template ΓÇ║ 
+SuperΓÇª
+ GET|HEAD superadmin/students/{student} superadmin.students.show ΓÇ║ 
+SuperAdmΓÇª
+ PUT superadmin/students/{student} superadmin.students.update ΓÇ║ SuperAΓÇª
+ DELETE superadmin/students/{student} superadmin.students.destroy ΓÇ║ SuperΓÇª
+ GET|HEAD superadmin/students/{student}/pdf superadmin.students.pdf ΓÇ║ 
+ProfiΓÇª
+ GET|HEAD superadmin/students/{student}/report superadmin.students.report ΓÇª
+ PATCH superadmin/students/{student}/toggle-status superadmin.students.tΓÇª
+ GET|HEAD superadmin/tutors superadmin.tutors ΓÇ║ 
+SuperAdmin\TutorController@ΓÇª
+ POST superadmin/tutors superadmin.tutors.store ΓÇ║ SuperAdmin\TutorContrΓÇª
+ PUT superadmin/tutors/{tutor} superadmin.tutors.update ΓÇ║ SuperAdmin\TΓÇª
+ DELETE superadmin/tutors/{tutor} superadmin.tutors.destroy ΓÇ║ SuperAdmin\ΓÇª
+ PATCH superadmin/tutors/{tutor}/toggle-status superadmin.tutors.toggle-ΓÇª
+
+
+PS C:\laragon\www\project_aici> php artisan tinker --execute="
+>> \$tutor = \App\Models\User::where('role', 'tutor')->with(['students', 'learningSessions'])->first();
+>> echo 'Tutor: ' . \$tutor->name . PHP_EOL;
+>> echo 'Students count: ' . \$tutor->students->count() . PHP_EOL;
+>> echo 'Sessions count: ' . \App\Models\LearningSession::where('tutor_id', \$tutor->id)->count() . PHP_EOL;
+>> "
+ PARSE ERROR PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR in vendor\psy\psysh\src\Exception\ParseErrorException.php on line 44.
+PS C:\laragon\www\project_aici> php artisan tinker --execute="\$t = App\Models\User::where('role', 'tutor')->first(); dump(\$t->name); dump(\$t->students()->count()); dump(App\Models\LearningSession::where('tutor_id', \$t->id)->count());"
+ PARSE ERROR PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR in vendor\psy\psysh\src\Exception\ParseErrorException.php on line 44.
+PS C:\laragon\www\project_aici> php -r "require 'vendor/autoload.php'; \$app = require 'bootstrap/app.php'; \$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap(); \$t = App\Models\User::where('role', 'tutor')->first(); echo \$t->name . ' - Murid: ' . \$t->students()->count() . ' - Sesi: ' . App\Models\LearningSession::where('tutor_id', \$t->id)->count() . PHP_EOL;"
+PS C:\laragon\www\project_aici> php -v
+PHP 8.4.23 (cli) (built: Jul  1 2026 04:45:55) (ZTS Visual C++ 2022 x64)
+Copyright (c) The PHP Group
+Built by The PHP Group
+Zend Engine v4.4.23, Copyright (c) Zend Technologies
+PS C:\laragon\www\project_aici> php artisan test tests/Feature/ProfileTest.php
+{"tool":"phpunit","result":"failed","tests":6,"passed":0,"assertions":0,"duration_ms":1765,"errors":6,"error_details":[{"test":"Tests\\Feature\\ProfileTest::test_profile_page_is_displayed","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":19,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_profile_information_can_be_updated","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":30,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":52,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_user_can_delete_their_account","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":70,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_correct_password_must_be_provided_to_delete_account","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":88,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_student_profile_displays_four_meetings_range_and_stats","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":106,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"}]}
+PS C:\laragon\www\project_aici> npm run build
+
+> build
+> tsc && vite build
+
+11.02.10 [vite] warning: `esbuild` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `oxc` instead.
+`optimizeDeps.rollupOptions` / `ssr.optimizeDeps.rollupOptions` is deprecated. Use `optimizeDeps.rolldownOptions` instead. Note that this option may be set by a plugin. Set VITE_DEPRECATION_TRACE=1 to see where it is called.
+[vite:react-babel] We recommend switching to `@vitejs/plugin-react-oxc` for improved performance. More information at https://vite.dev/rolldown
+vite v8.2.0 building client environment for production...
+✓ 1374 modules transformed.
+computing gzip size...
+public/build/manifest.json                            10.97 kB │ gzip:   1.31 kB
+public/build/assets/app-kEJpk5a7.css                  80.13 kB │ gzip:  13.23 kB
+public/build/assets/ProgressBar-DUYD4zi3.js            0.57 kB │ gzip:   0.33 kB
+public/build/assets/rolldown-runtime-hePW80VL.js       0.71 kB │ gzip:   0.42 kB
+public/build/assets/FlashToast-DDUILXs2.js             1.25 kB │ gzip:   0.66 kB
+public/build/assets/SessionCard-yRjtfcNA.js            1.61 kB │ gzip:   0.66 kB
+public/build/assets/useStudentLock-CfKqae2u.js         2.83 kB │ gzip:   1.23 kB
+public/build/assets/Jadwal-Bj85mU6h.js                 2.89 kB │ gzip:   1.23 kB
+public/build/assets/Login-DPgGGA6G.js                  3.66 kB │ gzip:   1.25 kB
+public/build/assets/Index-BU8x4Axv.js                  3.80 kB │ gzip:   1.37 kB
+public/build/assets/Edit-WcdmzNJc.js                   4.24 kB │ gzip:   1.54 kB
+public/build/assets/ModulesViewer-DELHx_zL.js          5.06 kB │ gzip:   1.55 kB
+public/build/assets/SessionDetail-XkKDUPeC.js          5.53 kB │ gzip:   1.77 kB
+public/build/assets/Beranda-FZaS1YHd.js                9.34 kB │ gzip:   2.63 kB
+public/build/assets/TutorManagement-4q6k1Ah9.js       10.08 kB │ gzip:   2.53 kB
+public/build/assets/ModuleManagement-Blnlpy_p.js      10.18 kB │ gzip:   2.73 kB
+public/build/assets/UserLayout-DeN-gDTi.js            11.94 kB │ gzip:   2.18 kB
+public/build/assets/Index-B7wcBAWC.js                 12.87 kB │ gzip:   3.15 kB
+public/build/assets/CalendarManager-Dku68ABW.js       13.39 kB │ gzip:   3.45 kB
+public/build/assets/GradesManager-DT5XEv-r.js         13.95 kB │ gzip:   3.72 kB
+public/build/assets/FAQ-C8EHaBvE.js                   14.00 kB │ gzip:   4.83 kB
+public/build/assets/StudentDetail-DDPp51Gi.js         14.57 kB │ gzip:   3.32 kB
+public/build/assets/CommentsManager-DtKDTf7g.js       14.64 kB │ gzip:   3.45 kB
+public/build/assets/Landing-BatkvAdD.js               14.91 kB │ gzip:   2.82 kB
+public/build/assets/Profil-Ckbgog4m.js                15.24 kB │ gzip:   3.88 kB
+public/build/assets/Dashboard-B3qbxDJA.js             16.49 kB │ gzip:   4.06 kB
+public/build/assets/StudentManagement-D9EVNECr.js     17.79 kB │ gzip:   4.15 kB
+public/build/assets/ProfilPDF-BUmhyyfA.js             18.18 kB │ gzip:   4.37 kB
+public/build/assets/ClassroomManagement-BoSg_ZOm.js   18.27 kB │ gzip:   4.17 kB
+public/build/assets/CalendarManager-baLKw5QA.js       18.30 kB │ gzip:   4.97 kB
+public/build/assets/Dashboard-DXhzHc3W.js             22.64 kB │ gzip:   4.96 kB
+public/build/assets/GradeReport-C0vYZiZQ.js           39.49 kB │ gzip:  11.13 kB
+public/build/assets/app-CjNj6L9x.js                  345.18 kB │ gzip: 112.56 kB
+public/build/assets/BarChart-BIqAPbg5.js             357.72 kB │ gzip: 103.59 kB
+public/build/assets/html2pdf-C_jqpEd-.js             935.46 kB │ gzip: 265.60 kB
+
+✓ built in 7.83s
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[PLUGIN_TIMINGS] Your build spent 55% of 7.8s inside plugin hooks (4.3s).
+Measured inside the callback, so queue time is excluded and time the callback itself awaited is not:
+  - vite:css transform (27%, 2.1s, 1 call)
+  - vite:prepare-out-dir renderStart (21%, 1.6s, 1 call)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+
+PS C:\laragon\www\project_aici> php artisan tinker --execute="echo App\Models\User::where('role', 'tutor')->withCount('learningSessions')->first()->learning_sessions_count;"
+0
+PS C:\laragon\www\project_aici> php artisan tinker --execute="echo App\Models\LearningSession::whereNotNull('tutor_id')->count();"
+38
+PS C:\laragon\www\project_aici> php artisan tinker --execute="echo App\Models\User::where('role', 'tutor')->withCount('tutoredSessions')->first();"
+ BadMethodCallException Call to undefined method App\Models\User::tutoredSessions().
+PS C:\laragon\www\project_aici> php artisan tinker --execute="foreach (App\Models\User::where('role', 'tutor')->withCount(['students', 'tutoredSessions'])->get() as \$t) { echo \$t->name . ' - Murid: ' . \$t->students_count . ' - Sesi: ' . \$t->tutored_sessions_count . PHP_EOL; }"
+ PARSE ERROR PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR in vendor\psy\psysh\src\Exception\ParseErrorException.php on line 44.
+PS C:\laragon\www\project_aici> php artisan tinker --execute="dump(App\Models\User::where('role', 'tutor')->withCount('tutoredSessions')->get()->map(fn(\$t) => ['name' => \$t->name, 'sessions' => \$t->tutored_sessions_count]));"
+ PARSE ERROR PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR, expecting T_VARIABLE in vendor\psy\psysh\src\Exception\ParseErrorException.php on line 44.
+PS C:\laragon\www\project_aici> php artisan tinker --execute="\$res = \App\Models\User::where('role', 'tutor')->withCount('tutoredSessions')->get(); foreach (\$res as \$r) { echo \$r->name . ': ' . \$r->tutored_sessions_count . PHP_EOL; }"
+ PARSE ERROR PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR in vendor\psy\psysh\src\Exception\ParseErrorException.php on line 44.
+PS C:\laragon\www\project_aici> php artisan tinker --execute='echo App\Models\User::where("role", "tutor")->withCount("tutoredSessions")->first()->tutored_sessions_count;'
+ Error Undefined constant "role".
+PS C:\laragon\www\project_aici> php -r "require __DIR__.'/vendor/autoload.php'; \$app = require_once __DIR__.'/bootstrap/app.php'; \$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class); \$kernel->bootstrap(); foreach(App\Models\User::where('role','tutor')->withCount(['students','tutoredSessions'])->get() as \$t){ echo \$t->name.' | Murid: '.\$t->students_count.' | Sesi: '.\$t->tutored_sessions_count.PHP_EOL; }"
+PS C:\laragon\www\project_aici> php -r "require __DIR__.'/vendor/autoload.php'; \$app = require_once __DIR__.'/bootstrap/app.php'; \$app->boot(); foreach(App\Models\User::where('role','tutor')->withCount(['students','tutoredSessions'])->get() as \$t){ echo \$t->name.' | Murid: '.\$t->students_count.' | Sesi: '.\$t->tutored_sessions_count.PHP_EOL; }"
+PS C:\laragon\www\project_aici> php -r "passthru('type bootstrap\\app.php');"
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        $middleware->alias([
+            'role'  => \App\Http\Middleware\RoleMiddleware::class,
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'active' => \App\Http\Middleware\EnsureUserIsActive::class,
+            'check.resource' => \App\Http\Middleware\CheckResourceAccess::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*'),
+        );
+    })->create();
+PS C:\laragon\www\project_aici> php -r "\$app = require_once 'bootstrap/app.php'; \$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo 'App initialized'.PHP_EOL;"
+PS C:\laragon\www\project_aici> php -r "error_reporting(E_ALL); ini_set('display_errors', '1'); require 'vendor/autoload.php'; \$app = require 'bootstrap/app.php'; echo 'Loaded OK';"
+PS C:\laragon\www\project_aici> php artisan --version
+Laravel Framework 13.23.0
+PS C:\laragon\www\project_aici> php artisan list
+Laravel Framework 13.23.0
+
+Usage:
+  command [options] [arguments]
+
+Options:
+  -h, --help            Display help for the given command. When no command is given display help for the list command
+      --silent          Do not output any message
+  -q, --quiet           Only errors are displayed. All other output is suppressed
+  -V, --version         Display this application version
+      --ansi|--no-ansi  Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction  Do not ask any interactive question
+      --env[=ENV]       The environment the command should run under
+  -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+
+Available commands:
+  about                     Display basic information about your application
+  clear-compiled            Remove the compiled class file
+  completion                Dump the shell completion script
+  db                        Start a new database CLI session
+  dev                       Run the dev processes
+  docs                      Access the Laravel documentation
+  down                      Put the application into maintenance / demo mode
+  env                       Display the current framework environment
+  help                      Display help for a command
+  inspire                   Display an inspiring quote
+  list                      List commands
+  migrate                   Run the database migrations
+  optimize                  Cache framework bootstrap, configuration, and metadata to increase performance
+  pail                      Tails the application logs
+  reload                    Reload running services
+  serve                     Serve the application on the PHP development server
+  test                      Run the application tests
+  tinker                    Interact with your application
+  up                        Bring the application out of maintenance mode
+ auth
+  auth:clear-resets         Flush expired password reset tokens
+ breeze
+  breeze:install            Install the Breeze controllers and resources
+ cache
+  cache:clear               Flush the application cache
+  cache:forget              Remove an item from the cache
+  cache:prune-stale-tags    Prune stale cache tags from the cache (Redis only)
+ channel
+  channel:list              List all registered private broadcast channels
+ chats
+  chats:prune               Delete tutor chats older than specified hours (default: 120 hours / 5 days)
+ config
+  config:cache              Create a cache file for faster configuration loading
+  config:clear              Remove the configuration cache file
+  config:publish            Publish configuration files to your application
+  config:show               Display all of the values for a given configuration file or key
+ db
+  db:monitor                Monitor the number of connections on the specified database
+  db:seed                   Seed the database with records
+  db:show                   Display information about the given database
+  db:table                  Display information about the given database table
+  db:wipe                   Drop all tables, views, and types
+ dev
+  dev:list                  List the registered dev processes
+ env
+  env:decrypt               Decrypt an environment file
+  env:encrypt               Encrypt an environment file
+ event
+  event:cache               Discover and cache the application's events and listeners
+  event:clear               Clear all cached events and listeners
+  event:list                List the application's events and listeners
+ inertia
+  inertia:check-ssr         Check the Inertia SSR server health status
+  inertia:middleware        Create a new Inertia middleware
+  inertia:start-ssr         Start the Inertia SSR server
+  inertia:stop-ssr          Stop the Inertia SSR server
+ install
+  install:api               Create an API routes file and install Laravel Sanctum or Laravel Passport
+  install:broadcasting      Create a broadcasting channel routes file
+ key
+  key:generate              Set the application key
+ lang
+  lang:publish              Publish all language files that are available for customization
+ make
+  make:cache-table          [cache:table] Create a migration for the cache database table
+  make:cast                 Create a new custom Eloquent cast class
+  make:channel              Create a new channel class
+  make:class                Create a new class
+  make:command              Create a new Artisan command
+  make:component            Create a new view component class
+  make:config               [config:make] Create a new configuration file
+  make:controller           Create a new controller class
+  make:enum                 Create a new enum
+  make:event                Create a new event class
+  make:exception            Create a new custom exception class
+  make:factory              Create a new model factory
+  make:interface            Create a new interface
+  make:job                  Create a new job class
+  make:job-middleware       Create a new job middleware class
+  make:listener             Create a new event listener class
+  make:mail                 Create a new email class
+  make:middleware           Create a new HTTP middleware class
+  make:migration            Create a new migration file
+  make:model                Create a new Eloquent model class
+  make:notification         Create a new notification class
+  make:notifications-table  [notifications:table] Create a migration for the notifications table
+  make:observer             Create a new observer class
+  make:policy               Create a new policy class
+  make:provider             Create a new service provider class
+  make:queue-batches-table  [queue:batches-table] Create a migration for the batches database table
+  make:queue-failed-table   [queue:failed-table] Create a migration for the failed queue jobs database table
+  make:queue-table          [queue:table] Create a migration for the queue jobs database table
+  make:request              Create a new form request class
+  make:resource             Create a new resource
+  make:rule                 Create a new validation rule
+  make:scope                Create a new scope class
+  make:seeder               Create a new seeder class
+  make:session-table        [session:table] Create a migration for the session database table
+  make:test                 Create a new test class
+  make:trait                Create a new trait
+  make:view                 Create a new view
+ migrate
+  migrate:fresh             Drop all tables and re-run all migrations
+  migrate:install           Create the migration repository
+  migrate:refresh           Reset and re-run all migrations
+  migrate:reset             Rollback all database migrations
+  migrate:rollback          Rollback the last database migration
+  migrate:status            Show the status of each migration
+ model
+  model:prune               Prune models that are no longer needed
+  model:show                Show information about an Eloquent model
+ optimize
+  optimize:clear            Remove the cached bootstrap files
+ package
+  package:discover          Rebuild the cached package manifest
+ queue
+  queue:clear               Delete all of the jobs from the specified queues
+  queue:failed              List all of the failed queue jobs
+  queue:flush               Flush all of the failed queue jobs
+  queue:forget              Delete a failed queue job
+  queue:listen              Listen to a given queue
+  queue:monitor             Monitor the size of the specified queues
+  queue:pause               Pause job processing for a specific queue
+  queue:prune-batches       Prune stale entries from the batches database
+  queue:prune-failed        Prune stale entries from the failed jobs table
+  queue:restart             Restart queue worker daemons after their current job
+  queue:resume              [queue:continue] Resume job processing for a paused queue
+  queue:retry               Retry a failed queue job
+  queue:retry-batch         Retry the failed jobs for a batch
+  queue:work                Start processing jobs on the queue as a daemon
+ reminders
+  reminders:send-schedule   Send schedule reminders to students for upcoming sessions (24 hours before)
+ route
+  route:cache               Create a route cache file for faster route registration
+  route:clear               Remove the route cache file
+  route:list                List all registered routes
+ sanctum
+  sanctum:prune-expired     Prune tokens expired for more than specified number of hours
+ schedule
+  schedule:clear-cache      Delete the cached mutex files created by scheduler
+  schedule:interrupt        Interrupt the current schedule run
+  schedule:list             List all scheduled tasks
+  schedule:pause            Pause the scheduler
+  schedule:resume           [schedule:continue] Resume the schedule
+  schedule:run              Run the scheduled commands
+  schedule:test             Run a scheduled command
+  schedule:work             Start the schedule worker
+ schema
+  schema:dump               Dump the given database schema
+ sessions
+  sessions:fix-modules      Hubungkan modul ke sesi yang belum memiliki relasi modul
+ storage
+  storage:link              Create the symbolic links configured for the application
+  storage:unlink            Delete existing symbolic links configured for the application
+ stub
+  stub:publish              Publish all stubs that are available for customization
+ vendor
+  vendor:publish            Publish any publishable assets from vendor packages
+ view
+  view:cache                Compile all of the application's Blade templates
+  view:clear                Clear all compiled view files
+ ziggy
+  ziggy:generate            Generate a JavaScript file containing Ziggy’s routes and configuration.
+PS C:\laragon\www\project_aici> php artisan route:list
+
+ GET|HEAD / .. routes/web.php:28
+ POST api/chatbot .. chatbot.chat › ChatbotController@chat
+ GET|HEAD api/me .. Api\UserApiController@getCurrentUser
+ GET|HEAD api/modules .. Api\ModuleApiController@index
+ POST api/modules .. Api\ModuleApiController@store
+ GET|HEAD api/modules/{moduleId} .. Api\ModuleApiController@show
+ PUT api/modules/{moduleId} .. Api\ModuleApiController@update
+ DELETE api/modules/{moduleId} .. Api\ModuleApiController@destroy
+ GET|HEAD api/notifications/recent notifications.recent › NotificationContr…
+ GET|HEAD api/notifications/unread-count notifications.unread-count › Notif…
+ GET|HEAD api/students .. Api\UserApiController@getMyStudents
+ GET|HEAD api/students/{studentId}/grades Api\StudentApiController@getGrades
+ GET|HEAD api/students/{studentId}/sessions Api\StudentApiController@getSes…
+ GET|HEAD api/students/{studentId}/summary Api\StudentApiController@getSumm…
+ GET|HEAD api/tutor-chats .. tutor-chats.index › TutorChatController@index
+ POST api/tutor-chats .. tutor-chats.store › TutorChatController@store
+ GET|HEAD api/tutor-chats/active-alerts tutor-chats.active-alerts › TutorCh…
+ POST api/tutor-chats/mark-read tutor-chats.mark-read › TutorChatContro…
+ GET|HEAD api/tutor-chats/read-history tutor-chats.read-history › TutorChat…
+ PUT api/tutor-chats/{id} tutor-chats.update › TutorChatController@upd…
+ DELETE api/tutor-chats/{id} tutor-chats.destroy › TutorChatController@de…
+ GET|HEAD api/tutors .. Api\UserApiController@getTutors
+ GET|HEAD beranda .. user.beranda › UserSessionController@beranda
+ GET|HEAD confirm-password password.confirm › Auth\ConfirmablePasswordContr…
+ POST confirm-password .. Auth\ConfirmablePasswordController@store
+ GET|HEAD dashboard .. dashboard › routes/web.php:73
+ POST email/verification-notification verification.send › Auth\EmailVer…
+ GET|HEAD faq .. faq › routes/web.php:45
+ GET|HEAD forgot-password password.request › Auth\PasswordResetLinkControll…
+ POST forgot-password password.email › Auth\PasswordResetLinkController…
+ GET|HEAD jadwal .. user.jadwal › UserSessionController@jadwal
+ GET|HEAD jadwal/{id} .. user.session.detail › UserSessionController@show
+ GET|HEAD landing .. landing › routes/web.php:32
+ GET|HEAD login .. login › Auth\AuthenticatedSessionController@create
+ POST login .. Auth\AuthenticatedSessionController@store
+ POST logout .. logout › Auth\AuthenticatedSessionController@destroy
+ GET|HEAD nilai .. user.grades › StudentGradeReportController@show
+ GET|HEAD notifications . notifications.index › NotificationController@index
+ DELETE notifications/delete-all/read notifications.delete-all-read › Not…
+ PATCH notifications/mark-all/read notifications.mark-all-read › Notific…
+ DELETE notifications/{notification} notifications.destroy › Notification…
+ PATCH notifications/{notification}/read notifications.mark-read › Notif…
+ PUT password .. password.update › Auth\PasswordController@update
+ GET|HEAD profil .. profile.edit › ProfileController@edit
+ PATCH profil .. profile.update › ProfileController@update
+ DELETE profil .. profile.destroy › ProfileController@destroy
+ GET|HEAD profil/pdf .. user.profil.pdf › ProfileController@pdf
+ POST reset-password . password.store › Auth\NewPasswordController@store
+ GET|HEAD reset-password/{token} password.reset › Auth\NewPasswordControlle…
+ GET|HEAD sanctum/csrf-cookie sanctum.csrf-cookie › Laravel\Sanctum › CsrfC…
+ GET|HEAD storage/{path} storage.local › vendor/laravel/framework/src/Illum…
+ PUT storage/{path} storage.local.upload › vendor/laravel/framework/sr…
+ GET|HEAD superadmin . superadmin.dashboard › SuperAdmin\DashboardController
+ POST superadmin/calendar superadmin.calendar.store › SuperAdmin\Calend…
+ POST superadmin/calendar/import-csv superadmin.calendar.import-csv › S…
+ GET|HEAD superadmin/calendar/template superadmin.calendar.template › Super…
+ PUT superadmin/calendar/{session} superadmin.calendar.update › SuperA…
+ DELETE superadmin/calendar/{session} superadmin.calendar.destroy › Super…
+ GET|HEAD superadmin/calendar/{studentId} superadmin.calendar › SuperAdmin\…
+ DELETE superadmin/calendar/{studentId}/clear-all superadmin.calendar.cle…
+ GET|HEAD superadmin/classes superadmin.classes › SuperAdmin\ClassroomContr…
+ POST superadmin/classes superadmin.classes.store › SuperAdmin\Classroo…
+ DELETE superadmin/classes/students/{student}/remove superadmin.classes.r…
+ POST superadmin/classes/transfer superadmin.classes.transfer › SuperAd…
+ PUT superadmin/classes/{classroom} superadmin.classes.update › SuperA…
+ DELETE superadmin/classes/{classroom} superadmin.classes.destroy › Super…
+ POST superadmin/classes/{classroom}/assign superadmin.classes.assign …
+ GET|HEAD superadmin/export/students superadmin.export.students › ExportCon…
+ GET|HEAD superadmin/export/tutors superadmin.export.tutors › ExportControl…
+ GET|HEAD superadmin/modules superadmin.modules › SuperAdmin\ModuleControll…
+ POST superadmin/modules superadmin.modules.store › SuperAdmin\ModuleCo…
+ DELETE superadmin/modules/{moduleId}/force-delete superadmin.modules.for…
+ PATCH superadmin/modules/{moduleId}/restore superadmin.modules.restore …
+ PUT superadmin/modules/{module} superadmin.modules.update › SuperAdmi…
+ DELETE superadmin/modules/{module} superadmin.modules.destroy › SuperAdm…
+ GET|HEAD superadmin/students superadmin.students › SuperAdmin\StudentContr…
+ POST superadmin/students superadmin.students.store › SuperAdmin\Studen…
+ POST superadmin/students/import-excel superadmin.students.import-excel…
+ GET|HEAD superadmin/students/template superadmin.students.template › Super…
+ GET|HEAD superadmin/students/{student} superadmin.students.show › SuperAdm…
+ PUT superadmin/students/{student} superadmin.students.update › SuperA…
+ DELETE superadmin/students/{student} superadmin.students.destroy › Super…
+ GET|HEAD superadmin/students/{student}/pdf superadmin.students.pdf › Profi…
+ GET|HEAD superadmin/students/{student}/report superadmin.students.report …
+ PATCH superadmin/students/{student}/toggle-status superadmin.students.t…
+ GET|HEAD superadmin/tutors superadmin.tutors › SuperAdmin\TutorController@…
+ POST superadmin/tutors superadmin.tutors.store › SuperAdmin\TutorContr…
+ PUT superadmin/tutors/{tutor} superadmin.tutors.update › SuperAdmin\T…
+ DELETE superadmin/tutors/{tutor} superadmin.tutors.destroy › SuperAdmin\…
+ PATCH superadmin/tutors/{tutor}/toggle-status superadmin.tutors.toggle-…
+ GET|HEAD tugas .. user.tugas › routes/web.php:102
+ GET|HEAD tugas/{id} .. user.tugas.detail › routes/web.php:103
+ GET|HEAD tutor .. tutor.dashboard › Tutor\DashboardController
+ GET|HEAD tutor/calendar/{studentId} tutor.calendar › Tutor\CalendarControl…
+ POST tutor/comment-templates tutor.comment-templates.store › Tutor\Com…
+ PUT tutor/comment-templates/{template} tutor.comment-templates.update…
+ DELETE tutor/comment-templates/{template} tutor.comment-templates.destro…
+ POST tutor/comments tutor.comments.store › Tutor\CommentController@sto…
+ POST tutor/comments/generate/{studentId}/{semester} tutor.comments.gen…
+ DELETE tutor/comments/{studentComment} tutor.comments.destroy › Tutor\Co…
+ GET|HEAD tutor/comments/{studentId} tutor.comments › Tutor\CommentControll…
+ GET|HEAD tutor/export/comments/{studentId} tutor.export.comments › ExportC…
+ GET|HEAD tutor/export/grades/{studentId} tutor.export.grades › ExportContr…
+ POST tutor/grades .. tutor.grades.store › Tutor\GradeController@store
+ PUT tutor/grades/{gradeEntry} tutor.grades.update › Tutor\GradeContro…
+ DELETE tutor/grades/{gradeEntry} tutor.grades.destroy › Tutor\GradeContr…
+ GET|HEAD tutor/grades/{studentId} tutor.grades › Tutor\GradeController@ind…
+ GET|HEAD tutor/lock/{studentId} tutor.lock.status › Tutor\StudentLockContr…
+ POST tutor/lock/{studentId}/heartbeat tutor.lock.heartbeat › Tutor\Stu…
+ POST tutor/lock/{studentId}/release tutor.lock.release › Tutor\Student…
+ GET|HEAD tutor/modules .. tutor.modules › Tutor\ModuleViewController@index
+ GET|HEAD tutor/sessions tutor.sessions.index › Tutor\SessionController@ind…
+ POST tutor/sessions tutor.sessions.store › Tutor\SessionController@sto…
+ PUT tutor/sessions/{session} tutor.sessions.update › Tutor\SessionCon…
+ DELETE tutor/sessions/{session} tutor.sessions.destroy › Tutor\SessionCo…
+ GET|HEAD up vendor/laravel/framework/src/Illuminate/Foundation/Configurati…
+ GET|HEAD verify-email verification.notice › Auth\EmailVerificationPromptCo…
+ GET|HEAD verify-email/{id}/{hash} verification.verify › Auth\VerifyEmailCo…
+
+ Showing [118] routes
+
+PS C:\laragon\www\project_aici> php artisan route:list | Select-String "tutors"
+PS C:\laragon\www\project_aici> php artisan route:list
+
+   ParseError 
+
+  Unclosed '{' on line 15
+
+  at app\Http\Controllers\SuperAdmin\TutorController.php:211
+    207▕         }
+    208▕ 
+    209▕         return back()->with('success', "Murid {$student->name} berhasil dilepas dari Tutor {$tutor->name}.");
+    210▕     }
+  ➜ 211▕
+
+  1   vendor\composer\ClassLoader.php:427
+
+  2   [internal]:0
+      Composer\Autoload\ClassLoader::loadClass("App\Http\Controllers\SuperAdmin\TutorController")
+
+PS C:\laragon\www\project_aici> npm run build
+
+> build
+> tsc && vite build
+
+11.09.17 [vite] warning: `esbuild` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `oxc` instead.
+`optimizeDeps.rollupOptions` / `ssr.optimizeDeps.rollupOptions` is deprecated. Use `optimizeDeps.rolldownOptions` instead. Note that this option may be set by a plugin. Set VITE_DEPRECATION_TRACE=1 to see where it is called.
+[vite:react-babel] We recommend switching to `@vitejs/plugin-react-oxc` for improved performance. More information at https://vite.dev/rolldown
+vite v8.2.0 building client environment for production...
+✓ 1375 modules transformed.
+computing gzip size...
+public/build/manifest.json                            11.33 kB │ gzip:   1.34 kB
+public/build/assets/app-Blytl_Vu.css                  80.70 kB │ gzip:  13.30 kB
+public/build/assets/ProgressBar-CdM_ngk-.js            0.57 kB │ gzip:   0.33 kB
+public/build/assets/rolldown-runtime-hePW80VL.js       0.71 kB │ gzip:   0.42 kB
+public/build/assets/FlashToast-jih6viYO.js             1.25 kB │ gzip:   0.66 kB
+public/build/assets/SessionCard-B2LzVu94.js            1.61 kB │ gzip:   0.66 kB
+public/build/assets/useStudentLock-BCvZoj8Z.js         2.83 kB │ gzip:   1.23 kB
+public/build/assets/Jadwal-E8lT21ME.js                 2.89 kB │ gzip:   1.24 kB
+public/build/assets/Login-VR5J_PBN.js                  3.66 kB │ gzip:   1.25 kB
+public/build/assets/Index-BQdjpXbl.js                  3.80 kB │ gzip:   1.37 kB
+public/build/assets/Edit-CllX7PqQ.js                   4.24 kB │ gzip:   1.54 kB
+public/build/assets/ModulesViewer-C6rhyo2u.js          5.06 kB │ gzip:   1.55 kB
+public/build/assets/SessionDetail-Ca5SIQ_A.js          5.53 kB │ gzip:   1.77 kB
+public/build/assets/Beranda-CtmEwJ9l.js                9.34 kB │ gzip:   2.63 kB
+public/build/assets/ModuleManagement-7jeJ94Uc.js      10.18 kB │ gzip:   2.73 kB
+public/build/assets/TutorManagement-PWgw4Y5g.js       10.34 kB │ gzip:   2.59 kB
+public/build/assets/UserLayout-D_5PcAnQ.js            11.94 kB │ gzip:   2.18 kB
+public/build/assets/Index-O0llOpt3.js                 12.87 kB │ gzip:   3.15 kB
+public/build/assets/CalendarManager-Cz1m1Hsd.js       13.39 kB │ gzip:   3.45 kB
+public/build/assets/GradesManager-B693cXns.js         13.95 kB │ gzip:   3.73 kB
+public/build/assets/FAQ-CR2Sfy3N.js                   14.00 kB │ gzip:   4.83 kB
+public/build/assets/StudentDetail-SYkmr3XH.js         14.57 kB │ gzip:   3.32 kB
+public/build/assets/CommentsManager-BUtghnDi.js       14.64 kB │ gzip:   3.45 kB
+public/build/assets/Landing-CCKlhzs9.js               14.91 kB │ gzip:   2.82 kB
+public/build/assets/Profil-Bpcr5ot5.js                15.24 kB │ gzip:   3.88 kB
+public/build/assets/Dashboard-B1JQSv_j.js             16.49 kB │ gzip:   4.06 kB
+public/build/assets/TutorDetail-DI7QdNTM.js           16.88 kB │ gzip:   3.70 kB
+public/build/assets/StudentManagement-C0WF3qKP.js     17.79 kB │ gzip:   4.14 kB
+public/build/assets/ProfilPDF-BD157xdM.js             18.18 kB │ gzip:   4.37 kB
+public/build/assets/ClassroomManagement-C7WJ-R3g.js   18.27 kB │ gzip:   4.17 kB
+public/build/assets/CalendarManager-DsXB4DGu.js       18.30 kB │ gzip:   4.97 kB
+public/build/assets/Dashboard-C6SCEKBy.js             22.64 kB │ gzip:   4.96 kB
+public/build/assets/GradeReport-B3MrWOVI.js           39.49 kB │ gzip:  11.13 kB
+public/build/assets/app-D6AWSkv1.js                  345.33 kB │ gzip: 112.61 kB
+public/build/assets/BarChart-BIbA1V79.js             357.72 kB │ gzip: 103.58 kB
+public/build/assets/html2pdf-C_jqpEd-.js             935.46 kB │ gzip: 265.60 kB
+
+✓ built in 4.72s
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+PS C:\laragon\www\project_aici> php artisan tinker --execute="echo json_encode(Schema::getColumnListing('classrooms')); echo PHP_EOL; echo json_encode(Schema::getColumnListing('users'));"
+["id","name","photo","description","created_at","updated_at","deleted_at"]
+["id","name","email","email_verified_at","password","role","status","remember_token","avatar","created_at","updated_at","deleted_at","tutor_id","school_id","classroom_id","class"]
+PS C:\laragon\www\project_aici> php artisan tinker --execute="echo json_encode(Classroom::all(['id', 'name'])); echo PHP_EOL; echo 'Students with classroom_id: ' . User::where('role', 'user')->whereNotNull('classroom_id')->count(); echo PHP_EOL; echo 'Students without classroom_id: ' . User::where('role', 'user')->whereNull('classroom_id')->count();"
+[!] Aliasing 'Classroom' to 'App\Models\Classroom' for this Tinker session.
+[{"id":1,"name":"Robotics Explorer A"},{"id":2,"name":"Coding Master B"},{"id":3,"name":"AI Innovator C"}]
+[!] Aliasing 'User' to 'App\Models\User' for this Tinker session.
+Students with classroom_id: 11
+Students without classroom_id: 3
+PS C:\laragon\www\project_aici> php artisan tinker --execute="echo json_encode(User::where('role', 'user')->whereNull('classroom_id')->get(['id', 'name', 'class']));"
+[!] Aliasing 'User' to 'App\Models\User' for this Tinker session.
+[{"id":16,"name":"Dr. Jon Moore","class":null},{"id":70,"name":"Kevin Alamsyah","class":null},{"id":71,"name":"Lestari Putri","class":null}]
+PS C:\laragon\www\project_aici> php artisan test
+{"tool":"phpunit","result":"failed","tests":37,"passed":1,"assertions":2,"duration_ms":4904,"failed":1,"failures":[{"test":"Tests\\Feature\\ExampleTest::test_the_application_returns_a_successful_response","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ExampleTest.php","line":13,"message":"Expected response status code [200] but received 302.\nFailed asserting that 302 is identical to 200."}],"errors":35,"error_details":[{"test":"Tests\\Feature\\Auth\\AuthenticationTest::test_login_screen_can_be_rendered","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\AuthenticationTest.php","line":13,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\AuthenticationTest::test_users_can_authenticate_using_the_login_screen","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\AuthenticationTest.php","line":20,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\AuthenticationTest::test_users_can_not_authenticate_with_invalid_password","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\AuthenticationTest.php","line":33,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\AuthenticationTest::test_users_can_logout","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\AuthenticationTest.php","line":45,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\EmailVerificationTest::test_email_verification_screen_can_be_rendered","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\EmailVerificationTest.php","line":16,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\EmailVerificationTest::test_email_can_be_verified","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\EmailVerificationTest.php","line":25,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\EmailVerificationTest::test_email_is_not_verified_with_invalid_hash","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\EmailVerificationTest.php","line":44,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordConfirmationTest::test_confirm_password_screen_can_be_rendered","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordConfirmationTest.php","line":13,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordConfirmationTest::test_password_can_be_confirmed","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordConfirmationTest.php","line":22,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordConfirmationTest::test_password_is_not_confirmed_with_invalid_password","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordConfirmationTest.php","line":34,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordResetTest::test_reset_password_link_screen_can_be_rendered","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordResetTest.php","line":15,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordResetTest::test_reset_password_link_can_be_requested","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordResetTest.php","line":22,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordResetTest::test_reset_password_screen_can_be_rendered","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordResetTest.php","line":33,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordResetTest::test_password_can_be_reset_with_valid_token","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordResetTest.php","line":50,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordUpdateTest::test_password_can_be_updated","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordUpdateTest.php","line":14,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\Auth\\PasswordUpdateTest::test_correct_password_must_be_provided_to_update_password","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\Auth\\PasswordUpdateTest.php","line":34,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\CalendarCsvImportTest::test_superadmin_can_download_csv_template","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\CalendarCsvImportTest.php","line":13,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select * from \"users\" where \"role\" = superadmin and \"users\".\"deleted_at\" is null limit 1)"},{"test":"Tests\\Feature\\CalendarCsvImportTest::test_superadmin_can_import_calendar_csv","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\CalendarCsvImportTest.php","line":25,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select * from \"users\" where \"role\" = superadmin and \"users\".\"deleted_at\" is null limit 1)"},{"test":"Tests\\Feature\\ProfileTest::test_profile_page_is_displayed","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":19,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_profile_information_can_be_updated","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":30,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":52,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_user_can_delete_their_account","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":70,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_correct_password_must_be_provided_to_delete_account","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":88,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\ProfileTest::test_student_profile_displays_four_meetings_range_and_stats","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\ProfileTest.php","line":106,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SecurityHardeningTest::test_active_tutor_can_manage_any_student","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SecurityHardeningTest.php","line":13,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SecurityHardeningTest::test_inactive_tutor_cannot_manage_student","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SecurityHardeningTest.php","line":23,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SecurityHardeningTest::test_regular_user_cannot_manage_student","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SecurityHardeningTest.php","line":31,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SecurityHardeningTest::test_tutor_can_manage_unassigned_student","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SecurityHardeningTest.php","line":39,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SecurityHardeningTest::test_superadmin_can_manage_any_student","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SecurityHardeningTest.php","line":47,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SuperAdminStudentGovernanceTest::test_superadmin_can_view_student_account_detail_hub","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SuperAdminStudentGovernanceTest.php","line":50,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SuperAdminStudentGovernanceTest::test_superadmin_can_view_student_grade_report","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SuperAdminStudentGovernanceTest.php","line":59,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SuperAdminStudentGovernanceTest::test_superadmin_redirected_when_accessing_grades_without_student_param","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SuperAdminStudentGovernanceTest.php","line":80,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SuperAdminStudentGovernanceTest::test_superadmin_cannot_view_report_of_non_student_role","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SuperAdminStudentGovernanceTest.php","line":87,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SuperAdminStudentGovernanceTest::test_superadmin_can_view_student_pdf_report","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SuperAdminStudentGovernanceTest.php","line":98,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"},{"test":"Tests\\Feature\\SuperAdminStudentGovernanceTest::test_superadmin_can_manage_grades_and_comments","file":"C:\\laragon\\www\\project_aici\\tests\\Feature\\SuperAdminStudentGovernanceTest.php","line":118,"message":"could not find driver (Connection: sqlite, Database: :memory:, SQL: select exists (select 1 from \"main\".sqlite_master where name = 'migrations' and type = 'table') as \"exists\")"}]}
+PS C:\laragon\www\project_aici> php artisan migrate:status
+
+ Migration name .. Batch / Status 
+ 0001_01_01_000000_create_users_table .. [1] Ran 
+ 0001_01_01_000001_create_cache_table .. [1] Ran 
+ 0001_01_01_000002_create_jobs_table .. [1] Ran 
+ 2026_08_15_163329_create_modules_table .. [1] Ran 
+ 2026_08_15_163425_create_learning_sessions_table .. [1] Ran 
+ 2026_08_15_163433_create_learning_session_module_table .. [1] Ran 
+ 2026_08_21_000001_add_status_and_tutor_to_users_table .. [1] Ran 
+ 2026_08_21_000002_enrich_modules_table .. [1] Ran 
+ 2026_08_21_000003_enrich_learning_sessions_table .. [1] Ran 
+ 2026_08_21_000004_create_grade_entries_table .. [1] Ran 
+ 2026_08_21_000005_create_student_comments_table .. [1] Ran 
+ 2026_08_21_000006_create_comment_templates_table .. [1] Ran 
+ 2026_08_21_000007_create_schools_table .. [1] Ran 
+ 2026_08_21_000008_add_school_to_users_table .. [1] Ran 
+ 2026_08_21_000009_update_module_type_enum .. [1] Ran 
+ 2026_08_21_000010_create_notifications_table .. [1] Ran 
+ 2026_08_21_000011_add_avatar_to_users_table .. [1] Ran 
+ 2026_08_21_000012_add_soft_deletes_to_tables .. [1] Ran 
+ 2026_08_21_000013_add_details_to_student_comments_table .. [1] Ran 
+ 2026_08_21_000013_create_activity_logs_table .. [1] Ran 
+ 2026_08_21_000014_add_class_to_users_table .. [1] Ran 
+ 2026_09_16_120523_add_admin_note_to_student_comments_table .. [1] Ran 
+ 2026_09_17_000001_create_classrooms_table .. [1] Ran 
+ 2026_09_21_085659_add_admin_note_for_tutor_to_learning_sessions_table [2] Ran 
+ 2026_09_22_000001_create_tutor_chats_table .. [3] Ran 
+

@@ -52,13 +52,47 @@ export default function AdminTutorChatWidget({ tutors, currentUserId }: Props) {
     };
 
     useEffect(() => {
-        if (isOpen && selectedTutorId !== '') {
-            fetchMessages(Number(selectedTutorId));
-            const interval = setInterval(() => {
+        if (!isOpen || selectedTutorId === '') return;
+
+        // Fetch langsung saat dibuka atau ganti tutor
+        fetchMessages(Number(selectedTutorId));
+
+        // Smart polling: polling hanya aktif saat tab window aktif (document.visibilityState === 'visible')
+        let interval: any = null;
+
+        const startPolling = () => {
+            if (!interval) {
+                interval = setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        fetchMessages(Number(selectedTutorId));
+                    }
+                }, 6000);
+            }
+        };
+
+        const stopPolling = () => {
+            if (interval) {
+                clearInterval(interval);
+                interval = null;
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
                 fetchMessages(Number(selectedTutorId));
-            }, 5000); // Polling real-time update
-            return () => clearInterval(interval);
-        }
+                startPolling();
+            } else {
+                stopPolling();
+            }
+        };
+
+        startPolling();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            stopPolling();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [isOpen, selectedTutorId]);
 
     useEffect(() => {
@@ -174,6 +208,8 @@ export default function AdminTutorChatWidget({ tutors, currentUserId }: Props) {
                 const data = await res.json();
                 if (data.chat) {
                     setMessages(prev => [...prev, data.chat]);
+                    // Segera refresh list pesan
+                    fetchMessages(Number(selectedTutorId));
                 }
             } else {
                 const errData = await res.json().catch(() => null);

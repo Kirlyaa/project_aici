@@ -86,6 +86,13 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                             >
                                 <i className="bi bi-person-badge" /> Manajemen Tutor
                             </Link>
+                            <Link
+                                href="/superadmin/calendar"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-sm font-medium"
+                            >
+                                <i className="bi bi-calendar3" /> Kalender Siswa & Tutor
+                            </Link>
                         </>
                     ) : isTutor ? (
                         <>
@@ -95,6 +102,13 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-sm font-medium"
                             >
                                 <i className="bi bi-speedometer2" /> Dashboard Tutor
+                            </Link>
+                            <Link
+                                href="/tutor/teaching-calendar"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-sm font-medium"
+                            >
+                                <i className="bi bi-calendar3" /> Kalender Tutor
                             </Link>
                             <Link
                                 href="/tutor/modules"
@@ -118,7 +132,7 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-sm font-medium"
                             >
-                                <i className="bi bi-mortarboard" /> Tugas / Jadwal
+                                <i className="bi bi-mortarboard" /> Jadwal
                             </Link>
                             <Link
                                 href="/nilai"
@@ -180,11 +194,17 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                                     <Link href="/superadmin/tutors" className="text-gray-700 hover:text-[#034d52] transition-colors">
                                         Tutor
                                     </Link>
+                                    <Link href="/superadmin/calendar" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                        Kalender
+                                    </Link>
                                 </>
                             ) : isTutor ? (
                                 <>
                                     <Link href="/tutor" className="text-gray-700 hover:text-[#034d52] transition-colors">
                                         Dashboard
+                                    </Link>
+                                    <Link href="/tutor/teaching-calendar" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                        Kalender Tutor
                                     </Link>
                                     <Link href="/tutor/modules" className="text-gray-700 hover:text-[#034d52] transition-colors">
                                         Modul

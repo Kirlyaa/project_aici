@@ -80,10 +80,10 @@ export default function ProfilPDF() {
             const filename = `Rapor_${sanitizedName}_${rangeLabel}.pdf`;
 
             const opt = {
-                margin: [10, 10, 10, 10],
+                margin: [6, 6, 6, 6],
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
+                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
@@ -119,8 +119,25 @@ export default function ProfilPDF() {
         <>
             <Head title={`Rapor Siswa - ${userName}`} />
 
+            <style>{`
+                @media print {
+                    body {
+                        background: #ffffff !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    .print\\:break-inside-avoid {
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .print\\:hidden {
+                        display: none !important;
+                    }
+                }
+            `}</style>
+
             <div className="bg-white min-h-screen">
-                <div ref={reportRef} className="max-w-4xl mx-auto p-8">
+                <div ref={reportRef} className="max-w-4xl mx-auto p-6 sm:p-8 bg-white">
                     {/* SuperAdmin Navigation Banner */}
                     {isSuperAdmin && (
                         <div className="print:hidden mb-6 flex flex-wrap items-center justify-between gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">

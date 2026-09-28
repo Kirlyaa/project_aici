@@ -34,7 +34,8 @@ class CommentController extends Controller
                 return [
                     'id' => $c->id,
                     'semester' => $c->semester,
-                    'academic_year' => $c->academic_year,
+                    'meetingRange' => $c->meeting_range ?? '1-4',
+                    'academicYear' => $c->academic_year,
                     'systemComment' => $c->system_comment,
                     'tutorComment' => $c->tutor_comment,
                     'strengths' => $c->strengths,
@@ -47,6 +48,20 @@ class CommentController extends Controller
                 ];
             });
 
+        // Pertemuan murid dari GradeEntry untuk input komentar per pertemuan
+        $gradeEntries = GradeEntry::where('student_id', $studentId)
+            ->with('module:id,name')
+            ->orderBy('meeting_number', 'asc')
+            ->get()
+            ->map(fn(GradeEntry $g) => [
+                'id' => $g->id,
+                'meetingNumber' => $g->meeting_number,
+                'moduleName' => $g->module?->name ?? 'Umum',
+                'moduleType' => $g->module_type,
+                'meetingDate' => $g->meeting_date?->format('d M Y'),
+                'notes' => $g->notes,
+            ]);
+
         $templates = CommentTemplate::where('is_active', true)
             ->orderBy('grade_range')
             ->orderBy('category')
@@ -56,6 +71,7 @@ class CommentController extends Controller
             'studentId' => (int) $studentId,
             'student' => ['id' => $student->id, 'name' => $student->name, 'email' => $student->email],
             'comments' => $comments,
+            'gradeEntries' => $gradeEntries,
             'templates' => $templates,
         ]);
     }
@@ -66,32 +82,41 @@ class CommentController extends Controller
         abort_if(!$request->user()->managesStudent($validated['student_id']), 403);
         StudentLock::assertWritable((int) $validated['student_id'], $request->user());
 
-        $existing = StudentComment::firstOrNew([
-            'student_id' => $validated['student_id'],
-            'semester' => $validated['semester'],
-        ]);
+        $meetingRange = $validated['meeting_range'] ?? '1-4';
+
+        $existing = StudentComment::where('student_id', $validated['student_id'])
+            ->where('semester', $validated['semester'])
+            ->where('meeting_range', $meetingRange)
+            ->first();
 
         $comment = StudentComment::updateOrCreate(
             [
                 'student_id' => $validated['student_id'],
                 'semester' => $validated['semester'],
+                'meeting_range' => $meetingRange,
             ],
             [
                 'tutor_id' => $request->user()->role === 'tutor' ? $request->user()->id : null,
-                'academic_year' => $validated['academic_year'] ?? $existing->academic_year,
-                // R2: komentar personal disederhanakan jadi satu field "Catatan".
-                // tutor_comment & strengths dinull-kan; kolom DB dibiarkan untuk data lama.
+                'academic_year' => $validated['academic_year'] ?? ($existing?->academic_year ?? (int) substr($validated['semester'], 0, 4)),
                 'tutor_comment' => null,
                 'strengths' => null,
                 'notes' => $validated['notes'] ?? null,
-                'admin_note' => $validated['admin_note'] ?? $existing->admin_note,
-                // Jangan timpa system_comment lama kecuali dikirim eksplisit
-                'system_comment' => $validated['system_comment'] ?? $existing->system_comment,
-                'average_grade' => $existing->average_grade,
-                'module_names' => $existing->module_names,
-                'is_system_generated' => (bool) $existing->is_system_generated,
+                'admin_note' => $validated['admin_note'] ?? $existing?->admin_note,
+                'system_comment' => $validated['system_comment'] ?? $existing?->system_comment,
+                'average_grade' => $existing?->average_grade,
+                'module_names' => $existing?->module_names,
+                'is_system_generated' => (bool) ($existing?->is_system_generated ?? false),
             ]
         );
+
+        // Simpan komentar per pertemuan jika dikirim
+        if (!empty($validated['meeting_comments'])) {
+            foreach ($validated['meeting_comments'] as $mc) {
+                GradeEntry::where('id', $mc['grade_entry_id'])
+                    ->where('student_id', $validated['student_id'])
+                    ->update(['notes' => $mc['notes'] ?? null]);
+            }
+        }
 
         // Auto-generate komentar sistem dari template jika belum ada
         if (empty($comment->system_comment)) {

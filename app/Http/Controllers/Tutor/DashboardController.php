@@ -21,25 +21,32 @@ class DashboardController extends Controller
         // R4: filter murid per kelas ("Tanpa Kelas" => class IS NULL)
         $classFilter = $request->input('class');
 
-        // Semua tutor boleh melihat & mengakses semua murid.
-        // Exclusivity (tidak boleh edit bersamaan) dijaga oleh StudentLock.
+        // Filter murid: Hanya murid yang diajar oleh tutor ini saja yang muncul.
+        // Superadmin dapat melihat semua murid.
         $students = User::where('role', 'user')
             ->whereIn('status', ['aktif', 'pending'])
+            ->taughtBy($tutor)
+            ->with(['classroom:id,name,tutor_id', 'tutor:id,name'])
             ->when($classFilter, function ($q) use ($classFilter) {
                 if ($classFilter === 'Tanpa Kelas') {
-                    $q->whereNull('class');
+                    $q->whereNull('class')->whereNull('classroom_id');
                 } else {
-                    $q->where('class', $classFilter);
+                    $q->where(function ($sub) use ($classFilter) {
+                        $sub->where('class', $classFilter)
+                            ->orWhereHas('classroom', fn($c) => $c->where('name', $classFilter));
+                    });
                 }
             })
             ->withCount(['learningSessions', 'gradeEntries'])
             ->orderBy('name')
             ->get();
 
-        // R4: daftar kelas untuk tampilan dua level (kelas -> murid)
+        // R4: daftar kelas untuk tampilan dua level (kelas -> murid) yang diajar tutor ini
         $classes = User::where('role', 'user')
             ->whereIn('status', ['aktif', 'pending'])
-            ->selectRaw('COALESCE(class, ?) as class_name, COUNT(*) as total', ['Tanpa Kelas'])
+            ->taughtBy($tutor)
+            ->leftJoin('classrooms', 'users.classroom_id', '=', 'classrooms.id')
+            ->selectRaw('COALESCE(classrooms.name, users.class, ?) as class_name, COUNT(users.id) as total', ['Tanpa Kelas'])
             ->groupBy('class_name')
             ->orderBy('class_name')
             ->get()
@@ -69,7 +76,8 @@ class DashboardController extends Controller
                 'id' => $s->id,
                 'name' => $s->name,
                 'email' => $s->email,
-                'class' => $s->class ?? 'Tanpa Kelas',
+                'class' => $s->classroom?->name ?? ($s->class ?? 'Tanpa Kelas'),
+                'classroom_id' => $s->classroom_id,
                 'level' => $s->tutor?->name ?? 'Belum ada tutor',
                 // Progress dalam persen (skala 0-5 dikonversi ke 0-100)
                 'progress' => min(100, round(($avg / GradeEntry::MAX_SCORE) * 100, 1)),

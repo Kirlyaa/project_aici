@@ -56,36 +56,76 @@ export default function SessionDetail({ session }: Props) {
 
                 {/* Main Content Cards Stack */}
                 <div className="space-y-5">
+                    {/* Detail Informasi Tutor & Kelas */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 flex items-center gap-3.5">
+                            <div className="w-12 h-12 bg-teal-50 text-[#034d52] rounded-xl flex items-center justify-center text-xl flex-shrink-0 border border-teal-100">
+                                <i className="bi bi-person-badge" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Tutor Pembimbing</p>
+                                <p className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                                    {session.tutor ? session.tutor.name : 'Tutor AICI'}
+                                </p>
+                                {session.tutor?.email && (
+                                    <p className="text-xs text-gray-500 truncate">{session.tutor.email}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 flex items-center gap-3.5">
+                            <div className="w-12 h-12 bg-indigo-50 text-indigo-700 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border border-indigo-100">
+                                <i className="bi bi-diagram-3" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Kelas Belajar</p>
+                                <p className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                                    {session.classroom ? session.classroom.name : 'Kelas Reguler'}
+                                </p>
+                                <p className="text-xs text-gray-500">Status Kehadiran: <span className="font-semibold capitalize text-teal-800">{cfg.label}</span></p>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Deskripsi */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6 space-y-3">
                         <h2 className="font-bold text-base text-gray-900">Deskripsi</h2>
                         <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-                            {session.description || 'Sesi perdana membahas konsep dasar robotika dan block coding. Siswa sangat antusias dan langsung mencoba membuat program sederhana. Materi mencakup pemahaman tentang sensor, aktuator, dan bagaimana logika pemrograman digunakan untuk mengontrol pergerakan robot.'}
+                            {session.description || 'Sesi pembelajaran membahas konsep dan pengenalan materi secara terstruktur. Siswa dibimbing mempraktikkan langsung materi dengan arahan tutor dan perangkat belajar.'}
                         </p>
                     </div>
 
                     {/* Modul Ajar */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6 space-y-4">
-                        <h2 className="font-bold text-base text-gray-900">Modul Ajar</h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="font-bold text-base text-gray-900">Modul Ajar</h2>
+                        </div>
 
                         {session.modules && session.modules.length > 0 ? (
                             session.modules.map(mod => (
-                                <div key={mod.id} className="flex items-center gap-3 p-4 bg-[#f0f7f9] rounded-2xl border border-teal-100/80">
+                                <div
+                                    key={mod.id}
+                                    className="flex items-center gap-3 p-4 bg-[#f0f7f9] rounded-2xl border border-teal-100/80"
+                                >
                                     <div className="w-10 h-10 bg-[#034d52] rounded-xl flex items-center justify-center text-white flex-shrink-0">
                                         <i className="bi bi-journal-text text-xl" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-[#034d52] text-xs sm:text-sm truncate">{mod.name}</p>
+                                        <p className="text-[11px] text-teal-700/80 font-medium">Materi sesi pembelajaran</p>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="flex items-center gap-3 p-4 bg-[#f0f7f9] rounded-2xl border border-teal-100/80">
+                            <div
+                                className="flex items-center gap-3 p-4 bg-[#f0f7f9] rounded-2xl border border-teal-100/80"
+                            >
                                 <div className="w-10 h-10 bg-[#034d52] rounded-xl flex items-center justify-center text-white flex-shrink-0">
                                     <i className="bi bi-journal-text text-xl" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-[#034d52] text-xs sm:text-sm truncate">Modul 1 – Pengenalan Robotika</p>
+                                    <p className="text-[11px] text-teal-700/80 font-medium">Materi sesi pembelajaran</p>
                                 </div>
                             </div>
                         )}

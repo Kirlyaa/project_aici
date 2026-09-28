@@ -27,7 +27,25 @@ export default function SessionCard({ session, href }: Props) {
                             <h3 className="font-bold text-gray-900 truncate">{session.title}</h3>
                         </div>
                         <p className="text-sm text-gray-600 mb-1">{session.date}</p>
-                        <p className="text-xs text-gray-400 mb-3">{session.module}</p>
+                        <p className="text-xs text-gray-400 mb-2 truncate">{session.module || 'Modul Pembelajaran'}</p>
+                        
+                        {(session.tutor || session.classroom) && (
+                            <div className="flex flex-wrap items-center gap-2 mb-3 text-[11px] text-gray-500">
+                                {session.tutor && (
+                                    <span className="inline-flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded text-gray-600 border border-gray-100">
+                                        <i className="bi bi-person-badge text-teal-700" />
+                                        {session.tutor.name}
+                                    </span>
+                                )}
+                                {session.classroom && (
+                                    <span className="inline-flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded text-gray-600 border border-gray-100">
+                                        <i className="bi bi-diagram-3 text-indigo-700" />
+                                        {session.classroom.name}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
                         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${cfg.badge}`}>
                             <i className={`bi ${cfg.icon}`} />
                             {cfg.label}

@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface Tutor {
     id: number;
@@ -21,12 +21,20 @@ interface Props {
     users: Paginated<Tutor>;
     search: string;
     filterStatus: string;
+    import_errors?: string[];
 }
 
 export default function TutorManagement() {
     const { users, search, filterStatus: initialFilterStatus } = usePage().props as unknown as Props;
+    const pageProps = usePage().props as unknown as Props;
+    const importErrors = pageProps.import_errors || [];
 
     const [showModal, setShowModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const [editingId, setEditingId] = useState<number | null>(null);
     const [formData, setFormData] = useState({
         name: '',
@@ -87,6 +95,29 @@ export default function TutorManagement() {
 
     const toggleStatus = (id: number) => {
         router.patch(`/superadmin/tutors/${id}/toggle-status`);
+    };
+
+    const handleImportSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!importFile) return;
+
+        const uploadData = new FormData();
+        uploadData.append('file', importFile);
+
+        setIsUploading(true);
+        router.post('/superadmin/tutors/import-excel', uploadData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowImportModal(false);
+                setImportFile(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
+            onFinish: () => {
+                setIsUploading(false);
+            },
+        });
     };
 
     return (
@@ -157,14 +188,44 @@ export default function TutorManagement() {
                     </div>
                 </div>
 
-                {/* Add New Tutor Button */}
-                <div className="mb-6">
-                    <button
-                        onClick={() => openModal()}
-                        className="px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-2"
+                {/* Import Error Banner */}
+                {importErrors.length > 0 && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2 text-red-800 font-semibold">
+                            <i className="bi bi-exclamation-triangle-fill" />
+                            <span>Terdapat {importErrors.length} kesalahan saat impor:</span>
+                        </div>
+                        <ul className="list-disc list-inside text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
+                            {importErrors.map((err, idx) => (
+                                <li key={idx}>{err}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Add New Tutor & Bulk Import Buttons */}
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => openModal()}
+                            className="px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 flex items-center gap-2 transition"
+                        >
+                            <i className="bi bi-plus-lg" /> Tambah Tutor Baru
+                        </button>
+                        <button
+                            onClick={() => setShowImportModal(true)}
+                            className="px-5 py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-medium hover:bg-emerald-100 flex items-center gap-2 transition"
+                        >
+                            <i className="bi bi-file-earmark-spreadsheet-fill text-lg" /> Import Tutor (Excel)
+                        </button>
+                    </div>
+
+                    <a
+                        href="/superadmin/tutors/template"
+                        className="text-xs text-teal-700 hover:text-teal-900 font-medium inline-flex items-center gap-1.5 underline"
                     >
-                        <i className="bi bi-plus-lg" /> Tambah Tutor Baru
-                    </button>
+                        <i className="bi bi-download" /> Unduh Template Import Tutor (.xlsx)
+                    </a>
                 </div>
 
                 {/* Tutors Table */}
@@ -219,19 +280,33 @@ export default function TutorManagement() {
                                             <td className="px-4 py-4">
                                                 <p className="text-gray-600 text-sm">{tutor.terdaftar}</p>
                                             </td>
-                                            <td className="px-4 py-4">
-                                                <div className="flex items-center justify-center gap-2">
+                                            <td className="px-4 py-4 text-center">
+                                                <div className="flex items-center justify-center gap-1.5">
+                                                    <Link
+                                                        href={`/superadmin/calendar/tutors/${tutor.id}`}
+                                                        className="p-2 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+                                                        title="Buka Kalender Mengajar Tutor"
+                                                    >
+                                                        <i className="bi bi-calendar3" />
+                                                    </Link>
+                                                    <Link
+                                                        href={`/superadmin/tutors/${tutor.id}`}
+                                                        className="p-2 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                                                        title="Detail Profil & Murid Binaan"
+                                                    >
+                                                        <i className="bi bi-person-lines-fill" />
+                                                    </Link>
                                                     <button
                                                         onClick={() => openModal(tutor)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Edit"
+                                                        title="Edit Akun"
                                                     >
                                                         <i className="bi bi-pencil-fill" />
                                                     </button>
                                                     <button
                                                         onClick={() => deleteTutor(tutor.id)}
                                                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Hapus"
+                                                        title="Hapus Akun"
                                                     >
                                                         <i className="bi bi-trash-fill" />
                                                     </button>
@@ -350,6 +425,93 @@ export default function TutorManagement() {
                                     className="flex-1 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
                                 >
                                     {editingId ? 'Update' : 'Tambah'} Tutor
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Import Modal */}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg">
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                            <div className="flex items-center gap-2 text-teal-700">
+                                <i className="bi bi-file-earmark-spreadsheet-fill text-2xl" />
+                                <h3 className="text-lg font-bold text-gray-900">Import Tutor Massal (Excel)</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowImportModal(false)}
+                                className="text-gray-400 hover:text-gray-600 transition"
+                            >
+                                <i className="bi bi-x-lg text-lg" />
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                            Unggah berkas spreadsheet <strong>.xlsx</strong>, <strong>.xls</strong>, atau <strong>.csv</strong> untuk mendaftarkan akun tutor AICI sekaligus secara otomatis.
+                        </p>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-5 flex items-start gap-3">
+                            <i className="bi bi-lightbulb-fill text-amber-600 text-lg mt-0.5 shrink-0" />
+                            <div className="text-xs text-amber-900 leading-relaxed">
+                                <span className="font-semibold block mb-0.5">Petunjuk Format Berkas:</span>
+                                Gunakan template resmi AICI agar kolom data (Nama Tutor, Email, Password, Status) terbaca sempurna. Password default adalah <code className="bg-amber-100 px-1 py-0.5 rounded font-mono text-amber-950 font-semibold">aici1234</code> jika dikosongkan.
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <a
+                                href="/superadmin/tutors/template"
+                                className="inline-flex items-center gap-2 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3.5 py-2 rounded-lg transition"
+                            >
+                                <i className="bi bi-file-earmark-arrow-down-fill text-sm" />
+                                Unduh Template Spreadsheet Tutor (.xlsx)
+                            </a>
+                        </div>
+
+                        <form onSubmit={handleImportSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih File Spreadsheet</label>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".xlsx, .xls, .csv"
+                                    onChange={e => setImportFile(e.target.files?.[0] || null)}
+                                    className="w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-gray-200 rounded-lg cursor-pointer p-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    required
+                                />
+                                {importFile && (
+                                    <p className="text-xs text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
+                                        <i className="bi bi-check-circle-fill" /> File terpilih: {importFile.name} ({(importFile.size / 1024).toFixed(1)} KB)
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 pt-4 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowImportModal(false)}
+                                    disabled={isUploading}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!importFile || isUploading}
+                                    className="flex-1 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isUploading ? (
+                                        <>
+                                            <i className="bi bi-arrow-repeat animate-spin" /> Mengimpor...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-upload" /> Mulai Impor
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>

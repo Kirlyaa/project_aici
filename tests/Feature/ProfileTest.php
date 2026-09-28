@@ -108,7 +108,6 @@ class ProfileTest extends TestCase
         $this->seed(\Database\Seeders\TutorSeeder::class);
         $this->seed(\Database\Seeders\AiraLearningSessionSeeder::class);
         $this->seed(\Database\Seeders\AiraGradeEntrySeeder::class);
-        $this->seed(\Database\Seeders\AiraStudentCommentSeeder::class);
 
         $aira = User::where('email', 'aira@aici.id')->first();
         $this->assertNotNull($aira);

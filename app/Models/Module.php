@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
+    'parent_id',
     'name',
+    'book_title',
+    'order_index',
     'format',
     'size',
     'description',
@@ -25,6 +28,16 @@ class Module extends Model
         return [
             'tools' => 'array',
         ];
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Module::class, 'parent_id');
+    }
+
+    public function subModules()
+    {
+        return $this->hasMany(Module::class, 'parent_id')->orderBy('order_index')->orderBy('name');
     }
 
     public function learningSessions()

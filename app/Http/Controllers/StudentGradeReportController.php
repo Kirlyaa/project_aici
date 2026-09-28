@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GradeEntry;
+use App\Models\StudentComment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -96,10 +97,28 @@ class StudentGradeReportController extends Controller
             ];
         })->values();
 
+        // Get latest qualitative comments from tutor (StudentComment)
+        $latestComment = StudentComment::where('student_id', $student->id)
+            ->with('tutor:id,name,email')
+            ->latest('created_at')
+            ->first();
+
+        $commentData = $latestComment ? [
+            'id' => $latestComment->id,
+            'meeting_range' => $latestComment->meeting_range,
+            'tutor_comment' => $latestComment->tutor_comment,
+            'system_comment' => $latestComment->system_comment,
+            'strengths' => $latestComment->strengths,
+            'notes' => $latestComment->notes,
+            'tutor_name' => $latestComment->tutor?->name ?? 'Tutor Pembimbing',
+            'created_at' => $latestComment->created_at?->format('d M Y'),
+        ] : null;
+
         return Inertia::render('User/GradeReport', [
             'gradeEntries' => $gradeEntries,
             'stats' => $stats,
             'byModule' => $byModule,
+            'comment' => $commentData,
             'student' => [
                 'id' => $student->id,
                 'name' => $student->name,

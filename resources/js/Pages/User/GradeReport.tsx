@@ -37,10 +37,22 @@ interface ModuleStats {
     lowest: number;
 }
 
+interface StudentCommentData {
+    id: number;
+    meeting_range?: string;
+    tutor_comment?: string;
+    system_comment?: string;
+    strengths?: string;
+    notes?: string;
+    tutor_name?: string;
+    created_at?: string;
+}
+
 interface Props {
     gradeEntries: Grade[];
     stats: Stats;
     byModule: ModuleStats[];
+    comment?: StudentCommentData | null;
     student: {
         id: number;
         name: string;
@@ -49,7 +61,7 @@ interface Props {
 }
 
 export default function GradeReport() {
-    const { gradeEntries, stats, byModule, student, auth } = usePage().props as unknown as Props & { auth: any };
+    const { gradeEntries, stats, byModule, comment, student, auth } = usePage().props as unknown as Props & { auth: any };
     const isSuperAdmin = auth?.user?.role === 'superadmin';
 
     // Data untuk chart - trend nilai
@@ -183,6 +195,60 @@ export default function GradeReport() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Evaluasi & Catatan Kualitatif Tutor */}
+                    {comment && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-6 sm:p-7 mb-8 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-teal-50 text-[#034d52] flex items-center justify-center text-xl flex-shrink-0">
+                                        <i className="bi bi-chat-quote-fill" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-gray-900">Evaluasi & Catatan Perkembangan</h2>
+                                        <p className="text-xs text-gray-500">
+                                            Oleh <span className="font-semibold text-gray-700">{comment.tutor_name}</span> {comment.created_at ? `• ${comment.created_at}` : ''}
+                                        </p>
+                                    </div>
+                                </div>
+                                {comment.meeting_range && (
+                                    <span className="inline-flex items-center px-3 py-1 bg-teal-100/70 text-teal-800 text-xs font-semibold rounded-full self-start sm:self-auto">
+                                        {comment.meeting_range}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Komentar Tutor */}
+                            {comment.tutor_comment && (
+                                <div className="bg-teal-50/50 p-4 rounded-xl border border-teal-100/70">
+                                    <p className="text-xs font-bold text-teal-900 uppercase tracking-wider mb-1">Catatan Tutor</p>
+                                    <p className="text-sm text-gray-800 leading-relaxed italic">
+                                        "{comment.tutor_comment}"
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Poin Kelebihan / Feedback Kategori */}
+                            {comment.strengths && (
+                                <div className="space-y-1.5 pt-1">
+                                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Kelebihan & Aspek Unggul</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                                        {comment.strengths}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Catatan Pengembangan */}
+                            {comment.notes && (
+                                <div className="space-y-1.5 pt-1">
+                                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">Rekomendasi Peningkatan</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                                        {comment.notes}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Trend Chart */}
                     {chartData.length > 0 && (

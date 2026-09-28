@@ -22,12 +22,26 @@ class UserSessionController extends Controller
             'description' => $session->description,
             'tools' => $session->tools,
             'modules' => $session->modules,
+            'tutor' => $session->tutor ? [
+                'id' => $session->tutor->id,
+                'name' => $session->tutor->name,
+                'email' => $session->tutor->email,
+            ] : null,
+            'classroom' => $session->classroom ? [
+                'id' => $session->classroom->id,
+                'name' => $session->classroom->name,
+            ] : null,
         ];
     }
 
     public function beranda()
     {
-        $sessions = Auth::user()->learningSessions()->with('modules')->orderBy('date')->get()->map(fn($s) => $this->formatSession($s));
+        $sessions = Auth::user()->learningSessions()
+            ->with(['modules', 'tutor:id,name,email', 'classroom:id,name'])
+            ->orderBy('date')
+            ->get()
+            ->map(fn($s) => $this->formatSession($s));
+
         return Inertia::render('User/Beranda', [
             'sessions' => $sessions
         ]);
@@ -35,7 +49,12 @@ class UserSessionController extends Controller
 
     public function jadwal()
     {
-        $sessions = Auth::user()->learningSessions()->with('modules')->orderBy('date')->get()->map(fn($s) => $this->formatSession($s));
+        $sessions = Auth::user()->learningSessions()
+            ->with(['modules', 'tutor:id,name,email', 'classroom:id,name'])
+            ->orderBy('date')
+            ->get()
+            ->map(fn($s) => $this->formatSession($s));
+
         return Inertia::render('User/Jadwal', [
             'sessions' => $sessions
         ]);
@@ -43,7 +62,10 @@ class UserSessionController extends Controller
 
     public function show($id)
     {
-        $session = Auth::user()->learningSessions()->with('modules')->findOrFail($id);
+        $session = Auth::user()->learningSessions()
+            ->with(['modules', 'tutor:id,name,email', 'classroom:id,name'])
+            ->findOrFail($id);
+
         return Inertia::render('User/SessionDetail', [
             'session' => $this->formatSession($session)
         ]);

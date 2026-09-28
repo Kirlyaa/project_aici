@@ -29,6 +29,7 @@ class StoreUserRequest extends FormRequest
             'password' => [$isUpdate ? 'nullable' : 'required', 'confirmed', Password::defaults()],
             'status' => ['nullable', Rule::in(['aktif', 'nonaktif', 'pending'])],
             'tutor_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', 'tutor')],
+            'classroom_id' => ['nullable', 'integer', Rule::exists('classrooms', 'id')],
             'class' => ['nullable', 'string', 'max:255'],
         ];
     }

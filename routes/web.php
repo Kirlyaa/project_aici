@@ -99,6 +99,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/beranda', [UserSessionController::class, 'beranda'])->name('beranda');
         Route::get('/jadwal', [UserSessionController::class, 'jadwal'])->name('jadwal');
         Route::get('/jadwal/{id}', [UserSessionController::class, 'show'])->name('session.detail');
+        Route::get('/modul', [\App\Http\Controllers\StudentModuleController::class, 'index'])->name('modules');
         Route::get('/tugas', fn() => redirect()->route('user.jadwal'))->name('tugas');
         Route::get('/tugas/{id}', fn($id) => redirect()->route('user.session.detail', ['id' => $id]))->name('tugas.detail');
         Route::get('/nilai', [StudentGradeReportController::class, 'show'])->name('grades');
@@ -115,8 +116,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         
         // R6: Module Management pindah ke superadmin — route tutor dihapus
         
-        // R5: Calendar CRUD pindah ke superadmin — tutor hanya view jadwal miliknya sendiri
-        Route::get('/calendar/{studentId}', [CalendarController::class, 'index'])->name('calendar');
+        // R5 & Point 8, 9: Kalender Tutor & Absensi Real-time
+        Route::get('/teaching-calendar', [CalendarController::class, 'teachingSchedule'])->name('teaching-calendar');
+        Route::get('/calendar/{studentId?}', [CalendarController::class, 'index'])->name('calendar');
+        Route::post('/calendar', [CalendarController::class, 'store'])->name('calendar.store');
+        Route::put('/calendar/{session}', [CalendarController::class, 'update'])->name('calendar.update');
         
         // Grades (Nilai)
         Route::get('/grades/{studentId}', [GradeController::class, 'index'])->name('grades');
@@ -150,11 +154,16 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/', SuperAdminDashboardController::class)->name('dashboard');
         
         // Tutor Management
+        Route::get('/tutors/template', [TutorController::class, 'downloadTemplate'])->name('tutors.template');
+        Route::post('/tutors/import-excel', [TutorController::class, 'importExcel'])->name('tutors.import-excel');
         Route::get('/tutors', [TutorController::class, 'index'])->name('tutors');
         Route::post('/tutors', [TutorController::class, 'store'])->name('tutors.store');
+        Route::get('/tutors/{tutor}', [TutorController::class, 'show'])->name('tutors.show');
         Route::put('/tutors/{tutor}', [TutorController::class, 'update'])->name('tutors.update');
         Route::delete('/tutors/{tutor}', [TutorController::class, 'destroy'])->name('tutors.destroy');
         Route::patch('/tutors/{tutor}/toggle-status', [TutorController::class, 'toggleStatus'])->name('tutors.toggle-status');
+        Route::post('/tutors/{tutor}/assign-student', [TutorController::class, 'assignStudent'])->name('tutors.assign-student');
+        Route::delete('/tutors/{tutor}/students/{student}/remove', [TutorController::class, 'removeStudent'])->name('tutors.remove-student');
         
         // Student Management
         Route::get('/students/template', [StudentController::class, 'downloadTemplate'])->name('students.template');
@@ -176,10 +185,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/classes/{classroom}/assign', [ClassroomController::class, 'assignStudent'])->name('classes.assign');
         Route::post('/classes/transfer', [ClassroomController::class, 'transferStudent'])->name('classes.transfer');
         Route::delete('/classes/students/{student}/remove', [ClassroomController::class, 'removeStudent'])->name('classes.remove-student');
+        Route::post('/classes/{classroom}/schedule-session', [ClassroomController::class, 'scheduleBatchSessions'])->name('classes.schedule-session');
 
         // R5 & R10: Calendar Management (SuperAdmin)
         Route::get('/calendar/template', [SuperAdminCalendarController::class, 'downloadTemplate'])->name('calendar.template');
-        Route::get('/calendar/{studentId}', [SuperAdminCalendarController::class, 'index'])->name('calendar');
+        Route::get('/calendar/tutors/{tutorId?}', [SuperAdminCalendarController::class, 'tutorCalendar'])->name('calendar.tutors');
+        Route::get('/calendar/{studentId?}', [SuperAdminCalendarController::class, 'index'])->name('calendar');
         Route::post('/calendar', [SuperAdminCalendarController::class, 'store'])->name('calendar.store');
         Route::put('/calendar/{session}', [SuperAdminCalendarController::class, 'update'])->name('calendar.update');
         Route::delete('/calendar/{session}', [SuperAdminCalendarController::class, 'destroy'])->name('calendar.destroy');

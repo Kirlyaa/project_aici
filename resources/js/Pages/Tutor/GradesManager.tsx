@@ -78,7 +78,6 @@ export default function GradesManager() {
     const [selectedModuleId, setSelectedModuleId] = useState('');
     const [meetingNumber, setMeetingNumber] = useState('');
     const [meetingDate, setMeetingDate] = useState('');
-    const [notes, setNotes] = useState('');
 
     const selectedModule = modules.find(m => String(m.id) === selectedModuleId);
     const moduleType = selectedModule?.module_type === 'robot' ? 'robot' : 'coding';
@@ -150,14 +149,12 @@ export default function GradesManager() {
             tools_management: 0,
             interaksi: 0,
             coding: 0,
-            notes: notes || null,
         }, {
             onSuccess: () => {
                 setShowForm(false);
                 setSelectedModuleId('');
                 setMeetingNumber('');
                 setMeetingDate('');
-                setNotes('');
             },
         });
     };
@@ -285,21 +282,15 @@ export default function GradesManager() {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Catatan</label>
-                                    <textarea
-                                        value={notes}
-                                        onChange={e => setNotes(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none h-16"
-                                    />
-                                </div>
-
                                 <div className="p-3 bg-blue-50 rounded-lg">
                                     <p className="text-sm text-blue-700">
                                         <i className="bi bi-info-circle mr-1" />
                                         Kategori: {moduleType === 'robot'
                                             ? 'Fokus, Robot Building, Tools Mgmt, Interaksi, Koding'
                                             : 'Fokus, Tools Management, Interaksi, Koding'}
+                                    </p>
+                                    <p className="text-xs text-blue-600 mt-1">
+                                        Catatan evaluasi kualitatif murid diinput secara terpusat melalui menu <strong>Kelola Komentar</strong>.
                                     </p>
                                 </div>
 

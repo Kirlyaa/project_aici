@@ -355,14 +355,14 @@ export default function SuperAdminDashboard() {
                         </div>
                     </div>
 
-                    {/* Kelola Kalender */}
+                    {/* Kelola Kalender Siswa */}
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="bg-gradient-to-r from-violet-600 to-violet-700 px-6 py-4">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <i className="bi bi-calendar3" />
-                                Kelola Kalender
+                                Kelola Kalender Siswa
                             </h2>
-                            <p className="text-violet-100 text-sm mt-1">Atur jadwal sesi belajar per murid.</p>
+                            <p className="text-violet-100 text-sm mt-1">Atur jadwal sesi belajar per murid, materi dan absensi.</p>
                         </div>
 
                         <div className="p-6 space-y-4">
@@ -381,7 +381,7 @@ export default function SuperAdminDashboard() {
                             <div className="border-t pt-4">
                                 <p className="text-sm text-gray-600 mb-3">
                                     <i className="bi bi-info-circle mr-1 text-violet-500" />
-                                    Pilih murid dari daftar untuk mengelola kalender sesi belajarnya.
+                                    Pilih murid dari daftar untuk mengelola kalender sesi belajarnya:
                                 </p>
                                 <div className="space-y-2">
                                     {recentStudents.slice(0, 3).map(s => (
@@ -404,10 +404,67 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             <Link
-                                href="/superadmin/students"
+                                href="/superadmin/calendar"
                                 className="block text-center mt-4 px-4 py-2.5 bg-violet-600 text-white rounded-lg font-medium hover:bg-violet-700 transition-colors"
                             >
-                                <i className="bi bi-people-fill mr-2" /> Pilih Murid & Kelola Kalender
+                                <i className="bi bi-calendar3 mr-2" /> Buka Kalender Siswa
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Kelola Kalender Tutor */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-teal-600 to-emerald-700 px-6 py-4">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <i className="bi bi-calendar-week" />
+                                Kelola Kalender Tutor
+                            </h2>
+                            <p className="text-teal-100 text-sm mt-1">Otoritas penuh Super Admin untuk menyusun dan mengedit jadwal mengajar para tutor.</p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* Quick Stats */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="bg-teal-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-teal-600 font-semibold">Tutor Aktif</p>
+                                    <p className="text-2xl font-bold text-teal-900">{stats.activeTutors}</p>
+                                </div>
+                                <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-emerald-600 font-semibold">Total Tutor</p>
+                                    <p className="text-2xl font-bold text-emerald-900">{stats.totalTutors}</p>
+                                </div>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <p className="text-sm text-gray-600 mb-3">
+                                    <i className="bi bi-shield-check mr-1 text-teal-600" />
+                                    Hanya Super Admin yang berwenang menambah dan mengedit agenda mengajar tutor:
+                                </p>
+                                <div className="space-y-2">
+                                    {recentTutors.slice(0, 3).map(t => (
+                                        <Link
+                                            key={t.id}
+                                            href={`/superadmin/calendar/tutors/${t.id}`}
+                                            className="flex items-center justify-between p-2.5 hover:bg-teal-50 rounded-lg border border-transparent hover:border-teal-200 transition-colors"
+                                        >
+                                            <div>
+                                                <p className="font-medium text-sm text-gray-900">{t.name}</p>
+                                                <p className="text-xs text-gray-500">{t.email}</p>
+                                            </div>
+                                            <i className="bi bi-calendar-event text-teal-600" />
+                                        </Link>
+                                    ))}
+                                    {recentTutors.length === 0 && (
+                                        <p className="text-sm text-gray-500">Belum ada tutor terdaftar.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <Link
+                                href="/superadmin/calendar/tutors"
+                                className="block text-center mt-4 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors shadow-sm"
+                            >
+                                <i className="bi bi-calendar-week mr-2" /> Buka Kelola Kalender Tutor
                             </Link>
                         </div>
                     </div>

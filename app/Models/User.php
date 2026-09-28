@@ -54,6 +54,11 @@ class User extends Authenticatable
         return $this->hasMany(LearningSession::class);
     }
 
+    public function tutoredSessions()
+    {
+        return $this->hasMany(LearningSession::class, 'tutor_id');
+    }
+
     public function tutor()
     {
         return $this->belongsTo(User::class, 'tutor_id');
@@ -84,6 +89,11 @@ class User extends Authenticatable
         return $this->belongsTo(Classroom::class, 'classroom_id');
     }
 
+    public function managedClassrooms()
+    {
+        return $this->hasMany(Classroom::class, 'tutor_id');
+    }
+
     public function notifications()
     {
         return $this->hasMany(\App\Models\Notification::class);
@@ -92,6 +102,29 @@ class User extends Authenticatable
     public function unreadNotifications()
     {
         return $this->notifications()->where('is_read', false)->orderByDesc('created_at');
+    }
+
+    /**
+     * Scope query untuk murid yang diajar oleh tutor tertentu:
+     * 1. Murid dengan tutor_id langsung sama dengan tutor, ATAU
+     * 2. Murid yang berada di kelas binaan tutor (classrooms.tutor_id = tutor), ATAU
+     * 3. Murid yang memiliki sesi belajar dengan tutor (learning_sessions.tutor_id = tutor).
+     * Jika user adalah superadmin, semua murid disertakan.
+     */
+    public function scopeTaughtBy($query, User|int $tutor)
+    {
+        $tutorId = $tutor instanceof User ? $tutor->id : $tutor;
+        $tutorRole = $tutor instanceof User ? $tutor->role : User::where('id', $tutorId)->value('role');
+
+        if ($tutorRole === 'superadmin') {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($tutorId) {
+            $q->where('users.tutor_id', $tutorId)
+                ->orWhereHas('classroom', fn($c) => $c->where('tutor_id', $tutorId))
+                ->orWhereHas('learningSessions', fn($ls) => $ls->where('tutor_id', $tutorId));
+        });
     }
 
     /**

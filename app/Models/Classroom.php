@@ -5,17 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'photo', 'description'])]
+#[Fillable(['name', 'photo', 'tutor_id', 'description'])]
 class Classroom extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public function tutor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'tutor_id')->where('role', 'tutor');
+    }
+
     public function students(): HasMany
     {
         return $this->hasMany(User::class, 'classroom_id')->where('role', 'user');
+    }
+
+    public function learningSessions(): HasMany
+    {
+        return $this->hasMany(LearningSession::class, 'classroom_id');
     }
 
     public function getPhotoUrlAttribute(): string

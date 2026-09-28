@@ -125,19 +125,40 @@ export default function TutorDashboard() {
                                 <span className="text-[11px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">Tutor</span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
-                                <i className="bi bi-person-fill text-white" />
+                        <div className="flex items-center gap-6">
+                            <div className="hidden md:flex items-center gap-4 text-sm font-semibold">
+                                <Link href="/tutor" className="text-teal-800 font-bold">
+                                    Dashboard
+                                </Link>
+                                <Link
+                                    href="/tutor/teaching-calendar"
+                                    className="text-gray-600 hover:text-teal-700 transition flex items-center gap-1.5"
+                                >
+                                    <i className="bi bi-calendar3" />
+                                    Kalender Tutor
+                                </Link>
+                                <Link
+                                    href="/tutor/modules"
+                                    className="text-gray-600 hover:text-teal-700 transition flex items-center gap-1.5"
+                                >
+                                    <i className="bi bi-journal-code" />
+                                    Modul
+                                </Link>
                             </div>
-                            <span className="font-medium">{(props.auth as any)?.user?.name || 'Tutor'}</span>
-                            <button
-                                type="button"
-                                onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
-                                className="text-gray-600 hover:text-red-600 transition-colors"
-                                title="Logout"
-                            >
-                                <i className="bi bi-box-arrow-right text-xl" />
-                            </button>
+                            <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
+                                <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
+                                    <i className="bi bi-person-fill text-white" />
+                                </div>
+                                <span className="font-medium text-sm text-gray-800">{(props.auth as any)?.user?.name || 'Tutor'}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
+                                    className="text-gray-600 hover:text-red-600 transition-colors ml-1"
+                                    title="Logout"
+                                >
+                                    <i className="bi bi-box-arrow-right text-xl" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -147,10 +168,33 @@ export default function TutorDashboard() {
                 {/* Banner Notifikasi & Chat Real-Time dari Super Admin */}
                 <TutorLiveChatBanner />
 
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Tutor</h1>
-                    <p className="text-gray-600">Input absensi, nilai, dan komentar untuk murid Anda</p>
+                {/* Header & Quick Action Kalender Tutor Mandiri */}
+                <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-800">
+                                Portal Tutor
+                            </span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Tutor</h1>
+                        <p className="text-gray-500 text-sm mt-0.5">Kelola agenda mengajar tutor dan input absensi, nilai, serta komentar murid</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/tutor/teaching-calendar"
+                            className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-semibold text-sm shadow-sm transition hover:shadow-md group"
+                        >
+                            <div className="w-8 h-8 rounded-lg bg-teal-600/70 flex items-center justify-center text-teal-100 group-hover:scale-105 transition-transform">
+                                <i className="bi bi-calendar3 text-base" />
+                            </div>
+                            <div className="text-left">
+                                <div className="leading-tight">Kalender Tutor</div>
+                                <span className="text-[11px] text-teal-200 font-normal">Agenda &amp; Jadwal Mengajar</span>
+                            </div>
+                            <i className="bi bi-arrow-right ml-1 text-teal-300" />
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="grid lg:grid-cols-4 gap-6">
@@ -234,7 +278,7 @@ export default function TutorDashboard() {
                                     </div>
                                 </div>
 
-                                {/* Menu Cards */}
+                                {/* Menu Cards Khusus Siswa */}
                                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <Link
                                         href={`/tutor/calendar/${currentStudent.id}`}
@@ -242,11 +286,11 @@ export default function TutorDashboard() {
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <i className="bi bi-calendar-event text-blue-600 text-xl" />
+                                                <i className="bi bi-calendar-check text-blue-600 text-xl" />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-gray-900">Lihat Kalender</h3>
-                                                <p className="text-sm text-gray-600">Hanya jadwal Anda sendiri</p>
+                                                <h3 className="font-bold text-gray-900">Kalender Siswa</h3>
+                                                <p className="text-sm text-gray-600">Absensi {currentStudent.name.split(' ')[0]}</p>
                                             </div>
                                         </div>
                                     </Link>
@@ -282,7 +326,7 @@ export default function TutorDashboard() {
                                     </Link>
 
                                     <Link
-                                        href={`/tutor/modules`}
+                                        href={`/tutor/modules?student=${currentStudent.id}`}
                                         className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow"
                                     >
                                         <div className="flex items-center gap-4">
@@ -291,7 +335,7 @@ export default function TutorDashboard() {
                                             </div>
                                             <div>
                                                 <h3 className="font-bold text-gray-900">Lihat Modul</h3>
-                                                <p className="text-sm text-gray-600">Daftar modul tersedia</p>
+                                                <p className="text-sm text-gray-600">Sesuai kelas murid</p>
                                             </div>
                                         </div>
                                     </Link>

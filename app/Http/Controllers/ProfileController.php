@@ -35,7 +35,7 @@ class ProfileController extends Controller
             // Clamp ke 0-100 agar tidak melebihi 100% jika data seeder lama masih 0-10
             $overallPercentage = $overallAvg > 0 ? min(100, round(($overallAvg / GradeEntry::MAX_SCORE) * 100, 1)) : 0;
 
-            // Dataset nilai per pertemuan untuk grafik interaktif per pertemuan
+            // Dataset nilai per pertemuan untuk grafik interaktif per pertemuan beserta komentar tutor per pertemuan
             $meetingScores = \App\Models\GradeEntry::where('student_id', $user->id)
                 ->with('module')
                 ->orderBy('meeting_number', 'asc')
@@ -46,6 +46,7 @@ class ProfileController extends Controller
                         'id' => $g->id,
                         'meetingNumber' => $g->meeting_number,
                         'moduleName' => $g->module?->name,
+                        'moduleType' => $g->module_type,
                         'date' => $g->meeting_date ? $g->meeting_date->format('d M Y') : null,
                         'scores' => [
                             'interaction' => round((float) ($g->interaksi ?? 0), 1),
@@ -54,6 +55,7 @@ class ProfileController extends Controller
                             'tools' => round((float) ($g->tools_management ?? 0), 1),
                             'coding' => round((float) ($g->coding ?? 0), 1),
                         ],
+                        'tutorNotes' => $g->notes,
                     ];
                 })->values()->toArray();
 
@@ -71,6 +73,18 @@ class ProfileController extends Controller
                 ]);
 
             $latestComment = \App\Models\StudentComment::where('student_id', $user->id)->latest()->first();
+
+            // Ambil semua komentar tersimpan per siklus/meeting_range untuk murid ini
+            $commentsByRange = \App\Models\StudentComment::where('student_id', $user->id)
+                ->get()
+                ->keyBy(fn($c) => $c->meeting_range ?: 'all')
+                ->map(fn($c) => [
+                    'system' => $c->system_comment,
+                    'notes' => $c->notes,
+                    'tutorComment' => $c->tutor_comment,
+                    'meetingRange' => $c->meeting_range ?: 'all',
+                ])
+                ->toArray();
 
             // Ambil nomor pertemuan murid untuk generate opsi filter per 4 pertemuan & all
             $allMeetingNumbers = \App\Models\GradeEntry::where('student_id', $user->id)
@@ -130,6 +144,7 @@ class ProfileController extends Controller
                         'system' => $latestComment?->system_comment,
                         'notes'  => $latestComment?->notes,
                     ],
+                    'commentsByRange' => $commentsByRange,
                     'sessions' => $sessions,
                 ]
             ]);
@@ -326,17 +341,26 @@ class ProfileController extends Controller
         $attendancePct = $sessions->count() > 0 ? round(($hadir / $sessions->count()) * 100, 1) : 0;
 
         // Ambil komentar yang paling relevan dengan periode pertemuan yang difilter
-        $latestMeetingDate = $gradeEntries->pluck('meeting_date')->filter()->sortDesc()->first();
-        $targetSemester = $latestMeetingDate ? $latestMeetingDate->format('Y-m') : null;
+        // Prioritaskan kecocokan meeting_range (misal: '1-4', '5-8', atau 'all')
+        $activeComment = \App\Models\StudentComment::where('student_id', $user->id)
+            ->where('meeting_range', $selectedRangeKey)
+            ->latest()
+            ->first();
 
-        $matchingComment = null;
-        if ($targetSemester) {
-            $matchingComment = \App\Models\StudentComment::where('student_id', $user->id)
-                ->where('semester', $targetSemester)
-                ->first();
+        if (!$activeComment) {
+            $latestMeetingDate = $gradeEntries->pluck('meeting_date')->filter()->sortDesc()->first();
+            $targetSemester = $latestMeetingDate ? $latestMeetingDate->format('Y-m') : null;
+
+            if ($targetSemester) {
+                $activeComment = \App\Models\StudentComment::where('student_id', $user->id)
+                    ->where('semester', $targetSemester)
+                    ->first();
+            }
         }
 
-        $activeComment = $matchingComment ?? \App\Models\StudentComment::where('student_id', $user->id)->latest()->first();
+        if (!$activeComment) {
+            $activeComment = \App\Models\StudentComment::where('student_id', $user->id)->latest()->first();
+        }
 
         return Inertia::render('User/ProfilPDF', [
             'studentStats' => [

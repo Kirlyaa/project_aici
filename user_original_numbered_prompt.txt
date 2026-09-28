@@ -1,0 +1,11 @@
+sebelumnya aku meu menambahkan beberapa fitur 
+
+1. di dashboard suuperadmin tolong buatkan agar superadmin bisa membuat sebuah kelas yang bisa di masukan murid murid, tolong sekalian buat bebearpa seed jadi isinya 3 kelas masing masing kelas terdiri dari 3 murid, tambahkan 2 murid tanpa kelas, murid bisa di hapus di pindahkan bisa di edit bisa di keluarkan, nama kelas bisa di atur namanya dan fotonya.
+
+2.selanjutnya aku ingin agar di dashboard tutor di ringkasan kehadiran, di kolom akan datang ubah warna jadi biru.
+
+3. pada pdf tolong, nilai rata rata pada pdf itu per 4 pertemuan, dan ada juga yang keseluruhan, tolong buatkan saat menekan tombol pdf di profil murid, tolong buatkan jadi punya pilihan untuk pdf perpertemuan mana saja contoh 1-4 5-8, dan sebagainya, dan ada 1 yang dari 1-terakhir, jika perlu seed maka bikin seednya.
+
+4. Apakah bisa kalo menginput jadwal di kalender oleh super admin bisa menggunakan csv, intinya tolong membuat masukan jadwal secara massive langsung bulk begitu bukan satu satu seperti sekarang, apakah bisa atau tidak kalo bisa maka rubahlah.
+
+dengan bebearapa tambahan yang ku minta tolong buatkan aku list list yang baru dari sekarng.

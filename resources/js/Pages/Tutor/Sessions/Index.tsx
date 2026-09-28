@@ -12,7 +12,21 @@ interface SessionItem {
     tools: string[];
     studentId: number;
     studentName: string;
+    classroomId?: number | null;
+    classroomName?: string;
     modules: Array<{ id: number; name: string }>;
+}
+
+interface ClassroomItem {
+    id: number;
+    name: string;
+}
+
+interface StudentOption {
+    id: number;
+    name: string;
+    classroom_id?: number | null;
+    class?: string | null;
 }
 
 interface Paginated<T> {
@@ -24,8 +38,10 @@ interface Props {
     sessions: Paginated<SessionItem>;
     search: string;
     filterStatus: string;
-    students: Array<{ id: number; name: string }>;
+    filterClassroom?: string;
+    students: StudentOption[];
     modules: Array<{ id: number; name: string }>;
+    classrooms: ClassroomItem[];
 }
 
 const statusBadge: Record<SessionStatus, string> = {
@@ -46,6 +62,7 @@ const statusOptions: { value: SessionStatus; label: string }[] = [
 
 const emptyForm = {
     student_id: '',
+    classroom_id: '',
     title: '',
     date: '',
     status: 'akan-datang' as SessionStatus,
@@ -55,19 +72,24 @@ const emptyForm = {
 };
 
 export default function TutorSessions() {
-    const { sessions, search: initialSearch, filterStatus: initialFilterStatus, students, modules } =
+    const { sessions, search: initialSearch, filterStatus: initialFilterStatus, filterClassroom: initialFilterClassroom, students, modules, classrooms = [] } =
         usePage().props as unknown as Props;
 
     const [searchTerm, setSearchTerm] = useState(initialSearch);
     const [filterStatus, setFilterStatus] = useState(initialFilterStatus);
+    const [filterClassroom, setFilterClassroom] = useState(initialFilterClassroom || '');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [formData, setFormData] = useState(emptyForm);
     const [toolInput, setToolInput] = useState('');
 
-    const applyFilters = (term: string, status: string) => {
-        router.get('/tutor/sessions', { search: term, filter_status: status }, { preserveState: true });
+    const applyFilters = (term: string, status: string, classroom: string) => {
+        router.get('/tutor/sessions', {
+            search: term,
+            filter_status: status,
+            filter_classroom: classroom,
+        }, { preserveState: true });
     };
 
     const openCreate = () => {
@@ -80,6 +102,7 @@ export default function TutorSessions() {
         setEditingId(s.id);
         setFormData({
             student_id: String(s.studentId),
+            classroom_id: s.classroomId ? String(s.classroomId) : '',
             title: s.title,
             date: s.date ?? '',
             status: s.status,
@@ -113,6 +136,7 @@ export default function TutorSessions() {
         e.preventDefault();
         const payload = {
             student_id: Number(formData.student_id),
+            classroom_id: formData.classroom_id ? Number(formData.classroom_id) : null,
             title: formData.title,
             date_string: formData.date,
             date: formData.date,
@@ -180,16 +204,30 @@ export default function TutorSessions() {
                             type="text"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && applyFilters(searchTerm, filterStatus)}
+                            onKeyDown={e => e.key === 'Enter' && applyFilters(searchTerm, filterStatus, filterClassroom)}
                             placeholder="Cari judul sesi..."
                             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                     </div>
                     <select
+                        value={filterClassroom}
+                        onChange={e => {
+                            setFilterClassroom(e.target.value);
+                            applyFilters(searchTerm, filterStatus, e.target.value);
+                        }}
+                        className="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                        <option value="">Semua Kelas</option>
+                        {classrooms.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                        <option value="none">Tanpa Kelas</option>
+                    </select>
+                    <select
                         value={filterStatus}
                         onChange={e => {
                             setFilterStatus(e.target.value);
-                            applyFilters(searchTerm, e.target.value);
+                            applyFilters(searchTerm, e.target.value, filterClassroom);
                         }}
                         className="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     >
@@ -214,6 +252,7 @@ export default function TutorSessions() {
                                     <th className="text-left px-5 py-3 font-semibold text-gray-600">#</th>
                                     <th className="text-left px-5 py-3 font-semibold text-gray-600">Judul Sesi</th>
                                     <th className="text-left px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Siswa</th>
+                                    <th className="text-left px-5 py-3 font-semibold text-gray-600 hidden sm:table-cell">Kelas</th>
                                     <th className="text-left px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Tanggal</th>
                                     <th className="text-left px-5 py-3 font-semibold text-gray-600 hidden lg:table-cell">Modul</th>
                                     <th className="text-left px-5 py-3 font-semibold text-gray-600">Status</th>
@@ -226,6 +265,12 @@ export default function TutorSessions() {
                                         <td className="px-5 py-3 text-gray-400">{idx + 1}</td>
                                         <td className="px-5 py-3 font-medium text-gray-900">{session.title}</td>
                                         <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{session.studentName}</td>
+                                        <td className="px-5 py-3 text-gray-600 hidden sm:table-cell">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <i className="bi bi-door-open text-[11px]" />
+                                                {session.classroomName || 'Tanpa Kelas'}
+                                            </span>
+                                        </td>
                                         <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{session.dateString}</td>
                                         <td className="px-5 py-3 text-gray-500 hidden lg:table-cell truncate max-w-xs">
                                             {session.modules.map(m => m.name).join(', ') || '-'}
@@ -296,13 +341,39 @@ export default function TutorSessions() {
                                 </label>
                                 <select
                                     value={formData.student_id}
-                                    onChange={e => setFormData(prev => ({ ...prev, student_id: e.target.value }))}
+                                    onChange={e => {
+                                        const sId = e.target.value;
+                                        const selected = students.find(s => String(s.id) === sId);
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            student_id: sId,
+                                            classroom_id: selected?.classroom_id ? String(selected.classroom_id) : prev.classroom_id,
+                                        }));
+                                    }}
                                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     required
                                 >
                                     <option value="">-- Pilih Siswa --</option>
                                     {students.map(s => (
-                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                        <option key={s.id} value={s.id}>
+                                            {s.name} {s.class ? `(${s.class})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Kelas Terkait <span className="text-gray-400 font-normal">(opsional / otomatis sesuai siswa)</span>
+                                </label>
+                                <select
+                                    value={formData.classroom_id}
+                                    onChange={e => setFormData(prev => ({ ...prev, classroom_id: e.target.value }))}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="">-- Tanpa Kelas Khusus / Otomatis --</option>
+                                    {classrooms.map(c => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
                                 </select>
                             </div>

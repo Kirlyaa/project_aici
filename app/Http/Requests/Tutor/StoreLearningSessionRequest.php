@@ -22,6 +22,8 @@ class StoreLearningSessionRequest extends FormRequest
     {
         return [
             'student_id' => ['required', 'integer', 'exists:users,id'],
+            'tutor_id' => ['nullable', 'integer', 'exists:users,id'],
+            'classroom_id' => ['nullable', 'integer', 'exists:classrooms,id'],
             'title' => ['required', 'string', 'max:255'],
             'date_string' => ['required', 'string', 'max:255'],
             'date' => ['required', 'date'],

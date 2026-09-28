@@ -23,7 +23,6 @@ class DatabaseSeeder extends Seeder
             LearningSessionSeeder::class,
             AiraLearningSessionSeeder::class,
             RaporSeeder::class,
-            AiraStudentCommentSeeder::class,
             TutorChatAndNoteSeeder::class,
         ]);
     }

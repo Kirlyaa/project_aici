@@ -1,0 +1,7 @@
+Saya ingin grafik batang yang sudah ada saat ini dibagi datanya **per pertemuan**.
+
+- Contoh: Jika ada 8 pertemuan, maka akan ada 8 data grafik yang berbeda.
+- **KONTROL UI:** Saya ingin menambahkan navigasi panah ke kiri dan ke kanan untuk mengganti/menggeser tampilan grafik ke pertemuan sebelumnya atau selanjutnya. **Posisi tombol panah ini harus diletakkan di samping kiri dan kanan area grafik tersebut** (seperti tombol *slider/carousel* yang mengapit *chart*), BUKAN menempel di sebelah teks judulnya.
+**ATURAN SANGAT PENTING (Kritikal):**
+JANGAN mengubah jumlah atau kategori batang di dalam grafiknya!
+Kategori batangnya harus tetap sama persis seperti format aslinya (misalnya ada 5 variabel seperti Interact, Focus, Robot Building, Tools, Coding). Yang berubah HANYA *dataset* nilainya saja setiap kali panah ditekan untuk pindah pertemuan.

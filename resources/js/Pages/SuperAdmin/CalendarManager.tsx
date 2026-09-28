@@ -33,7 +33,7 @@ interface Module {
 
 interface Props {
     studentId: number;
-    student: Student;
+    student: Student | null;
     sessions: SessionData[];
     modules: Module[];
     students: Student[];
@@ -224,7 +224,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <Link href="/superadmin" className="text-gray-600 hover:text-gray-900 mr-1" title="Kembali ke Dashboard">
+                            <Link href="/superadmin/students" className="text-gray-600 hover:text-gray-900 mr-1" title="Kembali ke Kelola Murid">
                                 <i className="bi bi-arrow-left text-xl" />
                             </Link>
                             <img
@@ -238,11 +238,17 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                         </div>
                         <div className="flex items-center gap-2">
                             {/* Pilih murid lain */}
+                            <span className="text-xs font-semibold text-gray-500 hidden sm:inline">Pilih Murid:</span>
                             <select
                                 className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                value={studentId}
-                                onChange={e => router.get(`/superadmin/calendar/${e.target.value}`)}
+                                value={studentId || ''}
+                                onChange={e => {
+                                    if (e.target.value) {
+                                        router.get(`/superadmin/calendar/${e.target.value}`);
+                                    }
+                                }}
                             >
+                                <option value="" disabled>-- Pilih Murid --</option>
                                 {students.map(s => (
                                     <option key={s.id} value={s.id}>{s.name} {s.class ? `(${s.class})` : ''}</option>
                                 ))}
@@ -253,6 +259,36 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
             </nav>
 
             <div className="max-w-6xl mx-auto px-4 py-8">
+                {/* Dual Mode Switcher Tabs */}
+                <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+                    <div className="inline-flex p-1 bg-gray-200/80 rounded-xl shadow-inner">
+                        <Link
+                            href="/superadmin/calendar"
+                            className="px-5 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-teal-800 shadow-sm"
+                        >
+                            <i className="bi bi-person mr-2" />
+                            Kalender Siswa
+                        </Link>
+                        <Link
+                            href="/superadmin/calendar/tutors"
+                            className="px-5 py-2 rounded-lg text-sm font-semibold transition-all text-gray-600 hover:text-gray-900"
+                        >
+                            <i className="bi bi-person-badge mr-2" />
+                            Kalender Tutor
+                        </Link>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href="/superadmin/calendar/tutors"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-xl text-xs font-semibold transition"
+                        >
+                            <i className="bi bi-calendar3" />
+                            Buka Kalender Tutor
+                        </Link>
+                    </div>
+                </div>
+
                 <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 mb-1">Kelola Kalender Murid</h1>
@@ -278,40 +314,42 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                             onClick={() => setShowCsvPanel(v => !v)}
                             className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors text-sm shadow-sm"
                         >
-                            <i className="bi bi-file-earmark-arrow-up" /> Import CSV
+                            <i className="bi bi-file-earmark-spreadsheet" /> Import Excel / CSV
                         </button>
                     </div>
                 </div>
 
-                {/* R10: Panel Import CSV */}
+                {/* Panel Import Excel / CSV */}
                 {showCsvPanel && (
                     <div className="bg-white rounded-xl border border-teal-100 shadow-sm p-6 mb-6">
                         <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                             <h3 className="font-bold text-gray-900 flex items-center gap-2 text-base">
-                                <i className="bi bi-file-earmark-arrow-up text-teal-600 text-lg" /> Import Jadwal Kalender Secara Massal (CSV)
+                                <i className="bi bi-file-earmark-spreadsheet text-teal-600 text-lg" /> Import Jadwal Kalender Secara Massal (Excel / CSV)
                             </h3>
                             <a
                                 href="/superadmin/calendar/template"
-                                download
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition"
+                                download="template_bulk_jadwal_kalender.xlsx"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold transition"
                             >
-                                <i className="bi bi-download" /> Download Template CSV
+                                <i className="bi bi-file-earmark-excel text-emerald-600" /> Download Template Excel (.xlsx)
                             </a>
                         </div>
                         
                         <p className="text-sm text-gray-600 mb-3">
-                            Fitur ini memungkinkan Anda memasukkan puluhan atau ratusan jadwal pertemuan murid sekaligus dalam 1 kali upload file spreadsheet / CSV.
+                            Fitur ini memungkinkan Anda memasukkan puluhan atau ratusan jadwal pertemuan murid sekaligus dalam 1 kali upload file spreadsheet Excel (<code className="text-emerald-700 font-semibold">.xlsx</code>, <code className="text-emerald-700 font-semibold">.xls</code>) atau file CSV.
                         </p>
 
                         <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-700 leading-relaxed overflow-x-auto">
-                            <div className="font-bold text-slate-800 mb-1 font-sans">Format Kolom Header (Baris Pertama):</div>
-                            <div className="text-teal-700 font-bold mb-2">tanggal,status,judul,modul,email_murid</div>
+                            <div className="font-bold text-slate-800 mb-1 font-sans">Format Kolom Header Template Excel:</div>
+                            <div className="text-teal-700 font-bold mb-2">Tanggal | Status | Judul Pertemuan | Modul | Email Murid | Tutor | Catatan</div>
                             <div className="text-slate-600 font-sans space-y-1">
-                                <div>• <strong>tanggal</strong>: Format <code className="bg-slate-200 px-1 py-0.5 rounded">YYYY-MM-DD</code> (contoh: 2026-10-05) atau <code className="bg-slate-200 px-1 py-0.5 rounded">DD/MM/YYYY</code></div>
-                                <div>• <strong>status</strong>: <code className="bg-slate-200 px-1 py-0.5 rounded">hadir</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">absen</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">reschedule</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">libur</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">akan-datang</code></div>
-                                <div>• <strong>judul</strong>: Nama topik/judul sesi (bebas atau boleh kosong)</div>
-                                <div>• <strong>modul</strong>: Nama modul (opsional, jika cocok akan otomatis dihubungkan)</div>
-                                <div>• <strong>email_murid</strong>: Alamat email murid yang terdaftar di sistem</div>
+                                <div>• <strong>Tanggal</strong>: Format tanggal Excel atau teks <code className="bg-slate-200 px-1 py-0.5 rounded">YYYY-MM-DD</code> (contoh: 2026-10-15) atau <code className="bg-slate-200 px-1 py-0.5 rounded">DD/MM/YYYY</code></div>
+                                <div>• <strong>Status</strong>: <code className="bg-slate-200 px-1 py-0.5 rounded">hadir</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">absen</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">reschedule</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">libur</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">akan-datang</code></div>
+                                <div>• <strong>Judul Pertemuan</strong>: Nama judul atau topik pertemuan sesi</div>
+                                <div>• <strong>Modul</strong>: Nama modul pembelajaran (akan otomatis dikaitkan atau dibuat jika belum ada)</div>
+                                <div>• <strong>Email Murid</strong>: Email murid terdaftar di sistem</div>
+                                <div>• <strong>Tutor</strong>: Email atau nama tutor pengajar (opsional, jika kosong otomatis menggunakan tutor pembina murid)</div>
+                                <div>• <strong>Catatan</strong>: Catatan pengingat sesi dari admin untuk tutor (opsional)</div>
                             </div>
                         </div>
 
@@ -319,7 +357,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                             <input
                                 ref={csvInputRef}
                                 type="file"
-                                accept=".csv,.txt"
+                                accept=".xlsx,.xls,.csv,.txt"
                                 className="text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-50 file:text-teal-700 file:font-semibold hover:file:bg-teal-100 cursor-pointer"
                             />
                             <button
@@ -406,10 +444,15 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                                 <i className="bi bi-person-circle text-teal-600 text-xl" />
                                 Informasi Murid
                             </h3>
-                            <div className="space-y-2 text-sm">
-                                <p><span className="text-gray-600">Nama:</span> <span className="font-medium text-gray-900">{student.name}</span></p>
-                                <p><span className="text-gray-600">Email:</span> <span className="font-medium text-gray-900">{student.email}</span></p>
-                            </div>
+                            {student ? (
+                                <div className="space-y-2 text-sm">
+                                    <p><span className="text-gray-600">Nama:</span> <span className="font-medium text-gray-900">{student.name}</span></p>
+                                    <p><span className="text-gray-600">Email:</span> <span className="font-medium text-gray-900">{student.email}</span></p>
+                                    <p><span className="text-gray-600">Kelas:</span> <span className="font-medium text-teal-700">{student.class || 'Tanpa Kelas'}</span></p>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500 italic">Belum ada murid yang dipilih.</p>
+                            )}
                         </div>
 
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
@@ -435,10 +478,10 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                         </div>
 
                         <Link
-                            href="/superadmin"
+                            href="/superadmin/students"
                             className="block text-center px-4 py-2 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
                         >
-                            <i className="bi bi-arrow-left mr-2" /> Kembali ke Dashboard
+                            <i className="bi bi-arrow-left mr-2" /> Kembali ke Kelola Murid
                         </Link>
                     </div>
                 </div>
@@ -556,7 +599,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                             <p className="font-semibold">Perhatian:</p>
                             <p>
                                 Anda akan menghapus seluruh data jadwal sesi kalender ({sessions.length} jadwal) untuk murid{' '}
-                                <strong className="font-bold">{student.name}</strong>.
+                                <strong className="font-bold">{student ? student.name : 'terpilih'}</strong>.
                             </p>
                         </div>
 

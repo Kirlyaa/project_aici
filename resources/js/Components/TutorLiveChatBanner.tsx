@@ -28,8 +28,42 @@ export default function TutorLiveChatBanner() {
 
     useEffect(() => {
         fetchAlerts();
-        const interval = setInterval(fetchAlerts, 4000); // Polling real-time setiap 4 detik
-        return () => clearInterval(interval);
+
+        let interval: any = null;
+
+        const startPolling = () => {
+            if (!interval) {
+                interval = setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        fetchAlerts();
+                    }
+                }, 8000); // Smart polling: interval 8 detik dan hanya saat tab aktif
+            }
+        };
+
+        const stopPolling = () => {
+            if (interval) {
+                clearInterval(interval);
+                interval = null;
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchAlerts();
+                startPolling();
+            } else {
+                stopPolling();
+            }
+        };
+
+        startPolling();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            stopPolling();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, []);
 
     const markAllRead = async () => {

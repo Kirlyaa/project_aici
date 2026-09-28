@@ -46,6 +46,13 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
                         <i className="bi bi-person-badge-fill text-xl" />
                         <span className="text-[11px] tracking-wide">Tutor</span>
                     </Link>
+                    <Link
+                        href="/superadmin/calendar"
+                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                    >
+                        <i className="bi bi-calendar3 text-xl" />
+                        <span className="text-[11px] tracking-wide">Kalender</span>
+                    </Link>
                 </div>
             </nav>
         );
@@ -61,6 +68,13 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
                     >
                         <i className="bi bi-speedometer2 text-xl" />
                         <span className="text-[11px] tracking-wide">Dashboard</span>
+                    </Link>
+                    <Link
+                        href="/tutor/teaching-calendar"
+                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                    >
+                        <i className="bi bi-calendar3 text-xl" />
+                        <span className="text-[11px] tracking-wide">Kalender</span>
                     </Link>
                     <Link
                         href="/tutor/modules"

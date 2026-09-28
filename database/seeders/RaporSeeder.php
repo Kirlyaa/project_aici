@@ -52,7 +52,7 @@ class RaporSeeder extends Seeder
                     'tools_management' => 4.10,
                     'interaksi' => 4.40,
                     'coding' => 4.00,
-                    'notes' => 'Pertemuan 1: Aira menunjukkan adaptasi dan ketertarikan tinggi pada pengenalan dasar robotika. Pemahaman fungsi masing-masing komponen mekanik sangat cepat dan mampu bekerja sama dengan rekan sekelas secara kooperatif.',
+                    'notes' => null,
                 ],
                 2 => [
                     'module_id' => $modules[2]->id,
@@ -63,7 +63,7 @@ class RaporSeeder extends Seeder
                     'tools_management' => 4.30,
                     'interaksi' => 4.60,
                     'coding' => 4.20,
-                    'notes' => 'Pertemuan 2: Pemahaman sensor ultrasonik dan aktuator gerak meningkat pesat. Mampu melakukan kalibrasi jarak rintangan dengan rapi, teliti, serta cermat dalam penggunaan perkakas praktikum.',
+                    'notes' => null,
                 ],
                 3 => [
                     'module_id' => $modules[3]->id,
@@ -74,7 +74,7 @@ class RaporSeeder extends Seeder
                     'tools_management' => 4.40,
                     'interaksi' => 4.70,
                     'coding' => 4.80,
-                    'notes' => 'Pertemuan 3: Sangat unggul dalam logika percabangan kondisional dan perulangan loop. Aira berhasil memecahkan tantangan algoritma pemrograman secara mandiri dengan sintaks yang rapi.',
+                    'notes' => null,
                 ],
                 4 => [
                     'module_id' => $modules[4]->id,
@@ -85,7 +85,7 @@ class RaporSeeder extends Seeder
                     'tools_management' => 4.60,
                     'interaksi' => 4.80,
                     'coding' => 4.70,
-                    'notes' => 'Pertemuan 4: Performa istimewa pada proyek mini mandiri. Integrasi antara kode kontrol dan rakitan fisik robot otonom berfungsi dengan sempurna dan akurat menyelesaikan lintasan uji coba.',
+                    'notes' => null,
                 ],
             ];
 
@@ -110,7 +110,7 @@ class RaporSeeder extends Seeder
                         'tools_management' => $m['tools_management'],
                         'interaksi' => $m['interaksi'],
                         'coding' => $m['coding'],
-                        'notes' => $m['notes'],
+                        'notes' => null,
                     ]
                 );
 

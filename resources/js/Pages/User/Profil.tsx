@@ -12,6 +12,7 @@ interface MeetingScoreItem {
     id: number;
     meetingNumber: number;
     moduleName?: string;
+    moduleType?: string;
     date?: string;
     scores: {
         interaction: number;
@@ -20,6 +21,7 @@ interface MeetingScoreItem {
         tools: number;
         coding: number;
     };
+    tutorNotes?: string | null;
 }
 
 export default function Profil() {
@@ -34,6 +36,7 @@ export default function Profil() {
     const [activeTab, setActiveTab] = useState<'robot' | 'focus'>('robot');
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [selectedRange, setSelectedRange] = useState<string>('all');
+    const [selectedCommentCycle, setSelectedCommentCycle] = useState<string>('all');
 
     // Data skor per pertemuan
     const meetingScores: MeetingScoreItem[] = studentStats?.meetingScores ?? [];
@@ -53,6 +56,18 @@ export default function Profil() {
 
     // Nilai aktif untuk grafik: jika ada data per pertemuan, pakai dataset pertemuan terpilih
     const activeScores = activeMeeting ? activeMeeting.scores : scores;
+
+    // Komentar per rentang siklus (1-4, 5-8, all)
+    const commentsByRange: Record<string, { system?: string | null; notes?: string | null; tutorComment?: string | null; meetingRange?: string }> =
+        studentStats?.commentsByRange ?? {};
+
+    // Komentar aktif sesuai siklus terpilih (fallback ke comment default jika range belum ada)
+    const defaultComment = studentStats?.comment ?? {
+        system: null,
+        notes: null,
+    };
+
+    const activeCycleComment = commentsByRange[selectedCommentCycle] || defaultComment;
 
     // 5 Kategori tetap sama persis sesuai format asli
     const categoryData: CategoryScore[] = [
@@ -160,10 +175,30 @@ export default function Profil() {
 
                     {/* Left Card: Komentar */}
                     <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm space-y-4">
-                        <h2 className="text-base font-bold text-gray-900">Komentar</h2>
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                            <h2 className="text-base font-bold text-gray-900">Komentar</h2>
+
+                            {/* Dropdown Siklus Evaluasi Komentar (1-4, 5-8, Semua) */}
+                            {pdfRanges.length > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-[11px] font-medium text-gray-500">Siklus:</span>
+                                    <select
+                                        value={selectedCommentCycle}
+                                        onChange={(e) => setSelectedCommentCycle(e.target.value)}
+                                        className="text-xs font-semibold text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                                    >
+                                        {pdfRanges.map(r => (
+                                            <option key={r.key} value={r.key}>
+                                                {r.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Komentar Sistem (AI-Generated / Evaluasi Capaian Pembelajaran) */}
-                        {comment.system && (
+                        {activeCycleComment.system && (
                             <div className="rounded-2xl bg-gradient-to-br from-teal-50/90 via-white to-emerald-50/70 border border-teal-200/90 p-4 sm:p-5 shadow-xs">
                                 <div className="flex items-start gap-3.5">
                                     <div className="w-10 h-10 rounded-xl bg-white border border-teal-200 p-1.5 flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -182,15 +217,15 @@ export default function Profil() {
                                             <span className="text-xs text-teal-700 font-medium">Analisis Capaian Pembelajaran</span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-normal">
-                                            "{comment.system}"
+                                            "{activeCycleComment.system}"
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Catatan Tutor */}
-                        {comment.notes && (
+                        {/* Catatan Tutor (Umum / Siklus Terpilih) */}
+                        {activeCycleComment.notes && (
                             <div className="rounded-2xl bg-gradient-to-br from-amber-50/80 via-white to-orange-50/50 border border-amber-200/90 p-4 sm:p-5 shadow-xs">
                                 <div className="flex items-start gap-3.5">
                                     <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -199,11 +234,37 @@ export default function Profil() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-md">
-                                                CATATAN TUTOR
+                                                CATATAN TUTOR {selectedCommentCycle !== 'all' ? `(SIKLUS ${selectedCommentCycle})` : '(EVALUASI UMUM)'}
                                             </span>
                                         </div>
                                         <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-normal">
-                                            {comment.notes}
+                                            {activeCycleComment.notes}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Catatan Pertemuan Aktif (Khusus Pertemuan yang sedang dilihat di slider) */}
+                        {activeMeeting?.tutorNotes && (
+                            <div className="rounded-2xl bg-gradient-to-br from-teal-50/80 via-white to-emerald-50/50 border border-teal-200/90 p-4 sm:p-5 shadow-xs">
+                                <div className="flex items-start gap-3.5">
+                                    <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                        <i className="bi bi-chat-square-quote text-xl" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-900 bg-teal-100 px-2.5 py-0.5 rounded-md">
+                                                CATATAN PERTEMUAN {activeMeeting.meetingNumber}
+                                            </span>
+                                            {activeMeeting.moduleName && (
+                                                <span className="text-[11px] text-gray-500 truncate max-w-[200px]">
+                                                    • {activeMeeting.moduleName}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-normal">
+                                            {activeMeeting.tutorNotes}
                                         </p>
                                     </div>
                                 </div>
@@ -211,8 +272,8 @@ export default function Profil() {
                         )}
 
                         {/* Fallback jika belum ada komentar sama sekali */}
-                        {!comment.system && !comment.notes && (
-                            <p className="text-xs text-gray-400 italic">Belum ada komentar. Nilai akan muncul setelah sesi pertama.</p>
+                        {!activeCycleComment.system && !activeCycleComment.notes && !activeMeeting?.tutorNotes && (
+                            <p className="text-xs text-gray-400 italic">Belum ada komentar untuk siklus ini. Nilai akan muncul setelah sesi selesai.</p>
                         )}
                     </div>
 
@@ -471,11 +532,14 @@ function BarChartVisual({ data, isWide = false, gradeScale = 5 }: { data: Catego
                                 <div className="w-full bg-[#f1f5f9] rounded-sm h-full flex items-end overflow-hidden">
                                     {/* Filled Bar */}
                                     <div
-                                        className="w-full bg-[#529699] transition-all duration-500 rounded-t-sm"
+                                        className="w-full bg-[#529699] transition-all duration-500 rounded-t-sm hover:brightness-110 cursor-pointer"
                                         style={{ height: `${heightPercent}%` }}
-                                        title={`${item.label}: ${item.score} / ${gradeScale}`}
+                                        title={`${item.category}: ${item.score.toFixed(1)} / ${maxScale}`}
                                     />
                                 </div>
+                                <span className="absolute -top-6 text-[10px] sm:text-xs font-bold text-teal-800 bg-white/90 px-1 rounded shadow-2xs">
+                                    {item.score > 0 ? item.score.toFixed(1) : '0'}
+                                </span>
                             </div>
                         );
                     })}

@@ -7,20 +7,56 @@ use App\Http\Requests\Tutor\StoreLearningSessionRequest;
 use App\Models\LearningSession;
 use App\Models\Module;
 use App\Models\User;
+use App\Services\CalendarBulkImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CalendarController extends Controller
 {
-    public function index(int $studentId): Response
+    /**
+     * Kalender Pembelajaran Siswa (SuperAdmin)
+     */
+    public function index(?int $studentId = null): Response|RedirectResponse
     {
-        $student = User::findOrFail($studentId);
-        $sessions = LearningSession::where('user_id', $studentId)
-            ->with('modules')
+        $students = User::where('role', 'user')
+            ->whereIn('status', ['aktif', 'pending'])
+            ->with('classroom:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'class', 'classroom_id']);
+
+        $tutors = User::where('role', 'tutor')
+            ->whereIn('status', ['aktif', 'pending'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        if (!$studentId) {
+            $firstStudent = $students->first();
+            if ($firstStudent) {
+                return redirect()->route('superadmin.calendar', ['studentId' => $firstStudent->id]);
+            }
+        }
+
+        $student = $studentId ? User::with('classroom')->find($studentId) : null;
+
+        if (!$student) {
+            return Inertia::render('SuperAdmin/CalendarManager', [
+                'mode' => 'student',
+                'studentId' => 0,
+                'student' => null,
+                'sessions' => [],
+                'modules' => Module::orderBy('name')->get(['id', 'name', 'module_type', 'image']),
+                'students' => $students,
+                'tutors' => $tutors,
+            ]);
+        }
+
+        $sessions = LearningSession::where('user_id', $student->id)
+            ->with(['modules', 'classroom', 'tutor:id,name,email'])
             ->orderBy('date')
             ->get()
             ->map(function (LearningSession $s) {
@@ -34,20 +70,112 @@ class CalendarController extends Controller
                     'admin_note_for_tutor' => $s->admin_note_for_tutor,
                     'tools' => $s->tools,
                     'module_ids' => $s->modules->pluck('id'),
+                    'classroom_id' => $s->classroom_id,
+                    'classroom_name' => $s->classroom?->name,
+                    'tutor_id' => $s->tutor_id,
+                    'tutor_name' => $s->tutor?->name,
+                    'student_id' => $s->user_id,
+                    'student_name' => $s->student?->name,
                 ];
             });
 
         $modules = Module::orderBy('name')->get(['id', 'name', 'module_type', 'image']);
-        $students = User::where('role', 'user')
-            ->whereIn('status', ['aktif', 'pending'])
-            ->orderBy('name')
-            ->get(['id', 'name', 'email', 'class']);
 
         return Inertia::render('SuperAdmin/CalendarManager', [
-            'studentId' => (int) $studentId,
-            'student' => ['id' => $student->id, 'name' => $student->name, 'email' => $student->email],
+            'mode' => 'student',
+            'studentId' => (int) $student->id,
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
+                'class' => $student->classroom?->name ?? ($student->class ?? 'Tanpa Kelas'),
+                'classroom_id' => $student->classroom_id,
+            ],
             'sessions' => $sessions,
             'modules' => $modules,
+            'students' => $students,
+            'tutors' => $tutors,
+        ]);
+    }
+
+    /**
+     * Kalender Mengajar Tutor (SuperAdmin)
+     * Mengelola jadwal sesi pengajaran per tutor oleh SuperAdmin.
+     */
+    public function tutorCalendar(?int $tutorId = null): Response|RedirectResponse
+    {
+        $tutors = User::where('role', 'tutor')
+            ->whereIn('status', ['aktif', 'pending'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        $students = User::where('role', 'user')
+            ->whereIn('status', ['aktif', 'pending'])
+            ->with('classroom:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'class', 'classroom_id']);
+
+        if (!$tutorId) {
+            $firstTutor = $tutors->first();
+            if ($firstTutor) {
+                return redirect()->route('superadmin.calendar.tutors', ['tutorId' => $firstTutor->id]);
+            }
+        }
+
+        $tutor = $tutorId ? User::find($tutorId) : null;
+
+        if (!$tutor) {
+            return Inertia::render('SuperAdmin/TutorCalendarManager', [
+                'tutorId' => 0,
+                'tutor' => null,
+                'sessions' => [],
+                'modules' => Module::orderBy('name')->get(['id', 'name', 'module_type', 'image']),
+                'tutors' => $tutors,
+                'students' => $students,
+            ]);
+        }
+
+        // Ambil semua sesi di mana tutor_id = $tutor->id atau murid di kelas yang diampu oleh tutor ini
+        $sessions = LearningSession::where(function ($q) use ($tutor) {
+                $q->where('tutor_id', $tutor->id)
+                    ->orWhereHas('classroom', fn($c) => $c->where('tutor_id', $tutor->id))
+                    ->orWhereHas('student', fn($s) => $s->where('tutor_id', $tutor->id));
+            })
+            ->with(['modules', 'classroom', 'student:id,name,email,classroom_id'])
+            ->orderBy('date')
+            ->get()
+            ->map(function (LearningSession $s) {
+                return [
+                    'id' => $s->id,
+                    'title' => $s->title,
+                    'date_string' => $s->date_string,
+                    'date' => $s->date?->toDateString(),
+                    'status' => $s->status,
+                    'description' => $s->description,
+                    'admin_note_for_tutor' => $s->admin_note_for_tutor,
+                    'tools' => $s->tools,
+                    'module_ids' => $s->modules->pluck('id'),
+                    'classroom_id' => $s->classroom_id,
+                    'classroom_name' => $s->classroom?->name,
+                    'tutor_id' => $s->tutor_id,
+                    'student_id' => $s->user_id,
+                    'student_name' => $s->student?->name ?? 'Murid Tidak Ditemukan',
+                    'student_email' => $s->student?->email,
+                ];
+            });
+
+        $modules = Module::orderBy('name')->get(['id', 'name', 'module_type', 'image']);
+
+        return Inertia::render('SuperAdmin/TutorCalendarManager', [
+            'tutorId' => (int) $tutor->id,
+            'tutor' => [
+                'id' => $tutor->id,
+                'name' => $tutor->name,
+                'email' => $tutor->email,
+            ],
+            'sessions' => $sessions,
+            'modules' => $modules,
+            'tutors' => $tutors,
             'students' => $students,
         ]);
     }
@@ -56,11 +184,16 @@ class CalendarController extends Controller
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($validated, $request) {
+        $student = User::find($validated['student_id']);
+        $classroomId = $validated['classroom_id'] ?? $student?->classroom_id;
+        $tutorId = $validated['tutor_id'] ?? $student?->tutor_id;
+
+        DB::transaction(function () use ($validated, $classroomId, $tutorId) {
             /** @var LearningSession $session */
             $session = LearningSession::create([
                 'user_id' => $validated['student_id'],
-                'tutor_id' => null, // superadmin tidak punya tutor_id
+                'tutor_id' => $tutorId,
+                'classroom_id' => $classroomId,
                 'title' => $validated['title'],
                 'date_string' => $validated['date_string'],
                 'date' => $validated['date'],
@@ -82,9 +215,15 @@ class CalendarController extends Controller
     {
         $validated = $request->validated();
 
-        DB::transaction(function () use ($session, $validated) {
+        $student = User::find($validated['student_id']);
+        $classroomId = $validated['classroom_id'] ?? ($student?->classroom_id ?? $session->classroom_id);
+        $tutorId = array_key_exists('tutor_id', $validated) ? $validated['tutor_id'] : $session->tutor_id;
+
+        DB::transaction(function () use ($session, $validated, $classroomId, $tutorId) {
             $session->update([
                 'user_id' => $validated['student_id'],
+                'tutor_id' => $tutorId,
+                'classroom_id' => $classroomId,
                 'title' => $validated['title'],
                 'date_string' => $validated['date_string'],
                 'date' => $validated['date'],
@@ -141,155 +280,39 @@ class CalendarController extends Controller
     }
 
     /**
-     * Download template file CSV untuk import jadwal.
+     * Download template file Excel/CSV untuk import jadwal.
      */
-    public function downloadTemplate()
+    public function downloadTemplate(CalendarBulkImportService $importService): StreamedResponse
     {
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="template_bulk_jadwal_kalender.csv"',
-        ];
-
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-            // Header kolom
-            fputcsv($file, ['tanggal', 'status', 'judul', 'modul', 'email_murid']);
-
-            // Baris contoh lengkap berbagai status
-            fputcsv($file, ['2026-10-05', 'hadir', 'Pengenalan Robotik Dasar', 'Modul 1 – Pengenalan Robotika', 'student@aici.id']);
-            fputcsv($file, ['2026-10-12', 'hadir', 'Sensor & Motor Driver', 'Modul 2 – Sensor & Aktuator', 'student@aici.id']);
-            fputcsv($file, ['2026-10-19', 'libur', 'Libur Nasional', '', 'student@aici.id']);
-            fputcsv($file, ['2026-10-26', 'reschedule', 'Pemrograman Pergerakan Robot', 'Modul 3 – Kontrol Motor', 'student@aici.id']);
-            fputcsv($file, ['2026-11-02', 'akan-datang', 'Navigasi Line Follower', 'Modul 4 – Algoritma Garis', 'student@aici.id']);
-            fputcsv($file, ['2026-11-09', 'akan-datang', 'Proyek Akhir & Presentasi', 'Modul 5 – Final Project Robotika', 'student@aici.id']);
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return $importService->downloadTemplate();
     }
 
     /**
-     * R10: Import jadwal via CSV (Mendukung pemisah koma / titik koma dan header fleksibel).
-     * Format: tanggal,status,judul,modul,email_murid
+     * Import jadwal kalender via Excel (.xlsx, .xls) atau CSV (Mendukung format masal multi-tanggal dan kolom fleksibel).
      */
-    public function importCsv(Request $request): RedirectResponse
+    public function importCsv(Request $request, CalendarBulkImportService $importService): RedirectResponse
     {
         $request->validate([
-            'csv_file' => ['required', 'file', 'max:5120'], // mimes dihandle manual agar mendukung berbagai sistem OS/Excel
+            'csv_file' => ['required', 'file', 'max:10240', 'mimes:xlsx,xls,csv,txt'],
+        ], [
+            'csv_file.required' => 'Silakan pilih file spreadsheet / CSV terlebih dahulu.',
+            'csv_file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau .csv/.txt.',
+            'csv_file.max' => 'Ukuran file tidak boleh melebihi 10MB.',
         ]);
 
-        $file = $request->file('csv_file');
-        $filePath = $file->getRealPath();
+        $result = $importService->import($request->file('csv_file'));
 
-        // Deteksi delimiter (koma ',' atau titik koma ';')
-        $firstLine = fgets(fopen($filePath, 'r'));
-        $delimiter = strpos($firstLine, ';') !== false && strpos($firstLine, ',') === false ? ';' : ',';
+        if (! $result['success']) {
+            return back()->with('csv_errors', $result['errors'])->with('error', 'Gagal mengimpor jadwal. Silakan periksa file Excel Anda.');
+        }
 
-        $handle = fopen($filePath, 'r');
-        $errors = [];
-        $imported = 0;
-        $row = 0;
-
-        // Skip baris header
-        fgetcsv($handle, 0, $delimiter);
-
-        DB::transaction(function () use ($handle, $delimiter, &$errors, &$imported, &$row) {
-            while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
-                $row++;
-
-                // Abaikan baris kosong
-                if (empty($data) || (count($data) === 1 && trim($data[0]) === '')) {
-                    continue;
-                }
-
-                if (count($data) < 5) {
-                    $errors[] = "Baris {$row}: Format tidak lengkap (wajib 5 kolom: tanggal, status, judul, modul, email_murid).";
-                    continue;
-                }
-
-                [$tanggal, $status, $judul, $modulNama, $emailMurid] = array_map(fn($v) => trim((string)$v), array_slice($data, 0, 5));
-
-                // Normalisasi & validasi tanggal (support format YYYY-MM-DD atau DD/MM/YYYY)
-                $dateCarbon = null;
-                try {
-                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
-                        $dateCarbon = \Carbon\Carbon::createFromFormat('Y-m-d', $tanggal);
-                    } elseif (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $tanggal)) {
-                        $dateCarbon = \Carbon\Carbon::createFromFormat('d/m/Y', $tanggal);
-                    } elseif (preg_match('/^\d{2}-\d{2}-\d{4}$/', $tanggal)) {
-                        $dateCarbon = \Carbon\Carbon::createFromFormat('d-m-Y', $tanggal);
-                    }
-                } catch (\Exception $e) {
-                    $dateCarbon = null;
-                }
-
-                if (! $dateCarbon) {
-                    $errors[] = "Baris {$row}: Format tanggal '{$tanggal}' tidak valid. Gunakan format YYYY-MM-DD (contoh: 2026-10-05).";
-                    continue;
-                }
-
-                $isoDate = $dateCarbon->toDateString();
-
-                // Normalisasi & validasi status
-                $statusNormalized = strtolower(str_replace(' ', '-', $status));
-                $validStatuses = ['hadir', 'absen', 'reschedule', 'libur', 'akan-datang'];
-                if (! in_array($statusNormalized, $validStatuses, true)) {
-                    $errors[] = "Baris {$row}: Status '{$status}' tidak valid. Pilihan: " . implode(', ', $validStatuses);
-                    continue;
-                }
-
-                // Validasi murid
-                $student = User::where('email', $emailMurid)->where('role', 'user')->first();
-                if (! $student) {
-                    $errors[] = "Baris {$row}: Murid dengan email '{$emailMurid}' tidak ditemukan.";
-                    continue;
-                }
-
-                // Format date string yang ramah dibaca (contoh: Sabtu, 24 Oktober 2026)
-                $humanDateString = $dateCarbon->translatedFormat('l, d F Y');
-
-                // Buat sesi pembelajaran (otomatis kaitkan ke tutor murid jika ada)
-                $session = LearningSession::create([
-                    'user_id' => $student->id,
-                    'tutor_id' => $student->tutor_id,
-                    'title' => $judul ?: ('Sesi ' . $isoDate),
-                    'date_string' => $humanDateString,
-                    'date' => $isoDate,
-                    'status' => $statusNormalized,
-                ]);
-
-                // Hubungkan modul jika terisi di CSV
-                if (! empty($modulNama)) {
-                    // 1. Cari exact match atau kemiripan kata kunci
-                    $modul = Module::where('name', $modulNama)
-                        ->orWhere('name', 'like', "%{$modulNama}%")
-                        ->first();
-
-                    // 2. Jika tidak ditemukan, otomatis buat modul baru persis seperti seeder
-                    if (! $modul) {
-                        $isCoding = preg_match('/coding|program|ai|algoritma|scratch|python/i', $modulNama);
-                        $modul = Module::create([
-                            'name' => $modulNama,
-                            'module_type' => $isCoding ? 'coding' : 'robot',
-                            'format' => 'PDF',
-                            'size' => '4.2 MB',
-                        ]);
-                    }
-
-                    $session->modules()->sync([$modul->id]);
-                }
-
-                $imported++;
-            }
-        });
-
-        fclose($handle);
+        $imported = $result['imported_count'];
+        $warnings = $result['warnings'] ?? [];
 
         $message = "Sukses mengimpor {$imported} jadwal sesi secara massal.";
-        if (! empty($errors)) {
-            $message .= " (Terdapat " . count($errors) . " peringatan/baris dilewati).";
-            return back()->with('success', $message)->with('csv_errors', $errors);
+        if (! empty($warnings)) {
+            $message .= " (Terdapat " . count($warnings) . " catatan/peringatan).";
+            return back()->with('success', $message)->with('csv_warnings', $warnings);
         }
 
         return back()->with('success', $message);

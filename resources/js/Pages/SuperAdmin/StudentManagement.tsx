@@ -12,6 +12,8 @@ interface Student {
     tutorName: string | null;
     tutorId: number | null;
     class: string | null;
+    classroomId?: number | null;
+    classroomName?: string | null;
     sessionsCount: number;
     gradesCount: number;
 }
@@ -19,6 +21,12 @@ interface Student {
 interface Tutor {
     id: number;
     name: string;
+}
+
+interface ClassroomOption {
+    id: number;
+    name: string;
+    tutor_id: number | null;
 }
 
 interface Paginated<T> {
@@ -31,12 +39,13 @@ interface Props {
     search: string;
     filterStatus: string;
     tutors: Tutor[];
+    classrooms?: ClassroomOption[];
     flash?: { success?: string; error?: string };
     import_errors?: string[];
 }
 
 export default function StudentManagement() {
-    const { students, search, filterStatus: initialFilterStatus, tutors } = usePage().props as unknown as Props;
+    const { students, search, filterStatus: initialFilterStatus, tutors, classrooms = [] } = usePage().props as unknown as Props;
     const pageProps = usePage().props as unknown as Props;
     const importErrors = pageProps.import_errors || [];
 
@@ -53,6 +62,7 @@ export default function StudentManagement() {
         password: '',
         status: 'aktif',
         tutor_id: '' as string | number,
+        classroom_id: '' as string | number,
         class: '',
     });
     const [searchTerm, setSearchTerm] = useState(search);
@@ -65,22 +75,31 @@ export default function StudentManagement() {
     const openModal = (student?: Student) => {
         if (student) {
             setEditingId(student.id);
-            setFormData({ name: student.name, email: student.email, password: '', status: student.status, tutor_id: student.tutorId ?? '', class: student.class ?? '' });
+            setFormData({
+                name: student.name,
+                email: student.email,
+                password: '',
+                status: student.status,
+                tutor_id: student.tutorId ?? '',
+                classroom_id: student.classroomId ?? '',
+                class: student.class ?? '',
+            });
         } else {
             setEditingId(null);
-            setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '', class: '' });
+            setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '', classroom_id: '', class: '' });
         }
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
-        setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '', class: '' });
+        setFormData({ name: '', email: '', password: '', status: 'aktif', tutor_id: '', classroom_id: '', class: '' });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        const selectedClass = classrooms.find(c => String(c.id) === String(formData.classroom_id));
         const payload = {
             name: formData.name,
             email: formData.email,
@@ -88,7 +107,8 @@ export default function StudentManagement() {
             password_confirmation: formData.password || undefined,
             status: formData.status,
             tutor_id: formData.tutor_id === '' ? null : formData.tutor_id,
-            class: formData.class || null,
+            classroom_id: formData.classroom_id === '' ? null : formData.classroom_id,
+            class: selectedClass ? selectedClass.name : (formData.class || null),
         };
 
         if (editingId) {
@@ -279,16 +299,38 @@ export default function StudentManagement() {
                                             </td>
                                             <td className="px-4 py-4">
                                                 {student.class ? (
-                                                    <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded">
-                                                        {student.class}
-                                                    </span>
+                                                    student.classroomId ? (
+                                                        <Link
+                                                            href={`/superadmin/classes?classId=${student.classroomId}`}
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold rounded transition"
+                                                            title="Buka Pengelola Kelas"
+                                                        >
+                                                            <i className="bi bi-door-open text-[11px]" />
+                                                            {student.class}
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded">
+                                                            {student.class}
+                                                        </span>
+                                                    )
                                                 ) : (
                                                     <span className="text-xs text-gray-400 italic">—</span>
                                                 )}
                                             </td>
                                             <td className="px-4 py-4">
                                                 {student.tutorName ? (
-                                                    <span className="text-sm text-gray-700">{student.tutorName}</span>
+                                                    student.tutorId ? (
+                                                        <Link
+                                                            href={`/superadmin/tutors/${student.tutorId}`}
+                                                            className="inline-flex items-center gap-1 text-sm text-teal-700 hover:text-teal-900 font-medium"
+                                                            title="Lihat Detail Tutor"
+                                                        >
+                                                            <i className="bi bi-person text-xs" />
+                                                            {student.tutorName}
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="text-sm text-gray-700">{student.tutorName}</span>
+                                                    )
                                                 ) : (
                                                     <span className="text-xs text-gray-400 italic">Belum ada</span>
                                                 )}
@@ -469,27 +511,54 @@ export default function StudentManagement() {
                                 </select>
                             </div>
 
-                            {/* Kelas */}
+                            {/* Kelas (Terintegrasi dengan Pengelola Kelas) */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Kelas</label>
-                                <input
-                                    type="text"
-                                    value={formData.class}
-                                    onChange={e => setFormData({ ...formData, class: e.target.value })}
-                                    placeholder="Contoh: 5A, 6B, Kelas Pagi..."
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-semibold text-gray-700">Kelas</label>
+                                    <Link
+                                        href="/superadmin/classes"
+                                        className="text-xs text-teal-600 hover:text-teal-800 font-medium"
+                                        target="_blank"
+                                    >
+                                        + Kelola Kelas
+                                    </Link>
+                                </div>
+                                <select
+                                    value={formData.classroom_id}
+                                    onChange={e => {
+                                        const newClassId = e.target.value;
+                                        const matched = classrooms.find(c => String(c.id) === String(newClassId));
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            classroom_id: newClassId,
+                                            class: matched ? matched.name : '',
+                                            // Jika kelas terpilih memiliki tutor dan user belum pilih tutor, bantu auto-select
+                                            tutor_id: matched?.tutor_id && !prev.tutor_id ? matched.tutor_id : prev.tutor_id,
+                                        }));
+                                    }}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                                >
+                                    <option value="">- Tanpa Kelas / Pilih Kelas -</option>
+                                    {classrooms.map(c => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-[11px] text-gray-500 mt-1">
+                                    Pilih kelas terdaftar dari menu Pengelola Kelas.
+                                </p>
                             </div>
 
-                            {/* Tutor */}
+                            {/* Tutor Pembimbing */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Tutor</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Tutor Pembimbing</label>
                                 <select
                                     value={formData.tutor_id}
                                     onChange={e => setFormData({ ...formData, tutor_id: e.target.value })}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
                                 >
-                                    <option value="">- Pilih Tutor -</option>
+                                    <option value="">- Belum Ditugaskan / Pilih Tutor -</option>
                                     {tutors.map(t => (
                                         <option key={t.id} value={t.id}>{t.name}</option>
                                     ))}

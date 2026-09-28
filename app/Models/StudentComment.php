@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'student_id',
     'tutor_id',
     'semester',
+    'meeting_range',
     'academic_year',
     'system_comment',
     'tutor_comment',
