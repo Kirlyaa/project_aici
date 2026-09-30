@@ -1084,8 +1084,7 @@ export default function ClassroomManagement() {
                                         >
                                             <option value="akan-datang">Akan Datang</option>
                                             <option value="hadir">Hadir</option>
-                                            <option value="absen">Absen</option>
-                                            <option value="reschedule">Reschedule</option>
+                                            <option value="absen">Tidak Hadir</option>
                                             <option value="libur">Libur</option>
                                         </select>
                                     </div>

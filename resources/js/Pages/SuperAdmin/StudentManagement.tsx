@@ -194,7 +194,7 @@ export default function StudentManagement() {
                     <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700">
                         <div className="flex items-center gap-2 font-semibold mb-2">
                             <i className="bi bi-exclamation-triangle-fill text-lg text-red-600" />
-                            <span>Terdapat kendala saat impor Excel:</span>
+                            <span>Terdapat kendala saat impor CSV:</span>
                         </div>
                         <ul className="list-disc list-inside text-xs sm:text-sm space-y-1">
                             {importErrors.map((err, idx) => (
@@ -250,18 +250,24 @@ export default function StudentManagement() {
                     </button>
 
                     <div className="flex items-center gap-2">
+                        <Link
+                            href="/superadmin/report-periods"
+                            className="px-4 py-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-medium hover:bg-rose-100 flex items-center gap-2 shadow-sm text-sm transition"
+                        >
+                            <i className="bi bi-file-earmark-pdf-fill text-rose-600" /> Atur Periode Rapor PDF
+                        </Link>
                         <a
                             href="/superadmin/students/template"
                             className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm text-sm transition"
                         >
-                            <i className="bi bi-download text-teal-600" /> Download Template Excel
+                            <i className="bi bi-download text-teal-600" /> Download Template CSV
                         </a>
                         <button
                             type="button"
                             onClick={() => setShowImportModal(true)}
                             className="px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 flex items-center gap-2 shadow-sm text-sm transition"
                         >
-                            <i className="bi bi-file-earmark-spreadsheet" /> Bulk Insert Excel
+                            <i className="bi bi-file-earmark-spreadsheet" /> Bulk Insert CSV
                         </button>
                     </div>
                 </div>
@@ -604,14 +610,14 @@ export default function StudentManagement() {
                 </div>
             )}
 
-            {/* Modal Bulk Insert Excel */}
+            {/* Modal Bulk Insert CSV */}
             {showImportModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <i className="bi bi-file-earmark-spreadsheet text-emerald-600 text-xl" />
-                                Bulk Insert Siswa Baru (.xlsx / .csv)
+                                Bulk Insert Siswa Baru (.csv)
                             </h3>
                             <button
                                 type="button"
@@ -623,7 +629,7 @@ export default function StudentManagement() {
                         </div>
 
                         <p className="text-sm text-gray-600 mb-4">
-                            Unggah file Excel untuk mendaftarkan akun siswa baru secara massal, sekaligus menghubungkannya dengan <strong>Kelas</strong>, <strong>Modul</strong>, <strong>Jadwal</strong>, dan <strong>Tutor</strong>.
+                            Unggah file CSV untuk mendaftarkan akun siswa baru secara massal, sekaligus menghubungkannya dengan <strong>Kelas</strong>, <strong>Modul</strong>, <strong>Jadwal</strong>, dan <strong>Tutor</strong>.
                         </p>
 
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 mb-4 space-y-1">
@@ -635,11 +641,11 @@ export default function StudentManagement() {
 
                         <form onSubmit={handleImportSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih File Excel / CSV</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih File CSV</label>
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept=".xlsx,.xls,.csv"
+                                    accept=".csv"
                                     onChange={e => setImportFile(e.target.files?.[0] || null)}
                                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-gray-200 rounded-lg cursor-pointer p-1"
                                 />
@@ -650,7 +656,7 @@ export default function StudentManagement() {
                                     href="/superadmin/students/template"
                                     className="text-xs text-teal-600 hover:text-teal-700 font-semibold flex items-center gap-1"
                                 >
-                                    <i className="bi bi-download" /> Download Template
+                                    <i className="bi bi-download" /> Download Template CSV
                                 </a>
 
                                 <div className="flex gap-2">

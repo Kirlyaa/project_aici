@@ -10,52 +10,67 @@ use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentBulkImportService
 {
     /**
-     * Parse and import student data from an Excel/CSV spreadsheet.
+     * Parse and import student data from a CSV file.
      *
      * @return array{success: bool, imported_count: int, errors: array<string>}
      */
     public function import(UploadedFile $file): array
     {
-        $spreadsheet = IOFactory::load($file->getRealPath());
-        $worksheet = $spreadsheet->getActiveSheet();
-        $rows = $worksheet->toArray(null, true, true, true);
-
-        if (count($rows) <= 1) {
+        $handle = fopen($file->getRealPath(), 'r');
+        if (! $handle) {
             return [
                 'success' => false,
                 'imported_count' => 0,
-                'errors' => ['File spreadsheet kosong atau hanya memiliki header.'],
+                'errors' => ['Gagal membuka berkas CSV.'],
             ];
         }
 
-        // Expected headers in first row
-        // A: Nama Lengkap, B: Email, C: Password, D: Kelas, E: Modul, F: Jadwal, G: Tutor
-        $firstRow = array_shift($rows);
+        // Baca baris pertama (header) dan deteksi delimiter (, atau ;)
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+            return [
+                'success' => false,
+                'imported_count' => 0,
+                'errors' => ['Berkas CSV kosong atau tidak terbaca.'],
+            ];
+        }
+
+        // Hapus UTF-8 BOM jika ada
+        if (str_starts_with($firstLine, "\xEF\xBB\xBF")) {
+            $firstLine = substr($firstLine, 3);
+        }
+
+        $delimiter = (strpos($firstLine, ';') !== false && strpos($firstLine, ',') === false) ? ';' : ',';
+        $headerFields = str_getcsv(trim($firstLine), $delimiter);
+
         $errors = [];
         $validRows = [];
         $seenEmails = [];
         $rowNumber = 1;
 
-        foreach ($rows as $data) {
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
             $rowNumber++;
 
-            $name = trim((string) ($data['A'] ?? ''));
-            $email = strtolower(trim((string) ($data['B'] ?? '')));
-            $password = trim((string) ($data['C'] ?? ''));
-            $className = trim((string) ($data['D'] ?? ''));
-            $moduleName = trim((string) ($data['E'] ?? ''));
-            $scheduleRaw = trim((string) ($data['F'] ?? ''));
-            $tutorIdentifier = trim((string) ($data['G'] ?? ''));
+            // Jika baris kosong atau hanya 1 elemen null/kosong
+            if (empty($row) || (count($row) === 1 && trim((string)$row[0]) === '')) {
+                continue;
+            }
+
+            // Expected format:
+            // 0: Nama Lengkap, 1: Email, 2: Password, 3: Kelas, 4: Modul, 5: Jadwal, 6: Tutor
+            $name = trim((string) ($row[0] ?? ''));
+            $email = strtolower(trim((string) ($row[1] ?? '')));
+            $password = trim((string) ($row[2] ?? ''));
+            $className = trim((string) ($row[3] ?? ''));
+            $moduleName = trim((string) ($row[4] ?? ''));
+            $scheduleRaw = trim((string) ($row[5] ?? ''));
+            $tutorIdentifier = trim((string) ($row[6] ?? ''));
 
             // Abaikan jika baris sepenuhnya kosong
             if ($name === '' && $email === '' && $password === '' && $className === '' && $scheduleRaw === '') {
@@ -72,7 +87,7 @@ class StudentBulkImportService
             } elseif (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = "Baris {$rowNumber}: Format email '{$email}' tidak valid.";
             } elseif (isset($seenEmails[$email])) {
-                $errors[] = "Baris {$rowNumber}: Email '{$email}' duplikat di dalam file Excel.";
+                $errors[] = "Baris {$rowNumber}: Email '{$email}' duplikat di dalam file CSV.";
             } elseif (User::where('email', $email)->exists()) {
                 $errors[] = "Baris {$rowNumber}: Email '{$email}' sudah terdaftar di sistem.";
             } else {
@@ -85,11 +100,13 @@ class StudentBulkImportService
                 $errors[] = "Baris {$rowNumber}: Password minimal 6 karakter.";
             }
 
-            // Parse Jadwal jika diisi (Multi-tanggal dipisahkan koma)
+            // Parse Jadwal jika diisi (Multi-tanggal dipisahkan koma atau titik-koma)
             $parsedDates = [];
             if ($scheduleRaw !== '') {
+                // Mendukung pemisah koma atau titik koma
+                $separator = str_contains($scheduleRaw, ';') ? ';' : ',';
                 $rawDates = array_filter(
-                    array_map('trim', explode(',', $scheduleRaw)),
+                    array_map('trim', explode($separator, $scheduleRaw)),
                     fn($d) => $d !== ''
                 );
 
@@ -117,6 +134,8 @@ class StudentBulkImportService
                 'tutor_identifier' => $tutorIdentifier,
             ];
         }
+
+        fclose($handle);
 
         if (! empty($errors)) {
             return [
@@ -232,40 +251,20 @@ class StudentBulkImportService
     }
 
     /**
-     * Download Excel template for bulk student import.
+     * Download CSV template for bulk student import.
      */
     public function downloadTemplate(): StreamedResponse
     {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Template Siswa Baru');
-
-        // Headers
         $headers = [
-            'A1' => 'Nama Lengkap',
-            'B1' => 'Email',
-            'C1' => 'Password',
-            'D1' => 'Kelas',
-            'E1' => 'Modul',
-            'F1' => 'Jadwal',
-            'G1' => 'Tutor',
+            'Nama Lengkap',
+            'Email',
+            'Password',
+            'Kelas',
+            'Modul',
+            'Jadwal',
+            'Tutor',
         ];
 
-        foreach ($headers as $cell => $text) {
-            $sheet->setCellValue($cell, $text);
-        }
-
-        // Header Styling
-        $headerRange = 'A1:G1';
-        $sheet->getStyle($headerRange)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-        $sheet->getStyle($headerRange)->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('0D9488'); // Teal-600
-        $sheet->getStyle($headerRange)->getAlignment()
-            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-            ->setVertical(Alignment::VERTICAL_CENTER);
-
-        // Contoh baris data
         $sampleData = [
             [
                 'Ahmad Fauzan',
@@ -287,29 +286,19 @@ class StudentBulkImportService
             ],
         ];
 
-        $rowIndex = 2;
-        foreach ($sampleData as $row) {
-            $colLetter = 'A';
-            foreach ($row as $val) {
-                $sheet->setCellValueExplicit($colLetter . $rowIndex, $val, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $colLetter++;
+        $fileName = 'template_bulk_insert_siswa_baru.csv';
+
+        return response()->streamDownload(function () use ($headers, $sampleData) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
+            fputcsv($file, $headers);
+            foreach ($sampleData as $row) {
+                fputcsv($file, $row);
             }
-            $rowIndex++;
-        }
-
-        // Auto width
-        foreach (range('A', 'G') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $fileName = 'template_bulk_insert_siswa_baru.xlsx';
-
-        return response()->streamDownload(function () use ($spreadsheet) {
-            $writer = new Xlsx($spreadsheet);
-            $writer->save('php://output');
+            fclose($file);
         }, $fileName, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Cache-Control' => 'max-age=0',
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
     }
 
@@ -323,11 +312,13 @@ class StudentBulkImportService
             return null;
         }
 
-        // Check if numeric (Excel serial timestamp date)
+        // Check if numeric (Excel serial timestamp date if converted from spreadsheet)
         if (is_numeric($raw)) {
             try {
-                $dt = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $raw);
-                return Carbon::instance($dt);
+                if (class_exists(\PhpOffice\PhpSpreadsheet\Shared\Date::class)) {
+                    $dt = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $raw);
+                    return Carbon::instance($dt);
+                }
             } catch (\Exception) {
                 // fallback
             }

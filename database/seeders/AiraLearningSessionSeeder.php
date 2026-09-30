@@ -28,7 +28,7 @@ class AiraLearningSessionSeeder extends Seeder
 
         $tutorId = $aiya?->id;
 
-        // Bersihkan sesi lama Aira agar sinkron 8 pertemuan hadir + 4 sesi kalender (reschedule, libur, akan-datang)
+        // Bersihkan sesi lama Aira agar sinkron 8 pertemuan hadir + 4 sesi kalender (libur, akan-datang)
         LearningSession::where('user_id', $aira->id)->delete();
 
         // 8 Pertemuan utama berstatus 'hadir' (1-4 di April 2025, 5-8 di Mei 2025)
@@ -114,8 +114,8 @@ class AiraLearningSessionSeeder extends Seeder
             [
                 'title' => 'Pertemuan 9: Persiapan Kompetisi Robotika',
                 'date' => '2025-06-07',
-                'status' => 'reschedule',
-                'description' => 'Sesi dijadwalkan ulang atas permohonan orang tua murid karena Aira mewakili sekolah dalam olimpiade matematika.',
+                'status' => 'akan-datang',
+                'description' => 'Sesi persiapan kompetisi robotika dengan modul pemrograman AI.',
                 'module_name' => 'Modul 9 – Intro Pemrograman AI',
                 'module_type' => 'coding',
                 'tools' => ['Laptop', 'Modul Panduan Kompetisi'],
@@ -177,6 +177,6 @@ class AiraLearningSessionSeeder extends Seeder
             }
         }
 
-        echo "✅ Created 12 learning sessions for Aira (8 hadir, 1 reschedule, 1 libur, 2 akan-datang).\n";
+        echo "✅ Created 12 learning sessions for Aira (8 hadir, 1 libur, 3 akan-datang).\n";
     }
 }

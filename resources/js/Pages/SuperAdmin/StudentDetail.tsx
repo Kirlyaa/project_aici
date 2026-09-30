@@ -23,7 +23,7 @@ interface StudentDetailProps {
     stats: {
         totalSessions: number;
         completedSessions: number;
-        attendance: { hadir: number; absen: number; reschedule: number; percentage: number };
+        attendance: { hadir: number; absen: number; percentage: number };
         overallAvg: number;
         averagePercentage: number;
         highestScore: number;
@@ -209,11 +209,11 @@ export default function StudentDetail({
 
                     <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Absen / Reschedule</p>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Tidak Hadir</p>
                             <i className="bi bi-clock-history text-rose-500 text-lg" />
                         </div>
-                        <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.attendance.absen + stats.attendance.reschedule}</p>
-                        <p className="text-xs text-gray-400 mt-1">{stats.attendance.absen} Absen, {stats.attendance.reschedule} Reschedule</p>
+                        <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.attendance.absen}</p>
+                        <p className="text-xs text-gray-400 mt-1">{stats.attendance.absen} Sesi Tidak Hadir</p>
                     </div>
                 </div>
 
@@ -376,7 +376,7 @@ export default function StudentDetail({
                                         <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
                                             s.status === 'hadir' ? 'bg-green-100 text-green-700' :
                                             s.status === 'absen' ? 'bg-red-100 text-red-700' :
-                                            s.status === 'reschedule' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
+                                            s.status === 'libur' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
                                         }`}>
                                             {s.status}
                                         </span>

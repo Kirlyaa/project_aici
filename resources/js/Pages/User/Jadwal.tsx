@@ -14,8 +14,7 @@ const filters: { key: FilterKey; label: string; icon: string }[] = [
     { key: 'semua',        label: 'Semua',       icon: 'bi-list-ul' },
     { key: 'akan-datang',  label: 'Akan Datang', icon: 'bi-calendar-event' },
     { key: 'hadir',        label: 'Hadir',       icon: 'bi-check-circle' },
-    { key: 'absen',        label: 'Absen',       icon: 'bi-x-circle' },
-    { key: 'reschedule',   label: 'Reschedule',  icon: 'bi-arrow-repeat' },
+    { key: 'absen',        label: 'Tidak Hadir', icon: 'bi-x-circle' },
 ];
 
 export default function Jadwal({ sessions }: Props) {

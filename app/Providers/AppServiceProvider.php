@@ -8,6 +8,7 @@ use App\Models\Module;
 use App\Models\StudentComment;
 use App\Models\User;
 use App\Observers\ActivityObserver;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        if (config('app.env') === 'production' || env('FORCE_HTTPS', false)) {
+            URL::forceScheme('https');
+        }
 
         // Register activity logging observers
         User::observe(ActivityObserver::class);

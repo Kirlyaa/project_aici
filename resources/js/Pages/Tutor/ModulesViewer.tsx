@@ -482,8 +482,8 @@ export default function ModulesViewer() {
 
                                             <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
                                                 <span className="flex items-center gap-1 text-gray-600">
-                                                    <i className="bi bi-file-earmark-pdf text-red-500" />
-                                                    {sub.format || 'Dokumen PDF'}
+                                                    <i className="bi bi-journal-text text-teal-600" />
+                                                    Materi Sesi
                                                 </span>
                                                 <span className="text-teal-700 font-medium group-hover:underline flex items-center gap-1">
                                                     Lihat <i className="bi bi-chevron-right text-[10px]" />
@@ -542,8 +542,8 @@ export default function ModulesViewer() {
                             )}
 
                             <div className="p-3 bg-gray-50 rounded-xl flex items-center justify-between text-xs text-gray-600">
-                                <span>Format: <strong>{selectedSubModule.format || 'Dokumen PDF'}</strong></span>
-                                <span>{selectedSubModule.size || 'Materi Sesi'}</span>
+                                <span>Tipe Materi: <strong>{selectedSubModule.typeLabel ? selectedSubModule.typeLabel.toUpperCase() : 'GENERAL'}</strong></span>
+                                <span className="text-gray-400">Pertemuan #{selectedSubModule.orderIndex ?? '1'}</span>
                             </div>
                         </div>
 

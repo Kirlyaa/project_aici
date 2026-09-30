@@ -8,8 +8,7 @@ interface Props {
 
 const statusConfig: Record<SessionStatus, { badge: string; icon: string; label: string }> = {
     hadir:         { badge: 'bg-white/20 text-white backdrop-blur-md', icon: 'bi-check-circle-fill', label: 'Hadir' },
-    absen:         { badge: 'bg-white/20 text-white backdrop-blur-md', icon: 'bi-x-circle-fill',     label: 'Absen' },
-    reschedule:    { badge: 'bg-white/20 text-white backdrop-blur-md', icon: 'bi-arrow-repeat',       label: 'Reschedule' },
+    absen:         { badge: 'bg-white/20 text-white backdrop-blur-md', icon: 'bi-x-circle-fill',     label: 'Tidak Hadir' },
     libur:         { badge: 'bg-white/20 text-white backdrop-blur-md', icon: 'bi-calendar-x-fill',   label: 'Libur' },
     'akan-datang': { badge: 'bg-white/20 text-white backdrop-blur-md', icon: 'bi-calendar-event-fill',label: 'Akan Datang' },
 };

@@ -471,8 +471,8 @@ export default function UserModulesViewer() {
                                                 {/* Tools / Footer */}
                                                 <div className="pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
                                                     <div className="flex items-center gap-1.5 text-gray-600">
-                                                        <i className="bi bi-file-earmark-pdf text-red-500 text-sm" />
-                                                        <span className="font-medium">{sub.format || 'Dokumen PDF'}</span>
+                                                        <i className="bi bi-journal-text text-teal-600 text-sm" />
+                                                        <span className="font-medium">Materi Sesi</span>
                                                     </div>
                                                     <span className="text-[11px] text-teal-700 font-semibold group-hover:underline flex items-center gap-1">
                                                         Detail Materi <i className="bi bi-chevron-right text-[10px]" />
@@ -531,12 +531,12 @@ export default function UserModulesViewer() {
                                 </div>
                             )}
 
-                            <div className="p-3.5 bg-gray-50 rounded-2xl flex items-center justify-between text-xs text-gray-600">
+                            <div className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between text-xs text-gray-600">
                                 <span className="flex items-center gap-1.5">
-                                    <i className="bi bi-file-earmark-pdf text-red-500 text-base" />
-                                    Format: <strong>{selectedSubModule.format || 'Dokumen PDF'}</strong>
+                                    <i className="bi bi-journal-text text-teal-600 text-base" />
+                                    Tipe Materi: <strong>{selectedSubModule.typeLabel ? selectedSubModule.typeLabel.toUpperCase() : 'GENERAL'}</strong>
                                 </span>
-                                <span>{selectedSubModule.size || 'Materi Sesi'}</span>
+                                <span className="text-gray-400">Pertemuan #{selectedSubModule.orderIndex ?? '1'}</span>
                             </div>
                         </div>
 

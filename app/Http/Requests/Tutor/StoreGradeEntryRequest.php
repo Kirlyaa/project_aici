@@ -20,6 +20,11 @@ class StoreGradeEntryRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Nilai diperbolehkan: 0 (anak tidak hadir), 3, 3.5, 4, 4.5, 5
+        $allowedGrades = [0, 3, 3.0, 3.5, 4, 4.0, 4.5, 5, 5.0];
+        $ruleGrade = ['required', 'numeric', Rule::in($allowedGrades)];
+        $ruleRobotGrade = ['nullable', 'numeric', Rule::in($allowedGrades)];
+
         return [
             'student_id' => ['required', 'integer', 'exists:users,id'],
             'module_id' => ['nullable', 'integer', 'exists:modules,id'],
@@ -27,11 +32,11 @@ class StoreGradeEntryRequest extends FormRequest
             'meeting_number' => ['required', 'integer', 'min:1', 'max:50'],
             'module_type' => ['required', Rule::in(['robot', 'coding', 'general'])],
             'meeting_date' => ['nullable', 'date'],
-            'fokus' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
-            'robot_building' => ['nullable', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
-            'tools_management' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
-            'interaksi' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
-            'coding' => ['required', 'numeric', 'min:0', 'max:' . GradeEntry::MAX_SCORE],
+            'fokus' => $ruleGrade,
+            'robot_building' => $ruleRobotGrade,
+            'tools_management' => $ruleGrade,
+            'interaksi' => $ruleGrade,
+            'coding' => $ruleGrade,
             'notes' => ['nullable', 'string'],
         ];
     }

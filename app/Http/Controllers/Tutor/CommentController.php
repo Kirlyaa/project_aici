@@ -67,12 +67,24 @@ class CommentController extends Controller
             ->orderBy('category')
             ->get(['id', 'grade_range', 'category', 'template']);
 
+        $configuredPeriods = \App\Models\ReportPeriod::where('is_active', true)
+            ->orderBy('order_index')
+            ->orderBy('start_meeting')
+            ->get()
+            ->map(fn($p) => [
+                'key' => "{$p->start_meeting}-{$p->end_meeting}",
+                'label' => $p->display_name,
+                'start' => $p->start_meeting,
+                'end' => $p->end_meeting,
+            ]);
+
         return Inertia::render('Tutor/CommentsManager', [
             'studentId' => (int) $studentId,
             'student' => ['id' => $student->id, 'name' => $student->name, 'email' => $student->email],
             'comments' => $comments,
             'gradeEntries' => $gradeEntries,
             'templates' => $templates,
+            'configuredPeriods' => $configuredPeriods,
         ]);
     }
 

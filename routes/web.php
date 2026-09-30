@@ -20,6 +20,7 @@ use App\Http\Controllers\SuperAdmin\StudentController;
 use App\Http\Controllers\SuperAdmin\ClassroomController;
 use App\Http\Controllers\SuperAdmin\CalendarController as SuperAdminCalendarController;
 use App\Http\Controllers\SuperAdmin\ModuleController as SuperAdminModuleController;
+use App\Http\Controllers\SuperAdmin\ReportPeriodController as SuperAdminReportPeriodController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -121,6 +122,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/calendar/{studentId?}', [CalendarController::class, 'index'])->name('calendar');
         Route::post('/calendar', [CalendarController::class, 'store'])->name('calendar.store');
         Route::put('/calendar/{session}', [CalendarController::class, 'update'])->name('calendar.update');
+
+        // Presensi per Pertemuan Kelas (Class Attendance Sheet)
+        Route::get('/classes/{classroom}/attendance-form', [\App\Http\Controllers\Tutor\ClassAttendanceController::class, 'getFormData'])->name('classes.attendance-form');
+        Route::post('/classes/{classroom}/attendance', [\App\Http\Controllers\Tutor\ClassAttendanceController::class, 'store'])->name('classes.attendance.store');
         
         // Grades (Nilai)
         Route::get('/grades/{studentId}', [GradeController::class, 'index'])->name('grades');
@@ -198,6 +203,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/calendar/import-csv', [SuperAdminCalendarController::class, 'importCsv'])->name('calendar.import-csv');
         
         // Module Management
+        Route::get('/modules/template', [SuperAdminModuleController::class, 'downloadTemplate'])->name('modules.template');
+        Route::post('/modules/import-csv', [SuperAdminModuleController::class, 'importCsv'])->name('modules.import-csv');
         Route::get('/modules', [SuperAdminModuleController::class, 'index'])->name('modules');
         Route::post('/modules', [SuperAdminModuleController::class, 'store'])->name('modules.store');
         Route::put('/modules/{module}', [SuperAdminModuleController::class, 'update'])->name('modules.update');
@@ -208,5 +215,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         // Export Routes
         Route::get('/export/students', [ExportController::class, 'students'])->name('export.students');
         Route::get('/export/tutors', [ExportController::class, 'tutors'])->name('export.tutors');
+
+        // Periode Rapor PDF Management (Hanya SuperAdmin)
+        Route::get('/report-periods', [SuperAdminReportPeriodController::class, 'index'])->name('report-periods.index');
+        Route::post('/report-periods', [SuperAdminReportPeriodController::class, 'store'])->name('report-periods.store');
+        Route::put('/report-periods/{period}', [SuperAdminReportPeriodController::class, 'update'])->name('report-periods.update');
+        Route::delete('/report-periods/{period}', [SuperAdminReportPeriodController::class, 'destroy'])->name('report-periods.destroy');
+        Route::patch('/report-periods/{period}/toggle-status', [SuperAdminReportPeriodController::class, 'toggleStatus'])->name('report-periods.toggle-status');
     });
 });

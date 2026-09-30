@@ -62,10 +62,9 @@ function formatDateString(year: number, month: number, day: number): string {
 }
 
 const STATUS_COLOR: Record<SessionStatus, { badge: string; dot: string; text: string; label: string }> = {
-    hadir: { badge: 'bg-green-100 text-green-800 border-green-200', dot: 'bg-green-500', text: 'text-green-700', label: 'Hadir' },
-    absen: { badge: 'bg-red-100 text-red-800 border-red-200', dot: 'bg-red-500', text: 'text-red-700', label: 'Absen' },
-    reschedule: { badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-500', text: 'text-yellow-700', label: 'Reschedule' },
-    libur: { badge: 'bg-blue-100 text-blue-800 border-blue-200', dot: 'bg-blue-500', text: 'text-blue-700', label: 'Libur' },
+    hadir: { badge: 'bg-blue-100 text-blue-800 border-blue-200', dot: 'bg-blue-500', text: 'text-blue-700', label: 'Hadir' },
+    absen: { badge: 'bg-amber-100 text-amber-800 border-amber-200', dot: 'bg-amber-400', text: 'text-amber-700', label: 'Tidak Hadir' },
+    libur: { badge: 'bg-red-100 text-red-800 border-red-200', dot: 'bg-red-500', text: 'text-red-700', label: 'Libur' },
     'akan-datang': { badge: 'bg-purple-100 text-purple-800 border-purple-200', dot: 'bg-purple-500', text: 'text-purple-700', label: 'Akan Datang' },
 };
 
@@ -139,7 +138,6 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
     const statusCounts = {
         hadir: monthSessions.filter(s => s.status === 'hadir').length,
         absen: monthSessions.filter(s => s.status === 'absen').length,
-        reschedule: monthSessions.filter(s => s.status === 'reschedule').length,
         libur: monthSessions.filter(s => s.status === 'libur').length,
         'akan-datang': monthSessions.filter(s => s.status === 'akan-datang').length,
     };
@@ -237,20 +235,17 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
 
                     {/* Ringkasan status */}
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs w-full md:w-auto justify-start md:justify-end">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-green-500" /> Hadir: {statusCounts.hadir}
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium">
+                            <span className="w-2 h-2 rounded-full bg-blue-500" /> Hadir: {statusCounts.hadir}
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-medium">
                             <span className="w-2 h-2 rounded-full bg-purple-500" /> Akan Datang: {statusCounts['akan-datang']}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-800 border border-yellow-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-yellow-500" /> Reschedule: {statusCounts.reschedule}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-blue-500" /> Libur: {statusCounts.libur}
-                        </span>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-red-500" /> Absen: {statusCounts.absen}
+                            <span className="w-2 h-2 rounded-full bg-red-500" /> Libur: {statusCounts.libur}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium">
+                            <span className="w-2 h-2 rounded-full bg-amber-400" /> Tidak Hadir: {statusCounts.absen}
                         </span>
                     </div>
                 </div>
@@ -453,7 +448,7 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
                                                 {/* Quick Status / Actions: Tutor hanya berwenang mengubah status absensi kehadiran */}
                                                 <div className="pt-2 border-t border-gray-200/80 flex items-center justify-between flex-wrap gap-2">
                                                     <div className="flex items-center gap-1">
-                                                        {(['hadir', 'absen', 'reschedule', 'libur', 'akan-datang'] as SessionStatus[]).map(st => (
+                                                        {(['hadir', 'absen', 'libur', 'akan-datang'] as SessionStatus[]).map(st => (
                                                             <button
                                                                 key={st}
                                                                 type="button"
@@ -466,7 +461,7 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
                                                                 } disabled:opacity-50`}
                                                                 title={`Ubah status kehadiran ke ${st}`}
                                                             >
-                                                                {st === 'akan-datang' ? 'Akan Dtg' : st.charAt(0).toUpperCase() + st.slice(1)}
+                                                                {st === 'akan-datang' ? 'Akan Dtg' : st === 'absen' ? 'Tdk Hadir' : st.charAt(0).toUpperCase() + st.slice(1)}
                                                             </button>
                                                         ))}
                                                     </div>

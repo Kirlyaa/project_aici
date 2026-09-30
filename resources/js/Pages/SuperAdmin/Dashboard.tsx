@@ -468,7 +468,46 @@ export default function SuperAdminDashboard() {
                             </Link>
                         </div>
                     </div>
-                </div>
+                    {/* Pengaturan Periode Rapor PDF */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-rose-600 to-pink-700 px-6 py-4">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <i className="bi bi-file-earmark-pdf-fill" />
+                                Periode Rapor PDF
+                            </h2>
+                            <p className="text-rose-100 text-sm mt-1">Atur pembagian pertemuan untuk cetak PDF rapor & evaluasi tutor.</p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div className="bg-rose-50 rounded-lg p-4 border border-rose-100">
+                                <p className="text-sm font-semibold text-rose-900">Kendali Penuh Super Admin</p>
+                                <p className="text-xs text-rose-700 mt-1">
+                                    Atur siklus cetak PDF menjadi per 2 pertemuan, per 3 pertemuan (1-3, 4-6), atau rentang pertemuan kustom (misal 6-7).
+                                </p>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <ul className="space-y-2 text-xs text-gray-600">
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-rose-600" /> Fleksibel tentukan pertemuan awal & akhir
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-rose-600" /> Sinkron dengan modal cetak PDF & komentar tutor
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-rose-600" /> Tetap mendukung opsi custom rentang bebas
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <Link
+                                href="/superadmin/report-periods"
+                                className="block text-center mt-6 px-4 py-2.5 bg-rose-600 text-white rounded-lg font-medium hover:bg-rose-700 transition-colors shadow-sm"
+                            >
+                                <i className="bi bi-sliders mr-2" /> Atur Periode Rapor PDF
+                            </Link>
+                        </div>
+                    </div>                </div>
             </div>
         </div>
     );

@@ -262,7 +262,7 @@ class ClassroomController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'date' => ['required', 'date'],
             'date_string' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', Rule::in(['hadir', 'absen', 'reschedule', 'libur', 'akan-datang'])],
+            'status' => ['required', Rule::in(['hadir', 'absen', 'libur', 'akan-datang'])],
             'description' => ['nullable', 'string'],
             'admin_note_for_tutor' => ['nullable', 'string'],
             'tools' => ['nullable', 'array'],

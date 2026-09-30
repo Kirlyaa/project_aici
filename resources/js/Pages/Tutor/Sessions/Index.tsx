@@ -47,15 +47,13 @@ interface Props {
 const statusBadge: Record<SessionStatus, string> = {
     hadir:         'bg-green-100 text-green-700',
     absen:         'bg-red-100 text-red-700',
-    reschedule:    'bg-yellow-100 text-yellow-700',
     libur:         'bg-orange-100 text-orange-700',
     'akan-datang': 'bg-blue-100 text-blue-700',
 };
 
 const statusOptions: { value: SessionStatus; label: string }[] = [
     { value: 'hadir',         label: 'Hadir' },
-    { value: 'absen',         label: 'Absen' },
-    { value: 'reschedule',    label: 'Reschedule' },
+    { value: 'absen',         label: 'Tidak Hadir' },
     { value: 'libur',         label: 'Libur' },
     { value: 'akan-datang',   label: 'Akan Datang' },
 ];

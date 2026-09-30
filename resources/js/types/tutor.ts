@@ -35,7 +35,7 @@ export interface TutorStudent {
 
 export interface CalendarEvent {
     date: string;
-    status: 'hadir' | 'absen' | 'reschedule' | 'libur' | 'akan-datang';
+    status: 'hadir' | 'absen' | 'libur' | 'akan-datang';
     notes?: string;
 }
 

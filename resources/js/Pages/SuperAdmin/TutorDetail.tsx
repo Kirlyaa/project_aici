@@ -47,7 +47,6 @@ interface TutorDetailProps {
         total_sessions: number;
         hadir_count: number;
         absen_count: number;
-        reschedule_count: number;
         akan_datang_count: number;
     };
     assignedStudents: AssignedStudent[];
@@ -58,7 +57,6 @@ interface TutorDetailProps {
 const statusBadge: Record<string, string> = {
     hadir: 'bg-green-100 text-green-700',
     absen: 'bg-red-100 text-red-700',
-    reschedule: 'bg-yellow-100 text-yellow-700',
     libur: 'bg-orange-100 text-orange-700',
     'akan-datang': 'bg-blue-100 text-blue-700',
 };
@@ -193,7 +191,7 @@ export default function TutorDetail({
                 </div>
 
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Murid</p>
                         <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total_students}</p>
@@ -210,14 +208,9 @@ export default function TutorDetail({
                         <p className="text-xs text-green-600 mt-0.5">berjalan sukses</p>
                     </div>
                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Absen</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tidak Hadir</p>
                         <p className="text-2xl font-bold text-red-600 mt-1">{stats.absen_count}</p>
                         <p className="text-xs text-red-500 mt-0.5">tidak hadir</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reschedule</p>
-                        <p className="text-2xl font-bold text-yellow-600 mt-1">{stats.reschedule_count}</p>
-                        <p className="text-xs text-yellow-600 mt-0.5">dijadwalkan ulang</p>
                     </div>
                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Akan Datang</p>

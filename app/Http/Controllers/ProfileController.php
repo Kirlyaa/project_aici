@@ -98,16 +98,39 @@ class ProfileController extends Controller
             $pdfRanges = [];
 
             if ($maxMeeting > 0) {
-                for ($start = 1; $start <= $maxMeeting; $start += 4) {
-                    $end = min($start + 3, $maxMeeting);
-                    $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
-                    if ($hasData) {
-                        $pdfRanges[] = [
-                            'key' => "{$start}-{$end}",
-                            'label' => "Pertemuan {$start} - {$end}",
-                            'start' => $start,
-                            'end' => $end,
-                        ];
+                // Ambil periode rapor yang aktif dari pengaturan Super Admin
+                $customPeriods = \App\Models\ReportPeriod::where('is_active', true)
+                    ->orderBy('order_index')
+                    ->orderBy('start_meeting')
+                    ->get();
+
+                if ($customPeriods->isNotEmpty()) {
+                    foreach ($customPeriods as $period) {
+                        $start = $period->start_meeting;
+                        $end = $period->end_meeting;
+                        $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
+                        if ($hasData) {
+                            $pdfRanges[] = [
+                                'key' => "{$start}-{$end}",
+                                'label' => $period->display_name,
+                                'start' => $start,
+                                'end' => $end,
+                            ];
+                        }
+                    }
+                } else {
+                    // Fallback jika belum ada periode kustom: default per 4 pertemuan
+                    for ($start = 1; $start <= $maxMeeting; $start += 4) {
+                        $end = min($start + 3, $maxMeeting);
+                        $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
+                        if ($hasData) {
+                            $pdfRanges[] = [
+                                'key' => "{$start}-{$end}",
+                                'label' => "Pertemuan {$start} - {$end}",
+                                'start' => $start,
+                                'end' => $end,
+                            ];
+                        }
                     }
                 }
 
@@ -207,7 +230,7 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        $user->forceDelete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -262,17 +285,39 @@ class ProfileController extends Controller
         $ranges = [];
 
         if ($maxMeeting > 0) {
-            // Generate range blok per 4 pertemuan: 1-4, 5-8, 9-12, dst.
-            for ($start = 1; $start <= $maxMeeting; $start += 4) {
-                $end = min($start + 3, $maxMeeting);
-                $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
-                if ($hasData) {
-                    $ranges[] = [
-                        'key' => "{$start}-{$end}",
-                        'label' => "Pertemuan {$start} - {$end}",
-                        'start' => $start,
-                        'end' => $end,
-                    ];
+            // Ambil periode rapor yang aktif dari pengaturan Super Admin
+            $customPeriods = \App\Models\ReportPeriod::where('is_active', true)
+                ->orderBy('order_index')
+                ->orderBy('start_meeting')
+                ->get();
+
+            if ($customPeriods->isNotEmpty()) {
+                foreach ($customPeriods as $period) {
+                    $start = $period->start_meeting;
+                    $end = $period->end_meeting;
+                    $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
+                    if ($hasData) {
+                        $ranges[] = [
+                            'key' => "{$start}-{$end}",
+                            'label' => $period->display_name,
+                            'start' => $start,
+                            'end' => $end,
+                        ];
+                    }
+                }
+            } else {
+                // Fallback jika belum ada periode kustom: default per 4 pertemuan
+                for ($start = 1; $start <= $maxMeeting; $start += 4) {
+                    $end = min($start + 3, $maxMeeting);
+                    $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
+                    if ($hasData) {
+                        $ranges[] = [
+                            'key' => "{$start}-{$end}",
+                            'label' => "Pertemuan {$start} - {$end}",
+                            'start' => $start,
+                            'end' => $end,
+                        ];
+                    }
                 }
             }
 
@@ -285,9 +330,19 @@ class ProfileController extends Controller
             ];
         }
 
-        // Filter berdasarkan parameter range (default: 4 pertemuan pertama "1-4" sesuai siklus rapor)
-        $defaultRangeKey = !empty($ranges) ? $ranges[0]['key'] : 'all';
-        $selectedRangeKey = $request->query('range', $defaultRangeKey);
+        // Support parameter range atau custom start/end (from & to)
+        // Contoh: ?from=6&to=7 atau ?range=6-7
+        $reqFrom = $request->query('from');
+        $reqTo = $request->query('to');
+        if ($reqFrom !== null && $reqTo !== null && is_numeric($reqFrom) && is_numeric($reqTo)) {
+            $fromVal = max(1, (int) $reqFrom);
+            $toVal = max($fromVal, (int) $reqTo);
+            $selectedRangeKey = "{$fromVal}-{$toVal}";
+        } else {
+            $defaultRangeKey = !empty($ranges) ? $ranges[0]['key'] : 'all';
+            $selectedRangeKey = $request->query('range', $defaultRangeKey);
+        }
+
         $query = \App\Models\GradeEntry::where('student_id', $user->id);
         $activeRangeLabel = 'Pertemuan 1 - 4';
 
@@ -295,7 +350,13 @@ class ProfileController extends Controller
             $from = (int) $matches[1];
             $to = (int) $matches[2];
             $query->whereBetween('meeting_number', [$from, $to]);
-            $activeRangeLabel = "Pertemuan {$from} - {$to}";
+
+            // Cek apakah ada label kustom dari ReportPeriod
+            $matchingPeriod = !empty($customPeriods)
+                ? $customPeriods->first(fn($p) => $p->start_meeting === $from && $p->end_meeting === $to)
+                : null;
+
+            $activeRangeLabel = $matchingPeriod ? $matchingPeriod->display_name : "Pertemuan {$from} - {$to}";
         } elseif ($selectedRangeKey === 'all' && $maxMeeting > 0) {
             $activeRangeLabel = "Semua Pertemuan (1 - {$maxMeeting})";
         }
@@ -337,7 +398,6 @@ class ProfileController extends Controller
         $sessions = $user->learningSessions()->get(['status']);
         $hadir = $sessions->where('status', 'hadir')->count();
         $absen = $sessions->where('status', 'absen')->count();
-        $reschedule = $sessions->where('status', 'reschedule')->count();
         $attendancePct = $sessions->count() > 0 ? round(($hadir / $sessions->count()) * 100, 1) : 0;
 
         // Ambil komentar yang paling relevan dengan periode pertemuan yang difilter
@@ -368,7 +428,7 @@ class ProfileController extends Controller
                 'class' => $user->class,
                 'level' => null,
                 'totalSessions' => $sessions->count(),
-                'attendance' => ['hadir' => $hadir, 'absen' => $absen, 'reschedule' => $reschedule, 'percentage' => $attendancePct],
+                'attendance' => ['hadir' => $hadir, 'absen' => $absen, 'percentage' => $attendancePct],
                 'scores' => $scores,
                 'overallAvg' => $overallAvg,
                 'averagePercentage' => $overallPct,

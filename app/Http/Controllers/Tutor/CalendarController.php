@@ -181,7 +181,7 @@ class CalendarController extends Controller
 
     /**
      * Update status absensi sesi pembelajaran oleh tutor secara real-time.
-     * Catatan: Tutor HANYA berwenang mengubah status absensi kehadiran (hadir, absen, reschedule, libur, akan-datang).
+     * Catatan: Tutor HANYA berwenang mengubah status absensi kehadiran (hadir, absen, libur, akan-datang).
      * Penjadwalan, edit judul, modul, atau penambahan jadwal hanya dapat dilakukan oleh SuperAdmin.
      */
     public function update(Request $request, LearningSession $session): RedirectResponse
@@ -192,7 +192,7 @@ class CalendarController extends Controller
         StudentLock::assertWritable((int) $session->user_id, $tutor);
 
         $validated = $request->validate([
-            'status' => ['required', 'in:hadir,absen,reschedule,libur,akan-datang'],
+            'status' => ['required', 'in:hadir,absen,libur,akan-datang'],
         ]);
 
         DB::transaction(function () use ($session, $validated, $tutor) {

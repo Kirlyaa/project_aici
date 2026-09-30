@@ -107,7 +107,6 @@ class StudentApiController extends Controller
             'lowest_grade' => round((float) ($grades->min('average') ?? 0), 2),
             'sessions_attended' => $sessions->where('status', 'hadir')->count(),
             'sessions_absent' => $sessions->where('status', 'absen')->count(),
-            'sessions_rescheduled' => $sessions->where('status', 'reschedule')->count(),
         ];
 
         return response()->json([

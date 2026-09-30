@@ -174,7 +174,6 @@ class StudentController extends Controller
 
         $hadir = $sessions->where('status', 'hadir')->count();
         $absen = $sessions->where('status', 'absen')->count();
-        $reschedule = $sessions->where('status', 'reschedule')->count();
         $attendancePct = $sessions->count() > 0 ? round(($hadir / $sessions->count()) * 100, 1) : 0;
 
         $latestComment = \App\Models\StudentComment::where('student_id', $resolvedStudent->id)->latest()->first();
@@ -196,7 +195,6 @@ class StudentController extends Controller
                 'attendance' => [
                     'hadir' => $hadir,
                     'absen' => $absen,
-                    'reschedule' => $reschedule,
                     'percentage' => $attendancePct,
                 ],
                 'overallAvg' => $overallAvg,
@@ -245,7 +243,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Download template Excel untuk bulk insert siswa baru.
+     * Download template CSV untuk bulk insert siswa baru.
      */
     public function downloadTemplate(StudentBulkImportService $importService): StreamedResponse
     {
@@ -253,7 +251,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Import data siswa baru secara massal dari file Excel / Spreadsheet.
+     * Import data siswa baru secara massal dari file CSV.
      */
     public function importExcel(Request $request, StudentBulkImportService $importService): RedirectResponse
     {
@@ -262,11 +260,11 @@ class StudentController extends Controller
                 'required',
                 'file',
                 'max:10240',
-                'mimes:xlsx,xls,csv',
+                'mimes:csv,txt',
             ],
         ], [
-            'file.required' => 'Silakan pilih file Excel / CSV terlebih dahulu.',
-            'file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau .csv.',
+            'file.required' => 'Silakan pilih file CSV terlebih dahulu.',
+            'file.mimes' => 'Format file harus berupa file .csv.',
             'file.max' => 'Ukuran file tidak boleh melebihi 10MB.',
         ]);
 

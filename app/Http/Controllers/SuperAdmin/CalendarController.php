@@ -280,7 +280,7 @@ class CalendarController extends Controller
     }
 
     /**
-     * Download template file Excel/CSV untuk import jadwal.
+     * Download template file CSV untuk import jadwal.
      */
     public function downloadTemplate(CalendarBulkImportService $importService): StreamedResponse
     {
@@ -288,22 +288,24 @@ class CalendarController extends Controller
     }
 
     /**
-     * Import jadwal kalender via Excel (.xlsx, .xls) atau CSV (Mendukung format masal multi-tanggal dan kolom fleksibel).
+     * Import jadwal kalender via CSV (Mendukung format masal multi-tanggal dan kolom fleksibel).
      */
     public function importCsv(Request $request, CalendarBulkImportService $importService): RedirectResponse
     {
         $request->validate([
-            'csv_file' => ['required', 'file', 'max:10240', 'mimes:xlsx,xls,csv,txt'],
+            'csv_file' => ['required', 'file', 'max:10240', 'mimes:csv,txt'],
+            'tutor_id' => ['nullable', 'integer', 'exists:users,id'],
         ], [
-            'csv_file.required' => 'Silakan pilih file spreadsheet / CSV terlebih dahulu.',
-            'csv_file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau .csv/.txt.',
+            'csv_file.required' => 'Silakan pilih file CSV terlebih dahulu.',
+            'csv_file.mimes' => 'Format file harus berupa file .csv.',
             'csv_file.max' => 'Ukuran file tidak boleh melebihi 10MB.',
         ]);
 
-        $result = $importService->import($request->file('csv_file'));
+        $defaultTutorId = $request->filled('tutor_id') ? (int) $request->input('tutor_id') : null;
+        $result = $importService->import($request->file('csv_file'), $defaultTutorId);
 
         if (! $result['success']) {
-            return back()->with('csv_errors', $result['errors'])->with('error', 'Gagal mengimpor jadwal. Silakan periksa file Excel Anda.');
+            return back()->with('csv_errors', $result['errors'])->with('error', 'Gagal mengimpor jadwal. Silakan periksa file CSV Anda.');
         }
 
         $imported = $result['imported_count'];

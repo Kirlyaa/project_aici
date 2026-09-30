@@ -150,7 +150,6 @@ class TutorController extends Controller
             'total_sessions' => $sessions->count(),
             'hadir_count' => $sessions->where('status', 'hadir')->count(),
             'absen_count' => $sessions->where('status', 'absen')->count(),
-            'reschedule_count' => $sessions->where('status', 'reschedule')->count(),
             'akan_datang_count' => $sessions->where('status', 'akan-datang')->count(),
         ];
 
@@ -212,7 +211,7 @@ class TutorController extends Controller
     }
 
     /**
-     * Download template Excel untuk bulk import tutor.
+     * Download template CSV untuk bulk import tutor.
      */
     public function downloadTemplate(TutorBulkImportService $importService): StreamedResponse
     {
@@ -220,7 +219,7 @@ class TutorController extends Controller
     }
 
     /**
-     * Import data tutor secara massal dari file Excel / Spreadsheet.
+     * Import data tutor secara massal dari file CSV.
      */
     public function importExcel(Request $request, TutorBulkImportService $importService): RedirectResponse
     {
@@ -229,11 +228,11 @@ class TutorController extends Controller
                 'required',
                 'file',
                 'max:10240',
-                'mimes:xlsx,xls,csv',
+                'mimes:csv,txt',
             ],
         ], [
-            'file.required' => 'Silakan pilih file Excel / CSV terlebih dahulu.',
-            'file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau .csv.',
+            'file.required' => 'Silakan pilih file CSV terlebih dahulu.',
+            'file.mimes' => 'Format file harus berupa file .csv.',
             'file.max' => 'Ukuran file tidak boleh melebihi 10MB.',
         ]);
 

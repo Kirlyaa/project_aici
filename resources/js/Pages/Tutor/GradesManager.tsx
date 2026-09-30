@@ -34,6 +34,16 @@ const categoriesTypeCoding = ['fokus', 'tools-management', 'interaksi', 'koding'
 // Semua kolom yang mungkin muncul di tabel (robot punya 5 kolom, coding 4)
 const categoriesAll = categoriesTypeRobot;
 
+// Range nilai: 3, 3.5, 4, 4.5, 5 dan 0 untuk anak yang tidak hadir
+const GRADE_OPTIONS: { value: number; label: string }[] = [
+    { value: 0, label: '0 (Tidak Hadir)' },
+    { value: 3, label: '3' },
+    { value: 3.5, label: '3.5' },
+    { value: 4, label: '4' },
+    { value: 4.5, label: '4.5' },
+    { value: 5, label: '5' },
+];
+
 const getCategoryLabel = (cat: string): string => {
     const labels: Record<string, string> = {
         interaksi: 'Interaksi',
@@ -88,12 +98,18 @@ export default function GradesManager() {
         const entry = gradeEntries.find(e => e.id === entryId);
         if (!entry) return;
 
-        const clampedValue = Math.max(0, Math.min(5, value));
+        // Validasi nilai: hanya 0 atau antara 3 sampai 5
+        let validValue = value;
+        const allowedNums = [0, 3, 3.5, 4, 4.5, 5];
+        if (!allowedNums.includes(validValue)) {
+            // cari yang terdekat
+            validValue = allowedNums.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev, 0);
+        }
 
         // Optimistic local update — UI responds instantly
         setLocalGrades(prev => ({
             ...prev,
-            [entryId]: { ...(prev[entryId] ?? entry.grades), [category]: clampedValue },
+            [entryId]: { ...(prev[entryId] ?? entry.grades), [category]: validValue },
         }));
 
         // Mark as saving (show indicator)
@@ -106,7 +122,7 @@ export default function GradesManager() {
         }
 
         debounceTimers.current[entryId] = setTimeout(() => {
-            const mergedGrades = { ...entry.grades, ...(localGrades[entryId] ?? {}), [category]: clampedValue };
+            const mergedGrades = { ...entry.grades, ...(localGrades[entryId] ?? {}), [category]: validValue };
 
             router.put(`/tutor/grades/${entryId}`, {
                 student_id: studentId,
@@ -359,19 +375,27 @@ export default function GradesManager() {
                                             {categoriesAll.map(cat => {
                                                 const isEditable = getCategories(entry.moduleType).includes(cat);
                                                 const currentGrades = getGrades(entry);
+                                                const val = currentGrades[cat] !== undefined && currentGrades[cat] !== null ? Number(currentGrades[cat]) : 0;
+
                                                 return (
-                                                    <td key={cat} className="px-3 py-4 text-center">
+                                                    <td key={cat} className="px-2 py-4 text-center">
                                                         {isEditable ? (
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                max="5"
-                                                                step="0.1"
+                                                            <select
                                                                 disabled={isReadOnly}
-                                                                value={currentGrades[cat] ?? ''}
-                                                                onChange={e => updateGrade(entry.id, cat, parseFloat(e.target.value) || 0)}
-                                                                className="w-12 border border-gray-200 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400"
-                                                            />
+                                                                value={val}
+                                                                onChange={e => updateGrade(entry.id, cat, parseFloat(e.target.value))}
+                                                                className={`w-28 text-xs font-semibold rounded-lg px-2 py-1.5 border transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400 ${
+                                                                    val === 0
+                                                                        ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                                                        : 'bg-white text-gray-800 border-gray-200'
+                                                                }`}
+                                                            >
+                                                                {GRADE_OPTIONS.map(opt => (
+                                                                    <option key={opt.value} value={opt.value}>
+                                                                        {opt.label}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
                                                         ) : (
                                                             <span className="text-gray-300">-</span>
                                                         )}

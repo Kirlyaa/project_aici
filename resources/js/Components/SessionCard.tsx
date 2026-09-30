@@ -2,11 +2,10 @@ import { Link } from '@inertiajs/react';
 import { SessionItem, SessionStatus } from '@/types/session';
 
 const statusConfig: Record<SessionStatus, { dot: string; badge: string; label: string; icon: string }> = {
-    hadir:        { dot: 'bg-green-500',  badge: 'bg-green-100 text-green-700',  label: 'Hadir',        icon: 'bi-check-circle-fill' },
-    absen:        { dot: 'bg-red-500',    badge: 'bg-red-100 text-red-700',      label: 'Absen',        icon: 'bi-x-circle-fill' },
-    reschedule:   { dot: 'bg-yellow-500', badge: 'bg-yellow-100 text-yellow-700',label: 'Reschedule',   icon: 'bi-arrow-repeat' },
-    libur:        { dot: 'bg-orange-500', badge: 'bg-orange-100 text-orange-700',label: 'Libur',        icon: 'bi-calendar-x-fill' },
-    'akan-datang':{ dot: 'bg-blue-500',   badge: 'bg-blue-100 text-blue-700',    label: 'Akan Datang',  icon: 'bi-calendar-event-fill' },
+    hadir:        { dot: 'bg-blue-500',   badge: 'bg-blue-100 text-blue-700',    label: 'Hadir',        icon: 'bi-check-circle-fill' },
+    absen:        { dot: 'bg-amber-400',  badge: 'bg-amber-100 text-amber-800',  label: 'Tidak Hadir',  icon: 'bi-x-circle-fill' },
+    libur:        { dot: 'bg-red-500',    badge: 'bg-red-100 text-red-700',      label: 'Libur',        icon: 'bi-calendar-x-fill' },
+    'akan-datang':{ dot: 'bg-purple-400', badge: 'bg-purple-100 text-purple-700', label: 'Akan Datang', icon: 'bi-calendar-event-fill' },
 };
 
 interface Props {

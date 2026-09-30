@@ -21,7 +21,7 @@ class CalendarCsvImportTest extends TestCase
 
         $response = $this->actingAs($admin)->get(route('superadmin.calendar.template'));
         $response->assertStatus(200);
-        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type') ?? '');
+        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type') ?? '');
     }
 
     public function test_superadmin_can_import_calendar_csv(): void
@@ -63,7 +63,7 @@ class CalendarCsvImportTest extends TestCase
         ]);
     }
 
-    public function test_superadmin_can_import_calendar_excel(): void
+    public function test_superadmin_can_import_calendar_csv_with_seven_columns(): void
     {
         $this->withoutMiddleware();
 
@@ -74,32 +74,13 @@ class CalendarCsvImportTest extends TestCase
 
         $student = User::where('role', 'user')->first();
         if (!$student) {
-            $student = User::factory()->create(['role' => 'user', 'email' => 'student_excel@aici.id']);
+            $student = User::factory()->create(['role' => 'user', 'email' => 'student_csv_7@aici.id']);
         }
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setCellValue('A1', 'Tanggal');
-        $sheet->setCellValue('B1', 'Status');
-        $sheet->setCellValue('C1', 'Judul Pertemuan');
-        $sheet->setCellValue('D1', 'Modul');
-        $sheet->setCellValue('E1', 'Email Murid');
-        $sheet->setCellValue('F1', 'Tutor');
-        $sheet->setCellValue('G1', 'Catatan');
+        $csvContent = "Tanggal,Status,Judul Pertemuan,Modul,Email Murid,Tutor,Catatan\n"
+            . "2026-12-01,hadir,Pertemuan 1 CSV,Modul CSV Robotics,{$student->email},,Catatan sesi CSV\n";
 
-        $sheet->setCellValue('A2', '2026-12-01');
-        $sheet->setCellValue('B2', 'hadir');
-        $sheet->setCellValue('C2', 'Pertemuan 1 Excel');
-        $sheet->setCellValue('D2', 'Modul Excel Robotics');
-        $sheet->setCellValue('E2', $student->email);
-        $sheet->setCellValue('F2', '');
-        $sheet->setCellValue('G2', 'Catatan sesi Excel');
-
-        $tempPath = tempnam(sys_get_temp_dir(), 'test_cal_') . '.xlsx';
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save($tempPath);
-
-        $file = new UploadedFile($tempPath, 'jadwal.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+        $file = UploadedFile::fake()->createWithContent('jadwal.csv', $csvContent);
 
         $response = $this->actingAs($admin)->post(route('superadmin.calendar.import-csv'), [
             'csv_file' => $file,
@@ -110,12 +91,36 @@ class CalendarCsvImportTest extends TestCase
             'user_id' => $student->id,
             'date' => '2026-12-01 00:00:00',
             'status' => 'hadir',
-            'title' => 'Pertemuan 1 Excel',
-            'admin_note_for_tutor' => 'Catatan sesi Excel',
+            'title' => 'Pertemuan 1 CSV',
+            'admin_note_for_tutor' => 'Catatan sesi CSV',
+        ]);
+    }
+
+    public function test_superadmin_can_import_calendar_csv_with_default_tutor_id(): void
+    {
+        $this->withoutMiddleware();
+
+        $admin = User::factory()->create(['role' => 'superadmin']);
+        $tutor = User::factory()->create(['role' => 'tutor']);
+        $student = User::factory()->create(['role' => 'user', 'email' => 'student_tutor_csv@aici.id', 'tutor_id' => null]);
+
+        $csvContent = "Tanggal,Status,Judul Pertemuan,Modul,Email Murid,Tutor,Catatan\n"
+            . "2026-12-15,akan-datang,Pertemuan Khusus Tutor,,{$student->email},,Diampu tutor aktif\n";
+
+        $file = UploadedFile::fake()->createWithContent('jadwal_tutor.csv', $csvContent);
+
+        $response = $this->actingAs($admin)->post(route('superadmin.calendar.import-csv'), [
+            'csv_file' => $file,
+            'tutor_id' => $tutor->id,
         ]);
 
-        if (file_exists($tempPath)) {
-            @unlink($tempPath);
-        }
+        $response->assertRedirect();
+        $this->assertDatabaseHas('learning_sessions', [
+            'user_id' => $student->id,
+            'tutor_id' => $tutor->id,
+            'date' => '2026-12-15 00:00:00',
+            'status' => 'akan-datang',
+            'title' => 'Pertemuan Khusus Tutor',
+        ]);
     }
 }

@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import FlashToast from '@/Components/FlashToast';
 
 interface SubModuleItem {
     id: number;
@@ -72,10 +73,19 @@ interface Props {
 
 export default function ModuleManagement() {
     const { modules, books = [], parentModules = [], search, selectedType, sortBy, stats } = usePage().props as unknown as Props;
+    const pageProps = usePage().props as any;
+    const csvErrors = (pageProps.flash?.csv_errors || []) as string[];
+
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
     const [subSearch, setSubSearch] = useState('');
+
+    // State untuk Modal Import CSV
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [newModule, setNewModule] = useState({
         name: '',
@@ -257,6 +267,29 @@ export default function ModuleManagement() {
         });
     };
 
+    const handleImportSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!importFile) return;
+
+        const formData = new FormData();
+        formData.append('file', importFile);
+
+        setIsUploading(true);
+        router.post('/superadmin/modules/import-csv', formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setShowImportModal(false);
+                setImportFile(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
+            onFinish: () => {
+                setIsUploading(false);
+            },
+        });
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Head title="Kelola Modul Master" />
@@ -321,6 +354,16 @@ export default function ModuleManagement() {
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                        {/* Tombol Impor CSV */}
+                        <button
+                            type="button"
+                            onClick={() => setShowImportModal(true)}
+                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center gap-2 shadow-sm text-sm transition-colors"
+                        >
+                            <i className="bi bi-file-earmark-spreadsheet" />
+                            <span>Impor CSV Modul</span>
+                        </button>
+
                         {activeBook ? (
                             <>
                                 <button
@@ -352,6 +395,23 @@ export default function ModuleManagement() {
                         )}
                     </div>
                 </div>
+
+                <FlashToast />
+
+                {/* Import CSV Errors Alert if any */}
+                {csvErrors.length > 0 && (
+                    <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700">
+                        <div className="flex items-center gap-2 font-semibold mb-2">
+                            <i className="bi bi-exclamation-triangle-fill text-lg text-red-600" />
+                            <span>Terdapat kendala saat impor CSV Modul:</span>
+                        </div>
+                        <ul className="list-disc list-inside text-xs sm:text-sm space-y-1">
+                            {csvErrors.map((err, idx) => (
+                                <li key={idx}>{err}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {/* VIEW MODE: BUKU COVER */}
                 {!activeBook && (
@@ -904,6 +964,95 @@ export default function ModuleManagement() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Bulk Insert CSV Modul */}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <i className="bi bi-file-earmark-spreadsheet text-emerald-600 text-xl" />
+                                Bulk Insert Modul Kurikulum (.csv)
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowImportModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <i className="bi bi-x-lg text-lg" />
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-4">
+                            Unggah berkas CSV untuk mendaftarkan <strong>Buku Kurikulum Induk</strong> maupun <strong>Sub Modul Pertemuan</strong> secara massal lengkap dengan seluruh data atributnya.
+                        </p>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 mb-4 space-y-1.5">
+                            <p className="font-semibold flex items-center gap-1.5">
+                                <i className="bi bi-info-circle-fill" /> Panduan Kolom Template CSV:
+                            </p>
+                            <p className="text-[11px] leading-relaxed text-amber-900">
+                                <strong>1. Nama Modul:</strong> Judul modul / bab pertemuan <em>(wajib)</em><br />
+                                <strong>2. Buku Induk:</strong> Nama buku kurikulum. Kosongkan jika baris ini merupakan Buku Induk Utama.<br />
+                                <strong>3. Tipe:</strong> <code className="bg-amber-100 px-1 rounded">robot</code>, <code className="bg-amber-100 px-1 rounded">coding</code>, atau <code className="bg-amber-100 px-1 rounded">general</code><br />
+                                <strong>4. Urutan:</strong> Urutan bab / pertemuan (angka)<br />
+                                <strong>5. Deskripsi:</strong> Ringkasan materi pertemuan / silabus<br />
+                                <strong>6. URL Gambar:</strong> Path / URL gambar cover modul<br />
+                                <strong>7. Alat dan Bahan:</strong> Pisahkan alat dengan tanda koma (misal: <em>Arduino Uno, Motor Driver</em>)
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleImportSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih File CSV</label>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={e => setImportFile(e.target.files?.[0] || null)}
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-gray-200 rounded-lg cursor-pointer p-1"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2">
+                                <a
+                                    href="/superadmin/modules/template"
+                                    className="text-xs text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
+                                >
+                                    <i className="bi bi-download" /> Download Template CSV
+                                </a>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowImportModal(false)}
+                                        className="px-4 py-2 text-sm border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={!importFile || isUploading}
+                                        className="px-5 py-2 text-sm bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5"
+                                    >
+                                        {isUploading ? (
+                                            <>
+                                                <i className="bi bi-arrow-repeat animate-spin" />
+                                                <span>Mengimpor...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-upload" />
+                                                <span>Unggah & Impor</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

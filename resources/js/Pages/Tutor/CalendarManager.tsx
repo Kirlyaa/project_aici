@@ -106,12 +106,11 @@ export default function CalendarManager({ studentId, student, students = [], ses
         });
     };
 
-    // R8: blok warna penuh per status, libur = BIRU
+    // R8: blok warna penuh per status: Hadir = BIRU, Libur = MERAH, Tidak Hadir = KUNING
     const STATUS_BG: Record<SessionStatus, string> = {
-        hadir: 'bg-green-500 text-white',
-        libur: 'bg-blue-500 text-white',
-        absen: 'bg-red-500 text-white',
-        reschedule: 'bg-yellow-400 text-gray-900',
+        hadir: 'bg-blue-500 text-white',
+        libur: 'bg-red-500 text-white',
+        absen: 'bg-amber-400 text-gray-900',
         'akan-datang': 'bg-purple-400 text-white',
     };
 
@@ -135,7 +134,6 @@ export default function CalendarManager({ studentId, student, students = [], ses
     const statusCounts = {
         libur: monthSessions.filter(s => s.status === 'libur').length,
         absen: monthSessions.filter(s => s.status === 'absen').length,
-        reschedule: monthSessions.filter(s => s.status === 'reschedule').length,
         'akan-datang': monthSessions.filter(s => s.status === 'akan-datang').length,
         hadir: monthSessions.filter(s => s.status === 'hadir').length,
     };
@@ -195,7 +193,7 @@ export default function CalendarManager({ studentId, student, students = [], ses
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Kelola Kalender Murid</h1>
-                    <p className="text-gray-600">Tandai tanggal libur, absen, reschedule, hadir, atau akan datang</p>
+                    <p className="text-gray-600">Tandai tanggal libur, absen, hadir, atau akan datang</p>
                 </div>
 
                 <StudentLockBanner lock={lock} studentName={student.name} />
@@ -263,20 +261,16 @@ export default function CalendarManager({ studentId, student, students = [], ses
 
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-8 pt-6 border-t border-gray-200">
                             <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-green-500 inline-block flex-shrink-0" />
+                                <span className="w-5 h-5 rounded bg-blue-500 inline-block flex-shrink-0" />
                                 <span className="text-gray-700">Hadir</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-blue-500 inline-block flex-shrink-0" />
+                                <span className="w-5 h-5 rounded bg-red-500 inline-block flex-shrink-0" />
                                 <span className="text-gray-700">Libur</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-red-500 inline-block flex-shrink-0" />
-                                <span className="text-gray-700">Absen</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="w-5 h-5 rounded bg-yellow-400 inline-block flex-shrink-0" />
-                                <span className="text-gray-700">Reschedule</span>
+                                <span className="w-5 h-5 rounded bg-amber-400 inline-block flex-shrink-0" />
+                                <span className="text-gray-700">Tidak Hadir</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
                                 <span className="w-5 h-5 rounded bg-purple-400 inline-block flex-shrink-0" />
@@ -323,8 +317,8 @@ export default function CalendarManager({ studentId, student, students = [], ses
                                                     onClick={() => updateAttendanceQuick(sess, 'hadir')}
                                                     className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
                                                         sess.status === 'hadir'
-                                                            ? 'bg-green-600 text-white ring-2 ring-green-300'
-                                                            : 'bg-white text-green-700 border border-green-200 hover:bg-green-50'
+                                                            ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+                                                            : 'bg-white text-blue-700 border border-blue-200 hover:bg-blue-50'
                                                     }`}
                                                     title="Tandai Hadir"
                                                 >
@@ -336,25 +330,12 @@ export default function CalendarManager({ studentId, student, students = [], ses
                                                     onClick={() => updateAttendanceQuick(sess, 'absen')}
                                                     className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
                                                         sess.status === 'absen'
-                                                            ? 'bg-red-600 text-white ring-2 ring-red-300'
-                                                            : 'bg-white text-red-700 border border-red-200 hover:bg-red-50'
+                                                            ? 'bg-amber-500 text-white ring-2 ring-amber-300'
+                                                            : 'bg-white text-amber-700 border border-amber-200 hover:bg-amber-50'
                                                     }`}
-                                                    title="Tandai Absen"
+                                                    title="Tandai Tidak Hadir"
                                                 >
-                                                    <i className="bi bi-x-circle mr-1" /> Absen
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={isReadOnly || saving}
-                                                    onClick={() => updateAttendanceQuick(sess, 'reschedule')}
-                                                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
-                                                        sess.status === 'reschedule'
-                                                            ? 'bg-yellow-500 text-gray-900 ring-2 ring-yellow-300 font-bold'
-                                                            : 'bg-white text-yellow-700 border border-yellow-200 hover:bg-yellow-50'
-                                                    }`}
-                                                    title="Tandai Reschedule"
-                                                >
-                                                    <i className="bi bi-arrow-repeat mr-1" /> Reschedule
+                                                    <i className="bi bi-x-circle mr-1" /> Tidak Hadir
                                                 </button>
                                             </div>
                                         </div>
@@ -395,27 +376,21 @@ export default function CalendarManager({ studentId, student, students = [], ses
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <span className="w-3 h-3 rounded-sm bg-green-500 inline-block flex-shrink-0" /> Hadir
+                                        <span className="w-3 h-3 rounded-sm bg-blue-500 inline-block flex-shrink-0" /> Hadir
                                     </span>
-                                    <span className="font-bold text-green-600">{statusCounts.hadir}</span>
+                                    <span className="font-bold text-blue-600">{statusCounts.hadir}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <span className="w-3 h-3 rounded-sm bg-blue-500 inline-block flex-shrink-0" /> Libur
+                                        <span className="w-3 h-3 rounded-sm bg-red-500 inline-block flex-shrink-0" /> Libur
                                     </span>
-                                    <span className="font-bold text-blue-600">{statusCounts.libur}</span>
+                                    <span className="font-bold text-red-600">{statusCounts.libur}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <span className="w-3 h-3 rounded-sm bg-red-500 inline-block flex-shrink-0" /> Absen
+                                        <span className="w-3 h-3 rounded-sm bg-amber-400 inline-block flex-shrink-0" /> Tidak Hadir
                                     </span>
-                                    <span className="font-bold text-red-600">{statusCounts.absen}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600 text-sm flex items-center gap-1">
-                                        <span className="w-3 h-3 rounded-sm bg-yellow-400 inline-block flex-shrink-0" /> Reschedule
-                                    </span>
-                                    <span className="font-bold text-yellow-600">{statusCounts.reschedule}</span>
+                                    <span className="font-bold text-amber-600">{statusCounts.absen}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600 text-sm flex items-center gap-1">
@@ -522,7 +497,7 @@ export default function CalendarManager({ studentId, student, students = [], ses
                                     Perbarui Status Kehadiran Murid
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {(['hadir', 'absen', 'reschedule', 'libur', 'akan-datang'] as SessionStatus[]).map(st => {
+                                    {(['hadir', 'absen', 'libur', 'akan-datang'] as SessionStatus[]).map(st => {
                                         const isCurrent = selectedSession.status === st;
                                         return (
                                             <button
@@ -537,13 +512,12 @@ export default function CalendarManager({ studentId, student, students = [], ses
                                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                                             >
                                                 <span className={`w-2 h-2 rounded-full ${
-                                                    st === 'hadir' ? 'bg-green-500' :
-                                                    st === 'absen' ? 'bg-red-500' :
-                                                    st === 'reschedule' ? 'bg-yellow-400' :
-                                                    st === 'libur' ? 'bg-blue-500' : 'bg-purple-400'
+                                                    st === 'hadir' ? 'bg-blue-500' :
+                                                    st === 'absen' ? 'bg-amber-400' :
+                                                    st === 'libur' ? 'bg-red-500' : 'bg-purple-400'
                                                 }`} />
                                                 <span>
-                                                    {st === 'akan-datang' ? 'Akan Datang' : st.charAt(0).toUpperCase() + st.slice(1)}
+                                                    {st === 'akan-datang' ? 'Akan Datang' : st === 'absen' ? 'Tidak Hadir' : st.charAt(0).toUpperCase() + st.slice(1)}
                                                 </span>
                                             </button>
                                         );

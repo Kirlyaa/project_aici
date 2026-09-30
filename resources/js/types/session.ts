@@ -1,4 +1,4 @@
-export type SessionStatus = 'hadir' | 'absen' | 'reschedule' | 'libur' | 'akan-datang';
+export type SessionStatus = 'hadir' | 'absen' | 'libur' | 'akan-datang';
 
 export interface SessionModule {
     id: number;

@@ -4,12 +4,14 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Module;
+use App\Services\ModuleBulkImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ModuleController extends Controller
 {
@@ -218,6 +220,43 @@ class ModuleController extends Controller
         $module->delete();
 
         return back()->with('success', 'Modul / Buku berhasil dihapus.');
+    }
+
+    /**
+     * Download CSV template for modules import
+     */
+    public function downloadTemplate(ModuleBulkImportService $importService): StreamedResponse
+    {
+        return $importService->downloadTemplate();
+    }
+
+    /**
+     * Bulk import modules from CSV
+     */
+    public function importCsv(Request $request, ModuleBulkImportService $importService): RedirectResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:10240',
+        ], [
+            'file.required' => 'Pilih file CSV modul terlebih dahulu.',
+            'file.file' => 'File yang diunggah tidak valid.',
+            'file.mimes' => 'Format file harus berupa CSV (.csv).',
+            'file.max' => 'Ukuran file CSV maksimal 10MB.',
+        ]);
+
+        $result = $importService->import($request->file('file'), Auth::id());
+
+        if (! $result['success']) {
+            return back()->with('csv_errors', $result['errors']);
+        }
+
+        $message = "Berhasil mengimpor {$result['imported_count']} modul baru";
+        if ($result['updated_count'] > 0) {
+            $message .= " dan memperbarui {$result['updated_count']} modul";
+        }
+        $message .= '.';
+
+        return back()->with('success', $message);
     }
 
     /**

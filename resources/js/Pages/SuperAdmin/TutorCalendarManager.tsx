@@ -1,5 +1,5 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useMemo, useRef, useState } from 'react';
 import FlashToast from '@/Components/FlashToast';
 import { SessionStatus } from '@/types/session';
 
@@ -68,10 +68,9 @@ function formatDateString(year: number, month: number, day: number): string {
 }
 
 const STATUS_COLOR: Record<SessionStatus, { badge: string; label: string }> = {
-    hadir: { badge: 'bg-green-100 text-green-800 border-green-200', label: 'Hadir' },
-    absen: { badge: 'bg-red-100 text-red-800 border-red-200', label: 'Absen' },
-    reschedule: { badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Reschedule' },
-    libur: { badge: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Libur' },
+    hadir: { badge: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Hadir' },
+    absen: { badge: 'bg-amber-100 text-amber-800 border-amber-200', label: 'Tidak Hadir' },
+    libur: { badge: 'bg-red-100 text-red-800 border-red-200', label: 'Libur' },
     'akan-datang': { badge: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Akan Datang' },
 };
 
@@ -83,12 +82,19 @@ export default function SuperAdminTutorCalendarManager({
     tutors,
     students,
 }: Props) {
+    const { props } = usePage();
+    const csvErrors: string[] = (props as any)?.flash?.csv_errors ?? (props as any)?.csv_errors ?? [];
+    const csvWarnings: string[] = (props as any)?.flash?.csv_warnings ?? (props as any)?.csv_warnings ?? [];
+
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>('all');
     const [editingSession, setEditingSession] = useState<SessionData | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [showCsvPanel, setShowCsvPanel] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [uploadingCsv, setUploadingCsv] = useState(false);
+    const csvInputRef = useRef<HTMLInputElement>(null);
 
     // Form inputs
     const [formStudentId, setFormStudentId] = useState<number>(students[0]?.id || 0);
@@ -206,6 +212,31 @@ export default function SuperAdminTutorCalendarManager({
         });
     };
 
+    const handleCsvUpload = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const file = csvInputRef.current?.files?.[0];
+        if (!file) {
+            alert('Silakan pilih file CSV terlebih dahulu.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('csv_file', file);
+        if (tutorId) {
+            formData.append('tutor_id', String(tutorId));
+        }
+
+        setUploadingCsv(true);
+        router.post('/superadmin/calendar/import-csv', formData, {
+            forceFormData: true,
+            preserveScroll: true,
+            onFinish: () => setUploadingCsv(false),
+            onSuccess: () => {
+                if (csvInputRef.current) csvInputRef.current.value = '';
+            },
+        });
+    };
+
     const calendarDays: (number | null)[] = [];
     for (let i = daysInPrevMonth - firstDay + 1; i <= daysInPrevMonth; i++) {
         calendarDays.push(null);
@@ -220,7 +251,6 @@ export default function SuperAdminTutorCalendarManager({
     const statusCounts = {
         hadir: monthSessions.filter(s => s.status === 'hadir').length,
         absen: monthSessions.filter(s => s.status === 'absen').length,
-        reschedule: monthSessions.filter(s => s.status === 'reschedule').length,
         libur: monthSessions.filter(s => s.status === 'libur').length,
         'akan-datang': monthSessions.filter(s => s.status === 'akan-datang').length,
     };
@@ -294,13 +324,21 @@ export default function SuperAdminTutorCalendarManager({
                         </Link>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                            type="button"
+                            onClick={() => setShowCsvPanel(v => !v)}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-xl text-xs font-semibold transition"
+                        >
+                            <i className="bi bi-file-earmark-spreadsheet text-teal-600" />
+                            {showCsvPanel ? 'Tutup Panel Import' : 'Import CSV'}
+                        </button>
                         <Link
                             href="/superadmin/calendar/template"
                             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold transition"
                         >
-                            <i className="bi bi-file-earmark-excel text-emerald-600" />
-                            Download Template CSV/Excel
+                            <i className="bi bi-file-earmark-arrow-down text-emerald-600" />
+                            Download Template CSV (.csv)
                         </Link>
                         <button
                             type="button"
@@ -312,6 +350,86 @@ export default function SuperAdminTutorCalendarManager({
                         </button>
                     </div>
                 </div>
+
+                {/* Panel Import CSV */}
+                {showCsvPanel && (
+                    <div className="bg-white rounded-xl border border-teal-100 shadow-sm p-6 mb-6">
+                        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                            <h3 className="font-bold text-gray-900 flex items-center gap-2 text-base">
+                                <i className="bi bi-file-earmark-spreadsheet text-teal-600 text-lg" />
+                                Import Jadwal Mengajar Tutor Secara Massal (CSV)
+                            </h3>
+                            <a
+                                href="/superadmin/calendar/template"
+                                download="template_bulk_jadwal_kalender.csv"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold transition"
+                            >
+                                <i className="bi bi-file-earmark-arrow-down text-emerald-600" /> Download Template CSV (.csv)
+                            </a>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-3">
+                            Fitur ini memungkinkan Anda memasukkan jadwal pembelajaran tutor{' '}
+                            {tutor ? <strong className="text-teal-700">{tutor.name}</strong> : ''} secara massal sekaligus menggunakan file <code className="text-emerald-700 font-semibold">.csv</code>. Jika kolom Tutor di CSV dikosongkan, jadwal akan otomatis diasosiasikan ke tutor yang sedang dipilih saat ini.
+                        </p>
+
+                        <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-700 leading-relaxed overflow-x-auto">
+                            <div className="font-bold text-slate-800 mb-1 font-sans">Format Kolom Header Template CSV:</div>
+                            <div className="text-teal-700 font-bold mb-2">Tanggal | Status | Judul Pertemuan | Modul | Email Murid | Tutor | Catatan</div>
+                            <div className="text-slate-600 font-sans space-y-1">
+                                <div>• <strong>Tanggal</strong>: Format tanggal teks <code className="bg-slate-200 px-1 py-0.5 rounded">YYYY-MM-DD</code> (contoh: 2026-10-15) atau <code className="bg-slate-200 px-1 py-0.5 rounded">DD/MM/YYYY</code></div>
+                                <div>• <strong>Status</strong>: <code className="bg-slate-200 px-1 py-0.5 rounded">hadir</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">absen</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">libur</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">akan-datang</code></div>
+                                <div>• <strong>Judul Pertemuan</strong>: Nama judul atau topik pertemuan sesi</div>
+                                <div>• <strong>Modul</strong>: Nama modul pembelajaran (akan otomatis dikaitkan atau dibuat jika belum ada)</div>
+                                <div>• <strong>Email Murid</strong>: Email murid terdaftar di sistem</div>
+                                <div>• <strong>Tutor</strong>: Email atau nama tutor pengajar (opsional, otomatis default ke tutor ini jika dikosongkan)</div>
+                                <div>• <strong>Catatan</strong>: Catatan pengingat sesi dari admin untuk tutor (opsional)</div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleCsvUpload} className="flex flex-wrap items-center gap-3">
+                            <input
+                                ref={csvInputRef}
+                                type="file"
+                                accept=".csv,.txt"
+                                className="text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-50 file:text-teal-700 file:font-semibold hover:file:bg-teal-100 cursor-pointer"
+                            />
+                            <button
+                                type="submit"
+                                disabled={uploadingCsv}
+                                className="px-5 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 text-sm shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                                <i className="bi bi-cloud-arrow-up" /> {uploadingCsv ? 'Mengimpor...' : 'Upload & Impor Sekarang'}
+                            </button>
+                        </form>
+
+                        {csvErrors.length > 0 && (
+                            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="font-semibold text-red-700 mb-2 flex items-center gap-1.5 text-sm">
+                                    <i className="bi bi-exclamation-triangle-fill" /> Rincian Peringatan / Baris yang Dilewati:
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto">
+                                    {csvErrors.map((err, i) => (
+                                        <li key={i} className="text-xs text-red-600">{err}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {csvWarnings.length > 0 && (
+                            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p className="font-semibold text-amber-800 mb-2 flex items-center gap-1.5 text-sm">
+                                    <i className="bi bi-info-circle-fill" /> Catatan Saat Impor:
+                                </p>
+                                <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto">
+                                    {csvWarnings.map((warn, i) => (
+                                        <li key={i} className="text-xs text-amber-700">{warn}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Banner Info Tutor */}
                 {tutor ? (
@@ -366,20 +484,17 @@ export default function SuperAdminTutorCalendarManager({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 text-xs w-full md:w-auto justify-start md:justify-end">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-green-500" /> Hadir: {statusCounts.hadir}
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium">
+                            <span className="w-2 h-2 rounded-full bg-blue-500" /> Hadir: {statusCounts.hadir}
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-medium">
                             <span className="w-2 h-2 rounded-full bg-purple-500" /> Akan Datang: {statusCounts['akan-datang']}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-800 border border-yellow-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-yellow-500" /> Reschedule: {statusCounts.reschedule}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-blue-500" /> Libur: {statusCounts.libur}
-                        </span>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-red-500" /> Absen: {statusCounts.absen}
+                            <span className="w-2 h-2 rounded-full bg-red-500" /> Libur: {statusCounts.libur}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium">
+                            <span className="w-2 h-2 rounded-full bg-amber-400" /> Tidak Hadir: {statusCounts.absen}
                         </span>
                     </div>
                 </div>
@@ -716,8 +831,7 @@ export default function SuperAdminTutorCalendarManager({
                                 >
                                     <option value="akan-datang">Akan Datang</option>
                                     <option value="hadir">Hadir</option>
-                                    <option value="absen">Absen</option>
-                                    <option value="reschedule">Reschedule</option>
+                                    <option value="absen">Tidak Hadir</option>
                                     <option value="libur">Libur</option>
                                 </select>
                             </div>

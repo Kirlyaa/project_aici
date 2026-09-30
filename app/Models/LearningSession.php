@@ -74,7 +74,6 @@ class LearningSession extends Model
         return match ($this->status) {
             'hadir' => 'bg-green-100 text-green-700',
             'absen' => 'bg-red-100 text-red-700',
-            'reschedule' => 'bg-yellow-100 text-yellow-700',
             'libur' => 'bg-orange-100 text-orange-700',
             'akan-datang' => 'bg-blue-100 text-blue-700',
             default => 'bg-gray-100 text-gray-700',

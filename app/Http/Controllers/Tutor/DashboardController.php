@@ -46,11 +46,57 @@ class DashboardController extends Controller
             ->whereIn('status', ['aktif', 'pending'])
             ->taughtBy($tutor)
             ->leftJoin('classrooms', 'users.classroom_id', '=', 'classrooms.id')
-            ->selectRaw('COALESCE(classrooms.name, users.class, ?) as class_name, COUNT(users.id) as total', ['Tanpa Kelas'])
-            ->groupBy('class_name')
+            ->selectRaw('COALESCE(classrooms.name, users.class, ?) as class_name, classrooms.id as classroom_id, COUNT(users.id) as total', ['Tanpa Kelas'])
+            ->groupBy('class_name', 'classrooms.id')
             ->orderBy('class_name')
             ->get()
-            ->map(fn($r) => ['name' => $r->class_name, 'total' => (int) $r->total]);
+            ->map(fn($r) => [
+                'name' => $r->class_name,
+                'classroom_id' => $r->classroom_id,
+                'total' => (int) $r->total,
+            ]);
+
+        // Pertemuan per kelas beserta modul yang dipelajari pada tiap pertemuan
+        $classSessions = LearningSession::with(['modules:id,name,module_type', 'classroom:id,name'])
+            ->where(function ($q) use ($tutor) {
+                if ($tutor->role !== 'superadmin') {
+                    $q->where('tutor_id', $tutor->id)
+                      ->orWhereHas('student', fn($s) => $s->taughtBy($tutor));
+                }
+            })
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $groupedMeetings = [];
+        foreach ($classSessions as $session) {
+            $cName = $session->classroom?->name ?? 'Tanpa Kelas';
+            $cId = $session->classroom_id;
+            $d = $session->date?->toDateString() ?? 'nodate';
+            $key = $cName . '_' . $d . '_' . $session->title;
+
+            if (!isset($groupedMeetings[$key])) {
+                $groupedMeetings[$key] = [
+                    'classroom_id' => $cId,
+                    'class_name' => $cName,
+                    'date' => $d,
+                    'date_string' => $session->date_string,
+                    'title' => $session->title,
+                    'modules' => $session->modules->map(fn($m) => [
+                        'id' => $m->id,
+                        'name' => $m->name,
+                        'module_type' => $m->module_type,
+                    ])->values(),
+                    'students_count' => 0,
+                ];
+            }
+            $groupedMeetings[$key]['students_count']++;
+        }
+        $classMeetings = array_values($groupedMeetings);
+
+        // Seluruh modul untuk dropdown cepat pada lembar absensi
+        $modules = \App\Models\Module::orderBy('order_index')
+            ->orderBy('name')
+            ->get(['id', 'name', 'description', 'tools', 'module_type', 'parent_id', 'order_index']);
 
         $stats = [
             'total_students' => $students->count(),
@@ -86,7 +132,6 @@ class DashboardController extends Controller
                 'totalSessions' => (int) $byStatus->sum(),
                 'hadir' => (int) ($byStatus['hadir'] ?? 0),
                 'absen' => (int) ($byStatus['absen'] ?? 0),
-                'reschedule' => (int) ($byStatus['reschedule'] ?? 0),
                 'libur' => (int) ($byStatus['libur'] ?? 0),
                 'akanDatang' => (int) ($byStatus['akan-datang'] ?? 0),
             ];
@@ -102,6 +147,8 @@ class DashboardController extends Controller
                 'email' => $tutor->email,
             ],
             'classes' => $classes,
+            'classMeetings' => $classMeetings,
+            'modules' => $modules,
             'selectedStudentId' => $request->integer('student') ?: null,
         ]);
     }

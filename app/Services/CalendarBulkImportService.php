@@ -8,72 +8,25 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Reader\Csv as CsvReader;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CalendarBulkImportService
 {
     /**
-     * Download formatted Excel (.xlsx) template for bulk calendar schedule import.
-     * Styling matches AICI standard with Teal-600 header and formatted sample data.
+     * Download formatted CSV template for bulk calendar schedule import.
      */
     public function downloadTemplate(): StreamedResponse
     {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Template Jadwal Kalender');
-
-        // Headers
-        // A: Tanggal, B: Status, C: Judul Pertemuan, D: Modul, E: Email Murid, F: Tutor, G: Catatan
         $headers = [
-            'A1' => 'Tanggal',
-            'B1' => 'Status',
-            'C1' => 'Judul Pertemuan',
-            'D1' => 'Modul',
-            'E1' => 'Email Murid',
-            'F1' => 'Tutor',
-            'G1' => 'Catatan',
+            'Tanggal',
+            'Status',
+            'Judul Pertemuan',
+            'Modul',
+            'Email Murid',
+            'Tutor',
+            'Catatan',
         ];
 
-        foreach ($headers as $cell => $text) {
-            $sheet->setCellValue($cell, $text);
-        }
-
-        // Header Styling - Teal-600 background, bold white text, centered
-        $headerRange = 'A1:G1';
-        $sheet->getStyle($headerRange)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => 'FFFFFF'],
-                'size' => 11,
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '0D9488'], // Teal-600 (Signature AICI green/teal)
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => '0F766E'], // Teal-700
-                ],
-            ],
-        ]);
-        $sheet->getRowDimension(1)->setRowHeight(28);
-
-        // Sample Data Rows (Using same students & modules from student import template)
         $sampleData = [
             [
                 '2026-10-15',
@@ -104,12 +57,12 @@ class CalendarBulkImportService
             ],
             [
                 '2026-11-05',
-                'reschedule',
+                'akan-datang',
                 'Pertemuan 3 – Pemrograman Kontrol Motor',
                 'Modul 1 – Pengenalan Robotika',
                 'fauzan@student.aici.id',
                 'tutor@aici.id',
-                'Dijadwalkan ulang atas permohonan siswa',
+                'Membawa kit robotika',
             ],
             [
                 '2026-11-12',
@@ -140,116 +93,97 @@ class CalendarBulkImportService
             ],
         ];
 
-        $rowIdx = 2;
-        foreach ($sampleData as $row) {
-            $colLetter = 'A';
-            foreach ($row as $val) {
-                $sheet->setCellValueExplicit($colLetter . $rowIdx, $val, DataType::TYPE_STRING);
-                $colLetter++;
-            }
-            $sheet->getRowDimension($rowIdx)->setRowHeight(22);
-            $rowIdx++;
-        }
-
-        $lastRow = $rowIdx - 1;
-        $dataRange = "A2:G{$lastRow}";
-        $sheet->getStyle($dataRange)->applyFromArray([
-            'alignment' => [
-                'vertical' => Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => 'E2E8F0'],
-                ],
-            ],
-        ]);
-
-        // Center align for Tanggal (col A) and Status (col B)
-        $sheet->getStyle("A2:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        // Auto width for columns
-        foreach (range('A', 'G') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $fileName = 'template_bulk_jadwal_kalender.xlsx';
+        $fileName = 'template_bulk_jadwal_kalender.csv';
 
         return response()->streamDownload(
-            function () use ($spreadsheet) {
-                $writer = new Xlsx($spreadsheet);
-                $writer->save('php://output');
+            function () use ($headers, $sampleData) {
+                $file = fopen('php://output', 'w');
+                fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
+                fputcsv($file, $headers);
+                foreach ($sampleData as $row) {
+                    fputcsv($file, $row);
+                }
+                fclose($file);
             },
             $fileName,
             [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Cache-Control' => 'max-age=0',
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
             ]
         );
     }
 
     /**
-     * Parse and import calendar schedule entries from Excel (.xlsx, .xls) or CSV file.
+     * Parse and import calendar schedule entries from CSV file.
      *
+     * @param UploadedFile $file
+     * @param int|null $defaultTutorId Optional default tutor ID if row does not specify tutor
      * @return array{success: bool, imported_count: int, errors: array<string>, warnings: array<string>}
      */
-    public function import(UploadedFile $file): array
+    public function import(UploadedFile $file, ?int $defaultTutorId = null): array
     {
         $filePath = $file->getRealPath();
-        $extension = strtolower($file->getClientOriginalExtension());
+        $handle = fopen($filePath, 'r');
+        if (! $handle) {
+            return [
+                'success' => false,
+                'imported_count' => 0,
+                'errors' => ['Tidak dapat membuka file CSV.'],
+                'warnings' => [],
+            ];
+        }
 
-        try {
-            if (in_array($extension, ['csv', 'txt'], true)) {
-                $reader = new CsvReader();
-                $firstLine = fgets(fopen($filePath, 'r'));
-                $delimiter = (strpos($firstLine, ';') !== false && strpos($firstLine, ',') === false) ? ';' : ',';
-                $reader->setDelimiter($delimiter);
-                $spreadsheet = $reader->load($filePath);
-            } else {
-                $spreadsheet = IOFactory::load($filePath);
+        // Auto-detect delimiter
+        $firstLine = fgets($handle);
+        $delimiter = ',';
+        if ($firstLine !== false) {
+            $commaCount = substr_count($firstLine, ',');
+            $semicolonCount = substr_count($firstLine, ';');
+            if ($semicolonCount > $commaCount) {
+                $delimiter = ';';
             }
-        } catch (\Throwable $e) {
+        }
+        rewind($handle);
+
+        $firstRow = fgetcsv($handle, 0, $delimiter);
+        if ($firstRow === false || empty($firstRow)) {
+            fclose($handle);
             return [
                 'success' => false,
                 'imported_count' => 0,
-                'errors' => ['Gagal membaca file spreadsheet: ' . $e->getMessage()],
+                'errors' => ['File CSV kosong atau tidak memiliki baris data.'],
                 'warnings' => [],
             ];
         }
 
-        $sheet = $spreadsheet->getActiveSheet();
-        $highestRow = $sheet->getHighestRow();
-
-        if ($highestRow <= 1) {
-            return [
-                'success' => false,
-                'imported_count' => 0,
-                'errors' => ['File spreadsheet kosong atau hanya memiliki baris header.'],
-                'warnings' => [],
-            ];
+        // Clean BOM if present on first column
+        if (isset($firstRow[0])) {
+            $firstRow[0] = preg_replace('/^\xEF\xBB\xBF/', '', $firstRow[0]);
         }
 
-        // Map header columns dynamically
-        $headerMap = $this->resolveHeaderColumns($sheet);
+        $headerMap = $this->resolveHeaderColumns($firstRow);
 
         $errors = [];
         $warnings = [];
         $validSessions = [];
-        $validStatuses = ['hadir', 'absen', 'libur', 'reschedule', 'akan-datang'];
+        $validStatuses = ['hadir', 'absen', 'libur', 'akan-datang'];
 
         // Preload students and tutors for fast lookup
         $studentsByEmail = User::where('role', 'user')->get()->keyBy(fn($u) => strtolower(trim($u->email)));
         $tutorsByEmail = User::where('role', 'tutor')->get()->keyBy(fn($u) => strtolower(trim($u->email)));
         $tutors = User::where('role', 'tutor')->get();
 
-        for ($row = 2; $row <= $highestRow; $row++) {
-            $tanggalRaw   = $this->getCellValue($sheet->getCell("{$headerMap['date']}{$row}"));
-            $statusRaw    = $this->getCellValue($sheet->getCell("{$headerMap['status']}{$row}"));
-            $judul        = $this->getCellValue($sheet->getCell("{$headerMap['title']}{$row}"));
-            $modulNama    = $this->getCellValue($sheet->getCell("{$headerMap['module']}{$row}"));
-            $emailMurid   = strtolower($this->getCellValue($sheet->getCell("{$headerMap['student_email']}{$row}")));
-            $tutorRaw     = $this->getCellValue($sheet->getCell("{$headerMap['tutor']}{$row}"));
-            $adminNote    = $this->getCellValue($sheet->getCell("{$headerMap['note']}{$row}"));
+        $rowNumber = 1;
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+            $rowNumber++;
+
+            $tanggalRaw   = isset($row[$headerMap['date']]) ? trim((string) $row[$headerMap['date']]) : '';
+            $statusRaw    = isset($row[$headerMap['status']]) ? trim((string) $row[$headerMap['status']]) : '';
+            $judul        = isset($row[$headerMap['title']]) ? trim((string) $row[$headerMap['title']]) : '';
+            $modulNama    = isset($row[$headerMap['module']]) ? trim((string) $row[$headerMap['module']]) : '';
+            $emailMurid   = isset($row[$headerMap['student_email']]) ? strtolower(trim((string) $row[$headerMap['student_email']])) : '';
+            $tutorRaw     = isset($row[$headerMap['tutor']]) ? trim((string) $row[$headerMap['tutor']]) : '';
+            $adminNote    = isset($row[$headerMap['note']]) ? trim((string) $row[$headerMap['note']]) : '';
 
             // Skip completely empty rows
             if ($tanggalRaw === '' && $statusRaw === '' && $emailMurid === '') {
@@ -257,7 +191,7 @@ class CalendarBulkImportService
             }
 
             if ($tanggalRaw === '') {
-                $errors[] = "Baris {$row}: Tanggal wajib diisi.";
+                $errors[] = "Baris {$rowNumber}: Tanggal wajib diisi.";
                 continue;
             }
 
@@ -271,7 +205,7 @@ class CalendarBulkImportService
             foreach ($dateStrings as $dateStr) {
                 $dateCarbon = $this->parseDate($dateStr);
                 if (! $dateCarbon) {
-                    $errors[] = "Baris {$row}: Format tanggal '{$dateStr}' tidak valid. Gunakan format YYYY-MM-DD atau DD/MM/YYYY.";
+                    $errors[] = "Baris {$rowNumber}: Format tanggal '{$dateStr}' tidak valid. Gunakan format YYYY-MM-DD atau DD/MM/YYYY.";
                 } else {
                     $parsedDates[] = $dateCarbon;
                 }
@@ -288,23 +222,23 @@ class CalendarBulkImportService
             }
 
             if (! in_array($statusNormalized, $validStatuses, true)) {
-                $errors[] = "Baris {$row}: Status '{$statusRaw}' tidak valid. Pilihan: " . implode(', ', $validStatuses);
+                $errors[] = "Baris {$rowNumber}: Status '{$statusRaw}' tidak valid. Pilihan: " . implode(', ', $validStatuses);
                 continue;
             }
 
             // Validasi email murid
             if ($emailMurid === '') {
-                $errors[] = "Baris {$row}: Email Murid wajib diisi.";
+                $errors[] = "Baris {$rowNumber}: Email Murid wajib diisi.";
                 continue;
             }
 
             if (! isset($studentsByEmail[$emailMurid])) {
-                $errors[] = "Baris {$row}: Murid dengan email '{$emailMurid}' tidak ditemukan di sistem.";
+                $errors[] = "Baris {$rowNumber}: Murid dengan email '{$emailMurid}' tidak ditemukan di sistem.";
                 continue;
             }
 
             $student = $studentsByEmail[$emailMurid];
-            $tutorId = $student->tutor_id;
+            $tutorId = $defaultTutorId ?? $student->tutor_id;
 
             // Resolve Tutor jika ditentukan
             if ($tutorRaw !== '') {
@@ -319,7 +253,7 @@ class CalendarBulkImportService
                     if ($foundTutor) {
                         $tutorId = $foundTutor->id;
                     } else {
-                        $warnings[] = "Baris {$row}: Tutor '{$tutorRaw}' tidak ditemukan, menggunakan tutor binaan murid.";
+                        $warnings[] = "Baris {$rowNumber}: Tutor '{$tutorRaw}' tidak ditemukan, menggunakan tutor binaan murid.";
                     }
                 }
             }
@@ -337,7 +271,7 @@ class CalendarBulkImportService
                 $humanDateString = $dateCarbon->translatedFormat('l, d F Y');
 
                 $validSessions[] = [
-                    'row' => $row,
+                    'row' => $rowNumber,
                     'user_id' => $student->id,
                     'tutor_id' => $tutorId,
                     'classroom_id' => $student->classroom_id,
@@ -351,6 +285,8 @@ class CalendarBulkImportService
             }
         }
 
+        fclose($handle);
+
         if (! empty($errors)) {
             return [
                 'success' => false,
@@ -363,7 +299,7 @@ class CalendarBulkImportService
         if (empty($validSessions)) {
             return [
                 'success' => false,
-                'errors' => ['File spreadsheet tidak memuat baris jadwal yang valid untuk diimpor.'],
+                'errors' => ['File CSV tidak memuat baris jadwal yang valid untuk diimpor.'],
                 'warnings' => $warnings,
                 'imported_count' => 0,
             ];
@@ -416,16 +352,13 @@ class CalendarBulkImportService
     }
 
     /**
-     * Map header columns dynamically by header name or fall back to positional defaults.
+     * Map header columns dynamically by header name or fall back to positional indices.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
-     * @return array<string, string>
+     * @param array<int, string> $headerRow
+     * @return array<string, int>
      */
-    protected function resolveHeaderColumns($sheet): array
+    protected function resolveHeaderColumns(array $headerRow): array
     {
-        $highestColumn = $sheet->getHighestColumn();
-        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
-
         $map = [
             'date' => null,
             'status' => null,
@@ -436,78 +369,40 @@ class CalendarBulkImportService
             'note' => null,
         ];
 
-        for ($col = 1; $col <= $highestColumnIndex; $col++) {
-            $colLetter = Coordinate::stringFromColumnIndex($col);
-            $header = strtolower(trim((string) $sheet->getCell("{$colLetter}1")->getValue()));
+        foreach ($headerRow as $colIdx => $rawHeader) {
+            $header = strtolower(trim((string) $rawHeader));
 
             if ($map['date'] === null && preg_match('/tanggal|date|jadwal/i', $header)) {
-                $map['date'] = $colLetter;
+                $map['date'] = $colIdx;
             } elseif ($map['status'] === null && preg_match('/status|kehadiran/i', $header)) {
-                $map['status'] = $colLetter;
+                $map['status'] = $colIdx;
             } elseif ($map['title'] === null && preg_match('/judul|title|topik|nama sesi|pertemuan/i', $header)) {
-                $map['title'] = $colLetter;
+                $map['title'] = $colIdx;
             } elseif ($map['module'] === null && preg_match('/modul|module/i', $header)) {
-                $map['module'] = $colLetter;
-            } elseif ($map['student_email'] === null && (preg_match('/murid|siswa|student|email_murid/i', $header) || ($header === 'email' && $map['tutor'] !== $colLetter))) {
-                $map['student_email'] = $colLetter;
+                $map['module'] = $colIdx;
+            } elseif ($map['student_email'] === null && (preg_match('/murid|siswa|student|email_murid/i', $header) || ($header === 'email' && $map['tutor'] !== $colIdx))) {
+                $map['student_email'] = $colIdx;
             } elseif ($map['tutor'] === null && preg_match('/tutor|pengajar|guru/i', $header)) {
-                $map['tutor'] = $colLetter;
+                $map['tutor'] = $colIdx;
             } elseif ($map['note'] === null && preg_match('/catatan|note|keterangan|admin/i', $header)) {
-                $map['note'] = $colLetter;
+                $map['note'] = $colIdx;
             }
         }
 
-        // Positional defaults (compatible with old 5-column CSV: tanggal, status, judul, modul, email_murid)
-        $map['date']          = $map['date'] ?? 'A';
-        $map['status']        = $map['status'] ?? 'B';
-        $map['title']         = $map['title'] ?? 'C';
-        $map['module']        = $map['module'] ?? 'D';
-        $map['student_email'] = $map['student_email'] ?? 'E';
-        $map['tutor']         = $map['tutor'] ?? 'F';
-        $map['note']          = $map['note'] ?? 'G';
+        // Positional defaults (compatible with old 5-column and 7-column CSV)
+        $map['date']          = $map['date'] ?? 0;
+        $map['status']        = $map['status'] ?? 1;
+        $map['title']         = $map['title'] ?? 2;
+        $map['module']        = $map['module'] ?? 3;
+        $map['student_email'] = $map['student_email'] ?? 4;
+        $map['tutor']         = $map['tutor'] ?? 5;
+        $map['note']          = $map['note'] ?? 6;
 
         return $map;
     }
 
     /**
-     * Safely read cell value supporting dates, numbers, and strings.
-     *
-     * @param \PhpOffice\PhpSpreadsheet\Cell\Cell|null $cell
-     */
-    protected function getCellValue($cell): string
-    {
-        if ($cell === null) {
-            return '';
-        }
-
-        if (ExcelDate::isDateTime($cell)) {
-            try {
-                $dt = ExcelDate::excelToDateTimeObject($cell->getValue());
-                return $dt->format('Y-m-d');
-            } catch (\Throwable $e) {
-                // fall through
-            }
-        }
-
-        $val = $cell->getValue();
-        if ($val === null) {
-            return '';
-        }
-
-        if (is_numeric($val) && (float) $val > 30000 && (float) $val < 60000) {
-            try {
-                $dt = ExcelDate::excelToDateTimeObject((float) $val);
-                return $dt->format('Y-m-d');
-            } catch (\Throwable $e) {
-                // fall through
-            }
-        }
-
-        return trim((string) $val);
-    }
-
-    /**
-     * Parse date string supporting ISO, common Indonesian formats, and Excel timestamps.
+     * Parse date string supporting ISO and common Indonesian formats.
      */
     protected function parseDate(string $raw): ?Carbon
     {
@@ -516,11 +411,13 @@ class CalendarBulkImportService
             return null;
         }
 
-        // Numeric Excel timestamp serial
+        // Check if numeric (Excel serial timestamp date if converted from spreadsheet)
         if (is_numeric($raw) && (float) $raw > 30000 && (float) $raw < 60000) {
             try {
-                $dt = ExcelDate::excelToDateTimeObject((float) $raw);
-                return Carbon::instance($dt);
+                if (class_exists(\PhpOffice\PhpSpreadsheet\Shared\Date::class)) {
+                    $dt = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $raw);
+                    return Carbon::instance($dt);
+                }
             } catch (\Throwable $e) {
                 // fall through
             }

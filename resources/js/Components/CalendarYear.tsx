@@ -39,7 +39,7 @@ export default function CalendarYear({ sessions }: Props) {
         const prefix = `${selectedYear}-${monthStr}`;
         const monthSessions = sessions.filter(s => s.date && s.date.startsWith(prefix));
 
-        const completed = monthSessions.filter(s => ['hadir', 'absen', 'reschedule'].includes(s.status)).length;
+        const completed = monthSessions.filter(s => ['hadir', 'absen'].includes(s.status)).length;
         const attended = monthSessions.filter(s => s.status === 'hadir').length;
         const pending = monthSessions.filter(s => s.status === 'akan-datang').length;
 

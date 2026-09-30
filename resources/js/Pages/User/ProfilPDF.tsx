@@ -26,7 +26,7 @@ interface Props {
         class: string | null;
         level: string | null;
         totalSessions: number;
-        attendance: { hadir: number; absen: number; reschedule: number; percentage: number };
+        attendance: { hadir: number; absen: number; percentage: number };
         scores: { interaction: number; focus: number; robotBuilding: number; tools: number; coding: number };
         overallAvg?: number;
         averagePercentage: number;
@@ -54,7 +54,7 @@ export default function ProfilPDF() {
         class: null,
         level: null,
         totalSessions: 0,
-        attendance: { hadir: 0, absen: 0, reschedule: 0, percentage: 0 },
+        attendance: { hadir: 0, absen: 0, percentage: 0 },
         scores: { interaction: 0, focus: 0, robotBuilding: 0, tools: 0, coding: 0 },
         overallAvg: 0,
         averagePercentage: 0,
@@ -245,18 +245,14 @@ export default function ProfilPDF() {
                                 <i className="bi bi-calendar-check text-teal-600"></i>
                                 Statistik Kehadiran
                             </h2>
-                            <div className="grid grid-cols-3 gap-4 mb-6">
+                            <div className="grid grid-cols-2 gap-4 mb-6">
                                 <div className="text-center p-4 bg-green-50 rounded-lg">
                                     <div className="text-3xl font-bold text-green-600">{attendance.hadir}</div>
                                     <div className="text-sm text-gray-600">Hadir</div>
                                 </div>
                                 <div className="text-center p-4 bg-red-50 rounded-lg">
                                     <div className="text-3xl font-bold text-red-600">{attendance.absen}</div>
-                                    <div className="text-sm text-gray-600">Absen</div>
-                                </div>
-                                <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                                    <div className="text-3xl font-bold text-yellow-600">{attendance.reschedule}</div>
-                                    <div className="text-sm text-gray-600">Reschedule</div>
+                                    <div className="text-sm text-gray-600">Tidak Hadir</div>
                                 </div>
                             </div>
                             <ProgressBar value={attendance.percentage} label="Tingkat Kehadiran" color="bg-green-600" />
@@ -462,27 +458,29 @@ export default function ProfilPDF() {
                         </div>
                     </div>
 
-                    {/* Widget Sticky di Sudut Kanan Bawah (Persis Tampilan Awal: Ubah Periode + Tombol Download PDF) */}
-                    {filterInfo && filterInfo.availableRanges.length > 0 && (
+                    {/* Widget Sticky di Sudut Kanan Bawah (Ubah Periode + Tombol Download PDF) */}
+                    {filterInfo && (
                         <div className="print:hidden fixed bottom-6 right-6 bg-white/95 backdrop-blur-md border border-gray-200 shadow-2xl p-4 rounded-2xl flex items-center gap-4 z-50">
                             <i className="bi bi-funnel-fill text-teal-600 text-lg flex-shrink-0" />
-                            <div className="text-xs">
-                                <p className="font-bold text-gray-800 mb-1">Ubah Periode Rapor:</p>
-                                <select
-                                    value={filterInfo.selectedRange}
-                                    onChange={(e) => {
-                                        const currentPath = window.location.pathname;
-                                        window.location.href = `${currentPath}?range=${e.target.value}`;
-                                    }}
-                                    className="pl-3 pr-8 py-2 border border-gray-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-teal-500 font-medium text-gray-700 shadow-2xs cursor-pointer min-w-[200px]"
-                                >
-                                    {filterInfo.availableRanges.map(r => (
-                                        <option key={r.key} value={r.key}>
-                                            {r.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            {filterInfo.availableRanges && filterInfo.availableRanges.length > 0 && (
+                                <div className="text-xs">
+                                    <p className="font-bold text-gray-800 mb-1">Ubah Periode Rapor:</p>
+                                    <select
+                                        value={filterInfo.selectedRange}
+                                        onChange={(e) => {
+                                            const currentPath = window.location.pathname;
+                                            window.location.href = `${currentPath}?range=${e.target.value}`;
+                                        }}
+                                        className="pl-3 pr-8 py-2 border border-gray-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-teal-500 font-medium text-gray-700 shadow-2xs cursor-pointer min-w-[200px]"
+                                    >
+                                        {filterInfo.availableRanges.map(r => (
+                                            <option key={r.key} value={r.key}>
+                                                {r.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                             <button
                                 type="button"
                                 onClick={handleDownloadPdf}

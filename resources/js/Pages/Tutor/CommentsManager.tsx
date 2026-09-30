@@ -51,26 +51,35 @@ const emptyTemplateForm = {
 };
 
 export default function CommentsManager() {
-    const { studentId, student, comments, gradeEntries = [], templates, auth } = usePage().props as unknown as Props & { auth: any };
+    const { studentId, student, comments, gradeEntries = [], templates, configuredPeriods = [], auth } = usePage().props as unknown as Props & {
+        auth: any;
+        configuredPeriods?: Array<{ key: string; label: string; start: number; end: number }>;
+    };
     const isSuperAdmin = auth?.user?.role === 'superadmin';
 
     const { lock } = useStudentLock({ studentId, page: 'comments' });
     const isReadOnly = lock?.locked === true;
 
-    // Menentukan siklus pertemuan yang tersedia berdasarkan gradeEntries
+    // Menentukan siklus pertemuan yang tersedia berdasarkan konfigurasi SuperAdmin atau gradeEntries
     const maxMeeting = gradeEntries.length > 0
         ? Math.max(...gradeEntries.map(g => g.meetingNumber))
         : 4;
 
     const availableRanges: { key: string; label: string; start: number; end: number }[] = [];
-    for (let s = 1; s <= Math.max(maxMeeting, 4); s += 4) {
-        const e = s + 3;
-        availableRanges.push({
-            key: `${s}-${e}`,
-            label: `Pertemuan ${s} - ${e}`,
-            start: s,
-            end: e,
+    if (configuredPeriods && configuredPeriods.length > 0) {
+        configuredPeriods.forEach(p => {
+            availableRanges.push(p);
         });
+    } else {
+        for (let s = 1; s <= Math.max(maxMeeting, 4); s += 4) {
+            const e = s + 3;
+            availableRanges.push({
+                key: `${s}-${e}`,
+                label: `Pertemuan ${s} - ${e}`,
+                start: s,
+                end: e,
+            });
+        }
     }
 
     const [selectedRange, setSelectedRange] = useState<string>(availableRanges[0]?.key ?? '1-4');

@@ -37,6 +37,8 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error'   => $request->session()->get('error'),
+                'csv_errors' => $request->session()->get('csv_errors'),
+                'csv_warnings' => $request->session()->get('csv_warnings'),
             ],
             'supportEmail' => config('app.support_email'),
             'gradeScale' => \App\Models\GradeEntry::MAX_SCORE,

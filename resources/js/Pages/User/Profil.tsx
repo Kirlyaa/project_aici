@@ -36,6 +36,9 @@ export default function Profil() {
     const [activeTab, setActiveTab] = useState<'robot' | 'focus'>('robot');
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [selectedRange, setSelectedRange] = useState<string>('all');
+    const [pdfMode, setPdfMode] = useState<'preset' | 'custom'>('preset');
+    const [customFrom, setCustomFrom] = useState<number>(1);
+    const [customTo, setCustomTo] = useState<number>(4);
     const [selectedCommentCycle, setSelectedCommentCycle] = useState<string>('all');
 
     // Data skor per pertemuan
@@ -426,52 +429,130 @@ export default function Profil() {
                             </button>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                                Rentang Pertemuan Tersedia
-                            </label>
-
-                            {pdfRanges.length > 0 ? (
-                                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                                    {pdfRanges.map(r => (
-                                        <label
-                                            key={r.key}
-                                            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                                                selectedRange === r.key
-                                                    ? 'border-red-600 bg-red-50/70 text-red-900 ring-1 ring-red-500'
-                                                    : 'border-gray-200 hover:bg-gray-50 text-gray-800'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="radio"
-                                                    name="pdf_range"
-                                                    value={r.key}
-                                                    checked={selectedRange === r.key}
-                                                    onChange={() => setSelectedRange(r.key)}
-                                                    className="w-4 h-4 text-red-600 focus:ring-red-500"
-                                                />
-                                                <div>
-                                                    <p className="font-bold text-xs">{r.label}</p>
-                                                    <p className="text-[11px] text-gray-500">
-                                                        {r.key === 'all'
-                                                            ? 'Rata-rata kumulatif seluruh pertemuan murid'
-                                                            : `Rata-rata 4 pertemuan (${r.start} s/d ${r.end})`}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-600">
-                                                {r.key === 'all' ? 'Semua' : '4 Pertemuan'}
-                                            </span>
-                                        </label>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-4 bg-gray-50 rounded-xl text-center text-xs text-gray-500">
-                                    Belum ada data pertemuan nilai untuk murid ini.
-                                </div>
-                            )}
+                        {/* Tabs Switcher: Pilihan Preset vs Kustom */}
+                        <div className="flex bg-gray-100 p-1 rounded-xl">
+                            <button
+                                type="button"
+                                onClick={() => setPdfMode('preset')}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                                    pdfMode === 'preset'
+                                        ? 'bg-white text-gray-900 shadow-xs'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <i className="bi bi-calendar-check mr-1.5" /> Periode Rapor
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPdfMode('custom')}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                                    pdfMode === 'custom'
+                                        ? 'bg-white text-gray-900 shadow-xs'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <i className="bi bi-sliders mr-1.5" /> Rentang Bebas
+                            </button>
                         </div>
+
+                        {pdfMode === 'preset' ? (
+                            <div className="space-y-2">
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                                    Pilihan Periode (Ditetapkan Super Admin)
+                                </label>
+
+                                {pdfRanges.length > 0 ? (
+                                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                        {pdfRanges.map(r => (
+                                            <label
+                                                key={r.key}
+                                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                                    selectedRange === r.key
+                                                        ? 'border-red-600 bg-red-50/70 text-red-900 ring-1 ring-red-500'
+                                                        : 'border-gray-200 hover:bg-gray-50 text-gray-800'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="radio"
+                                                        name="pdf_range"
+                                                        value={r.key}
+                                                        checked={selectedRange === r.key}
+                                                        onChange={() => setSelectedRange(r.key)}
+                                                        className="w-4 h-4 text-red-600 focus:ring-red-500"
+                                                    />
+                                                    <div>
+                                                        <p className="font-bold text-xs">{r.label}</p>
+                                                        <p className="text-[11px] text-gray-500">
+                                                            {r.key === 'all'
+                                                                ? 'Rata-rata kumulatif seluruh pertemuan murid'
+                                                                : `Rata-rata pertemuan ${r.start} s/d ${r.end}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-600">
+                                                    {r.key === 'all' ? 'Semua' : `${r.end - r.start + 1} Sesi`}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-4 bg-gray-50 rounded-xl text-center text-xs text-gray-500">
+                                        Belum ada data pertemuan nilai untuk murid ini.
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="space-y-4 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                                <div>
+                                    <p className="text-xs font-bold text-gray-800 mb-1">Tentukan Pertemuan Sendiri</p>
+                                    <p className="text-[11px] text-gray-500">
+                                        Pilih pertemuan awal dan akhir secara bebas (misal hanya pertemuan 6 s/d 7, atau 1 s/d 3).
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                                            Dari Pertemuan
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={200}
+                                            value={customFrom}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value) || 1;
+                                                setCustomFrom(val);
+                                                if (val > customTo) setCustomTo(val);
+                                            }}
+                                            className="w-full text-xs px-3 py-2 border border-gray-300 rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-red-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                                            Sampai Pertemuan
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min={customFrom}
+                                            max={200}
+                                            value={customTo}
+                                            onChange={(e) => setCustomTo(Math.max(customFrom, parseInt(e.target.value) || customFrom))}
+                                            className="w-full text-xs px-3 py-2 border border-gray-300 rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-red-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="p-2.5 bg-red-50/70 border border-red-200 rounded-xl text-[11px] text-red-800 flex items-center gap-2">
+                                    <i className="bi bi-info-circle-fill text-red-600 flex-shrink-0" />
+                                    <span>
+                                        Mencetak rapor khusus untuk: <strong>Pertemuan {customFrom} s/d {customTo}</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex justify-end gap-2 pt-2 border-t">
                             <button
@@ -482,7 +563,11 @@ export default function Profil() {
                                 Batal
                             </button>
                             <a
-                                href={`/profil/pdf?range=${selectedRange}`}
+                                href={
+                                    pdfMode === 'custom'
+                                        ? `/profil/pdf?from=${customFrom}&to=${customTo}`
+                                        : `/profil/pdf?range=${selectedRange}`
+                                }
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={() => setShowPdfModal(false)}

@@ -44,27 +44,24 @@ export default function CalendarMonth({ sessions }: Props) {
     };
 
     const statusColors = {
-        hadir: 'bg-green-100 text-green-700',
-        absen: 'bg-red-100 text-red-700',
-        reschedule: 'bg-yellow-100 text-yellow-700',
-        libur: 'bg-orange-100 text-orange-700',
-        'akan-datang': 'bg-blue-100 text-blue-700',
+        hadir: 'bg-blue-100 text-blue-700',
+        absen: 'bg-amber-100 text-amber-800',
+        libur: 'bg-red-100 text-red-700',
+        'akan-datang': 'bg-purple-100 text-purple-700',
     };
 
     const statusDots = {
-        hadir: 'bg-green-500',
-        absen: 'bg-red-500',
-        reschedule: 'bg-yellow-500',
-        libur: 'bg-orange-500',
-        'akan-datang': 'bg-blue-500',
+        hadir: 'bg-blue-500',
+        absen: 'bg-amber-400',
+        libur: 'bg-red-500',
+        'akan-datang': 'bg-purple-400',
     };
 
     const statusIcons = {
-        hadir: 'bi-check-circle-fill text-green-500',
-        absen: 'bi-x-circle-fill text-red-500',
-        reschedule: 'bi-arrow-repeat text-yellow-500',
-        libur: 'bi-bookmark-fill text-orange-500',
-        'akan-datang': 'bi-calendar-event-fill text-blue-500',
+        hadir: 'bi-check-circle-fill text-blue-500',
+        absen: 'bi-x-circle-fill text-amber-500',
+        libur: 'bi-bookmark-fill text-red-500',
+        'akan-datang': 'bi-calendar-event-fill text-purple-500',
     };
 
     const prevMonth = () => {
@@ -159,10 +156,9 @@ export default function CalendarMonth({ sessions }: Props) {
                     const isToday = !isPrevMonth && !isNextMonth && day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
 
                     const statusColorClasses: Record<string, string> = {
-                        hadir: 'bg-green-500 text-white',
-                        absen: 'bg-red-500 text-white',
-                        reschedule: 'bg-yellow-400 text-gray-900',
-                        libur: 'bg-blue-500 text-white',
+                        hadir: 'bg-blue-500 text-white',
+                        absen: 'bg-amber-400 text-gray-900',
+                        libur: 'bg-red-500 text-white',
                         'akan-datang': 'bg-purple-400 text-white',
                     };
 
@@ -177,28 +173,26 @@ export default function CalendarMonth({ sessions }: Props) {
                         >
                             <span className="font-bold text-xs">{day}</span>
                             {status && !isToday && (
-                                <span className="text-[10px] leading-tight opacity-90">{status}</span>
+                                <span className="text-[10px] leading-tight opacity-90">
+                                    {status === 'absen' ? 'Tidak Hadir' : status}
+                                </span>
                             )}
                         </div>
                     );
                 })}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2 pt-4 border-t border-gray-100 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pt-4 border-t border-gray-100 text-xs">
                 <div className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded bg-green-500 inline-block flex-shrink-0" />
+                    <span className="w-4 h-4 rounded bg-blue-500 inline-block flex-shrink-0" />
                     <span className="text-gray-600">Hadir</span>
                 </div>
                 <div className="flex items-center gap-2">
+                    <span className="w-4 h-4 rounded bg-amber-400 inline-block flex-shrink-0" />
+                    <span className="text-gray-600">Tidak Hadir</span>
+                </div>
+                <div className="flex items-center gap-2">
                     <span className="w-4 h-4 rounded bg-red-500 inline-block flex-shrink-0" />
-                    <span className="text-gray-600">Absen</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded bg-yellow-400 inline-block flex-shrink-0" />
-                    <span className="text-gray-600">Reschedule</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded bg-blue-500 inline-block flex-shrink-0" />
                     <span className="text-gray-600">Libur</span>
                 </div>
                 <div className="flex items-center gap-2">

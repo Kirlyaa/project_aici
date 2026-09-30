@@ -57,12 +57,11 @@ function getSessionForDate(sessions: SessionData[], year: number, month: number,
     return sessions.find(s => (s.date ?? '').startsWith(iso));
 }
 
-// R8: blok warna penuh per status, libur = BIRU
+// R8: blok warna penuh per status: Hadir = BIRU, Libur = MERAH, Tidak Hadir = KUNING
 const STATUS_BG: Record<SessionStatus, string> = {
-    hadir: 'bg-green-500 text-white',
-    libur: 'bg-blue-500 text-white',
-    absen: 'bg-red-500 text-white',
-    reschedule: 'bg-yellow-400 text-gray-900',
+    hadir: 'bg-blue-500 text-white',
+    libur: 'bg-red-500 text-white',
+    absen: 'bg-amber-400 text-gray-900',
     'akan-datang': 'bg-purple-400 text-white',
 };
 
@@ -210,7 +209,6 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
     const statusCounts = {
         libur: monthSessions.filter(s => s.status === 'libur').length,
         absen: monthSessions.filter(s => s.status === 'absen').length,
-        reschedule: monthSessions.filter(s => s.status === 'reschedule').length,
         'akan-datang': monthSessions.filter(s => s.status === 'akan-datang').length,
         hadir: monthSessions.filter(s => s.status === 'hadir').length,
     };
@@ -292,7 +290,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                 <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 mb-1">Kelola Kalender Murid</h1>
-                        <p className="text-gray-600">Tandai tanggal libur, absen, reschedule, hadir, atau akan datang</p>
+                        <p className="text-gray-600">Tandai tanggal libur, absen, hadir, atau akan datang</p>
                     </div>
                     {/* Aksi Bulk: Hapus Semua Jadwal & Import CSV */}
                     <div className="flex items-center gap-2">
@@ -314,37 +312,37 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                             onClick={() => setShowCsvPanel(v => !v)}
                             className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors text-sm shadow-sm"
                         >
-                            <i className="bi bi-file-earmark-spreadsheet" /> Import Excel / CSV
+                            <i className="bi bi-file-earmark-spreadsheet" /> Import CSV
                         </button>
                     </div>
                 </div>
 
-                {/* Panel Import Excel / CSV */}
+                {/* Panel Import CSV */}
                 {showCsvPanel && (
                     <div className="bg-white rounded-xl border border-teal-100 shadow-sm p-6 mb-6">
                         <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                             <h3 className="font-bold text-gray-900 flex items-center gap-2 text-base">
-                                <i className="bi bi-file-earmark-spreadsheet text-teal-600 text-lg" /> Import Jadwal Kalender Secara Massal (Excel / CSV)
+                                <i className="bi bi-file-earmark-spreadsheet text-teal-600 text-lg" /> Import Jadwal Kalender Secara Massal (CSV)
                             </h3>
                             <a
                                 href="/superadmin/calendar/template"
-                                download="template_bulk_jadwal_kalender.xlsx"
+                                download="template_bulk_jadwal_kalender.csv"
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold transition"
                             >
-                                <i className="bi bi-file-earmark-excel text-emerald-600" /> Download Template Excel (.xlsx)
+                                <i className="bi bi-file-earmark-arrow-down text-emerald-600" /> Download Template CSV (.csv)
                             </a>
                         </div>
                         
                         <p className="text-sm text-gray-600 mb-3">
-                            Fitur ini memungkinkan Anda memasukkan puluhan atau ratusan jadwal pertemuan murid sekaligus dalam 1 kali upload file spreadsheet Excel (<code className="text-emerald-700 font-semibold">.xlsx</code>, <code className="text-emerald-700 font-semibold">.xls</code>) atau file CSV.
+                            Fitur ini memungkinkan Anda memasukkan puluhan atau ratusan jadwal pertemuan murid sekaligus dalam 1 kali upload file <code className="text-emerald-700 font-semibold">.csv</code> yang ringan dan hemat memori.
                         </p>
 
                         <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-700 leading-relaxed overflow-x-auto">
-                            <div className="font-bold text-slate-800 mb-1 font-sans">Format Kolom Header Template Excel:</div>
+                            <div className="font-bold text-slate-800 mb-1 font-sans">Format Kolom Header Template CSV:</div>
                             <div className="text-teal-700 font-bold mb-2">Tanggal | Status | Judul Pertemuan | Modul | Email Murid | Tutor | Catatan</div>
                             <div className="text-slate-600 font-sans space-y-1">
-                                <div>• <strong>Tanggal</strong>: Format tanggal Excel atau teks <code className="bg-slate-200 px-1 py-0.5 rounded">YYYY-MM-DD</code> (contoh: 2026-10-15) atau <code className="bg-slate-200 px-1 py-0.5 rounded">DD/MM/YYYY</code></div>
-                                <div>• <strong>Status</strong>: <code className="bg-slate-200 px-1 py-0.5 rounded">hadir</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">absen</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">reschedule</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">libur</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">akan-datang</code></div>
+                                <div>• <strong>Tanggal</strong>: Format tanggal teks <code className="bg-slate-200 px-1 py-0.5 rounded">YYYY-MM-DD</code> (contoh: 2026-10-15) atau <code className="bg-slate-200 px-1 py-0.5 rounded">DD/MM/YYYY</code></div>
+                                <div>• <strong>Status</strong>: <code className="bg-slate-200 px-1 py-0.5 rounded">hadir</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">absen</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">libur</code> | <code className="bg-slate-200 px-1 py-0.5 rounded">akan-datang</code></div>
                                 <div>• <strong>Judul Pertemuan</strong>: Nama judul atau topik pertemuan sesi</div>
                                 <div>• <strong>Modul</strong>: Nama modul pembelajaran (akan otomatis dikaitkan atau dibuat jika belum ada)</div>
                                 <div>• <strong>Email Murid</strong>: Email murid terdaftar di sistem</div>
@@ -357,7 +355,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                             <input
                                 ref={csvInputRef}
                                 type="file"
-                                accept=".xlsx,.xls,.csv,.txt"
+                                accept=".csv,.txt"
                                 className="text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-50 file:text-teal-700 file:font-semibold hover:file:bg-teal-100 cursor-pointer"
                             />
                             <button
@@ -421,12 +419,11 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                         </div>
 
                         {/* Legenda */}
-                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-6 pt-4 border-t border-gray-200">
+                        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mt-6 pt-4 border-t border-gray-200">
                             {[
-                                { label: 'Hadir', cls: 'bg-green-500' },
-                                { label: 'Libur', cls: 'bg-blue-500' },
-                                { label: 'Absen', cls: 'bg-red-500' },
-                                { label: 'Reschedule', cls: 'bg-yellow-400' },
+                                { label: 'Hadir', cls: 'bg-blue-500' },
+                                { label: 'Libur', cls: 'bg-red-500' },
+                                { label: 'Tidak Hadir', cls: 'bg-amber-400' },
                                 { label: 'Akan Datang', cls: 'bg-purple-400' },
                                 { label: 'Normal', cls: 'bg-gray-100 border border-gray-300' },
                             ].map(({ label, cls }) => (
@@ -463,10 +460,9 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                             <div className="space-y-3">
                                 {[
                                     { label: 'Total Sesi', value: monthSessions.length, color: 'text-gray-900' },
-                                    { label: 'Hadir', value: statusCounts.hadir, color: 'text-green-600' },
-                                    { label: 'Libur', value: statusCounts.libur, color: 'text-blue-600' },
-                                    { label: 'Absen', value: statusCounts.absen, color: 'text-red-600' },
-                                    { label: 'Reschedule', value: statusCounts.reschedule, color: 'text-yellow-600' },
+                                    { label: 'Hadir', value: statusCounts.hadir, color: 'text-blue-600' },
+                                    { label: 'Libur', value: statusCounts.libur, color: 'text-red-600' },
+                                    { label: 'Tidak Hadir', value: statusCounts.absen, color: 'text-amber-600' },
                                     { label: 'Akan Datang', value: statusCounts['akan-datang'], color: 'text-purple-600' },
                                 ].map(({ label, value, color }) => (
                                     <div key={label} className="flex justify-between items-center">
@@ -507,8 +503,7 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
                                     <option value="normal">Normal (hapus tanda)</option>
                                     <option value="hadir">Hadir</option>
                                     <option value="libur">Libur</option>
-                                    <option value="absen">Absen</option>
-                                    <option value="reschedule">Reschedule</option>
+                                    <option value="absen">Tidak Hadir</option>
                                     <option value="akan-datang">Akan Datang</option>
                                 </select>
                             </div>
