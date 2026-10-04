@@ -42,6 +42,9 @@ class HandleInertiaRequests extends Middleware
             ],
             'supportEmail' => config('app.support_email'),
             'gradeScale' => \App\Models\GradeEntry::MAX_SCORE,
+            'holidayAnnouncement' => fn () => $request->user() 
+                ? app(\App\Services\HolidayAnnouncementService::class)->getActiveAnnouncement($request->user()->role)
+                : null,
         ];
     }
 }

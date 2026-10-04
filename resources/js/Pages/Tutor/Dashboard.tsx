@@ -2,6 +2,8 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import FlashToast from '@/Components/FlashToast';
 import TutorLiveChatBanner from '@/Components/TutorLiveChatBanner';
+import HolidayAnnouncementModal from '@/Components/HolidayAnnouncementModal';
+import HolidayAnnouncementBadge from '@/Components/HolidayAnnouncementBadge';
 import ClassAttendanceModal, { ModuleItem } from '@/Components/Tutor/ClassAttendanceModal';
 
 interface Student {
@@ -140,6 +142,8 @@ export default function TutorDashboard() {
     return (
         <div className="min-h-screen bg-gray-50">
             <FlashToast />
+            <HolidayAnnouncementModal />
+            <HolidayAnnouncementBadge />
             <Head title="Dashboard Tutor" />
 
             {/* Navbar */}

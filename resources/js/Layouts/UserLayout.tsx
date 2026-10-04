@@ -2,6 +2,8 @@ import { PropsWithChildren } from 'react';
 import UserNavbar from '@/Components/UserNavbar';
 import MobileNavbar from '@/Components/MobileNavbar';
 import FlashToast from '@/Components/FlashToast';
+import HolidayAnnouncementModal from '@/Components/HolidayAnnouncementModal';
+import HolidayAnnouncementBadge from '@/Components/HolidayAnnouncementBadge';
 import { usePage } from '@inertiajs/react';
 
 interface UserLayoutProps {
@@ -15,6 +17,8 @@ export default function UserLayout({ currentPage, children }: PropsWithChildren<
     return (
         <div className="min-h-screen bg-gray-50">
             <FlashToast />
+            <HolidayAnnouncementModal />
+            <HolidayAnnouncementBadge />
             <UserNavbar userName={auth?.user?.name || 'User'} userRole={userRole} />
             <main className="pb-20 md:pb-8">
                 {children}

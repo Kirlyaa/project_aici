@@ -507,6 +507,47 @@ export default function SuperAdminDashboard() {
                                 <i className="bi bi-sliders mr-2" /> Atur Periode Rapor PDF
                             </Link>
                         </div>
+                    </div>
+
+                    {/* Surat Pengumuman Libur (Pop-up 3D Siswa & Tutor) */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-amber-500 to-yellow-600 px-6 py-4">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <i className="bi bi-envelope-paper-heart-fill" />
+                                Surat Pengumuman Libur
+                            </h2>
+                            <p className="text-amber-100 text-sm mt-1">Pop-up amplop 3D interaktif saat siswa/tutor login.</p>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div className="bg-amber-50 rounded-lg p-4 border border-amber-100">
+                                <p className="text-sm font-semibold text-amber-900">Notifikasi Interaktif 3D Mail</p>
+                                <p className="text-xs text-amber-700 mt-1">
+                                    Umumkan tanggal libur (misal tgl 7). Saat murid membuka web, akan muncul kartu pop-up amplop 3D yang bisa diunduh surat resminya.
+                                </p>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <ul className="space-y-2 text-xs text-gray-600">
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-amber-600" /> Atur tanggal libur & isi surat maklumat
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-amber-600" /> Upload surat resmi PDF / scan dokumen
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <i className="bi bi-check-circle-fill text-amber-600" /> Otomatis tampil 1x per user (super ringan via JSON)
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <Link
+                                href="/superadmin/holiday-announcement"
+                                className="block text-center mt-6 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg transition-colors shadow-sm"
+                            >
+                                <i className="bi bi-envelope-open-fill mr-2" /> Kelola Surat Libur
+                            </Link>
+                        </div>
                     </div>                </div>
             </div>
         </div>

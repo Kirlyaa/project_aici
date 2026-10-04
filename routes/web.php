@@ -43,6 +43,18 @@ Route::get('/landing', function () {
     ]);
 })->name('landing');
 
+Route::get('/program', fn() => Inertia::render('Program'))->name('program');
+
+Route::get('/profil', fn() => Inertia::render('Profil'))->name('profil');
+
+Route::get('/fasilitas', fn() => Inertia::render('Fasilitas'))->name('fasilitas');
+
+Route::get('/galeri', fn() => Inertia::render('Galeri'))->name('galeri');
+
+Route::get('/riset', fn() => Inertia::render('Riset'))->name('riset');
+
+Route::get('/kontak', fn() => Inertia::render('Kontak'))->name('kontak');
+
 Route::get('/faq', fn() => Inertia::render('FAQ'))->name('faq');
 
 Route::middleware(['auth', 'active', 'throttle:15,1'])->group(function () {
@@ -222,5 +234,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('/report-periods/{period}', [SuperAdminReportPeriodController::class, 'update'])->name('report-periods.update');
         Route::delete('/report-periods/{period}', [SuperAdminReportPeriodController::class, 'destroy'])->name('report-periods.destroy');
         Route::patch('/report-periods/{period}/toggle-status', [SuperAdminReportPeriodController::class, 'toggleStatus'])->name('report-periods.toggle-status');
+
+        // Pengumuman Libur (Holiday Announcement) Management (Hanya SuperAdmin)
+        Route::get('/holiday-announcement', [\App\Http\Controllers\SuperAdmin\HolidayAnnouncementController::class, 'index'])->name('holiday-announcement.index');
+        Route::post('/holiday-announcement', [\App\Http\Controllers\SuperAdmin\HolidayAnnouncementController::class, 'update'])->name('holiday-announcement.update');
+        Route::patch('/holiday-announcement/toggle', [\App\Http\Controllers\SuperAdmin\HolidayAnnouncementController::class, 'toggle'])->name('holiday-announcement.toggle');
+        Route::delete('/holiday-announcement', [\App\Http\Controllers\SuperAdmin\HolidayAnnouncementController::class, 'destroy'])->name('holiday-announcement.destroy');
     });
 });
