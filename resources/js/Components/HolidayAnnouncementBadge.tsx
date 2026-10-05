@@ -16,7 +16,7 @@ export default function HolidayAnnouncementBadge() {
             type="button"
             onClick={handleOpen}
             title="Buka Surat Pengumuman Libur"
-            className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 group flex items-center gap-3.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#034d52] hover:bg-[#02383c] text-white shadow-2xl shadow-teal-950/30 hover:shadow-teal-950/40 hover:scale-105 active:scale-95 transition-all border border-teal-500/40"
+            className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 group flex items-center gap-3.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#0B6282] hover:bg-[#08455c] text-white shadow-2xl shadow-[#062d3d]/30 hover:shadow-[#062d3d]/40 hover:scale-105 active:scale-95 transition-all border border-cyan-400/40"
         >
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-teal-800/90 text-amber-300 flex items-center justify-center shrink-0 border border-teal-600/60 shadow-inner group-hover:scale-105 transition-transform">
                 <i className="bi bi-file-earmark-text-fill text-lg sm:text-xl text-amber-300" />

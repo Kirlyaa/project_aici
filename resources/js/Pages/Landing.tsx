@@ -1,561 +1,560 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import PublicNavbar from '@/Components/PublicNavbar';
+import PublicFooter from '@/Components/PublicFooter';
 
 export default function Landing() {
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
+    const metrics = [
+        { value: '06', label: 'Ruang Lab Riset & AI', desc: 'Fasilitas komputasi & robotika modern di FMIPA UI' },
+        { value: '1.200+', label: 'Peserta & Pendidik Terlatih', desc: 'Mencakup siswa SD-SMA hingga dosen perguruan tinggi' },
+        { value: '04', label: 'Jenjang Edukasi Terstruktur', desc: 'Kurikulum bertingkat dari literasi dasar hingga deep tech' },
+        { value: '100%', label: 'Hands-on Learning', desc: 'Praktik langsung kit robotik, sensor, & model cerdas' },
+    ];
+
     const programs = [
         {
-            title: "Fun Learning With AI Untuk Siswa SD/MI, SMP/MTs Dan SMA/MA/SMK",
-            desc: "Kegiatan belajar yang diselenggarakan oleh AiCI bertujuan untuk memperkenalkan dan meningkatkan pengetahuan serta keterampilan peserta didik dalam bidang Artificial Intelligence ...",
-            linkText: "Lihat Kurikulum",
-            linkHref: "#",
-            accentColor: "bg-amber-500",
+            code: 'PROG-01',
+            category: 'K-12 Education',
+            title: 'Fun Learning With AI (SD, SMP, & SMA)',
+            desc: 'Kurikulum pengenalan konsep kecerdasan artifisial, logika komputasi, dan robotika interaktif yang disesuaikan dengan usia tumbuh kembang peserta didik.',
+            badge: 'Usia 7 - 18 Tahun',
+            link: '/program',
         },
         {
-            title: "AI For Education",
-            desc: "Kegiatan pelatihan implementasi AI dalam bidang pendidikan untuk Guru dan Dosen. Bertujuan untuk meningkatkan pengetahuan, keterampilan, serta melatih kemampuan guru dan dosen dalam mengembangkan pembelajaran artificial intelligence ...",
-            linkText: "Lihat Kurikulum",
-            linkHref: "#",
-            accentColor: "bg-amber-500",
+            code: 'PROG-02',
+            category: 'Teacher Training',
+            title: 'AI For Education (Guru & Dosen)',
+            desc: 'Pelatihan intensif integrasi AI generatif, otomasi asesmen, dan media pedagogi berbasis teknologi untuk memperkuat kapasitas tenaga pendidik di era digital.',
+            badge: 'Sertifikasi Pendidik',
+            link: '/program',
         },
         {
-            title: "AI Day",
-            desc: "AI Day merupakan sebuah kegiatan yang dilaksanakan selama satu hari dengan tujuan untuk menumbuhkan minat, pengetahuan, dan keterampilan peserta didik dalam bidang artificial intelligence dengan cara yang menyenangkan (fun learning) ...",
-            linkText: "Lihat Jadwal",
-            linkHref: "#",
-            accentColor: "bg-amber-500",
+            code: 'PROG-03',
+            category: 'One-Day Workshop',
+            title: 'AI Day & Edu Fair',
+            desc: 'Eksplorasi satu hari penuh perakitan robotik, live-demo computer vision, dan pengenalan inovasi teknologi mutakhir untuk menumbuhkan minat riset generasi muda.',
+            badge: 'Workshop Terbuka',
+            link: '/program',
         },
         {
-            title: "AI Edu Fair",
-            desc: "Sebuah kegiatan yang dilaksanakan selama satu hari dengan tujuan untuk menumbuhkan rasa ingin tahu, pengetahuan, dan keterampilan peserta didik dalam bidang artificial intelligence. Selain itu, pada kegiatan ini dikembangkan juga beberapa soft skills ...",
-            linkText: "Pelajari Pameran",
-            linkHref: "#",
-            accentColor: "bg-amber-500",
+            code: 'PROG-04',
+            category: 'Kampus Merdeka',
+            title: 'Preparing AI Talents (Studi Independen)',
+            desc: 'Program kemitraan MSIB bersama Departemen Fisika FMIPA UI dan praktisi industri untuk membina talenta masa depan machine learning dan implementasi robotika terapan.',
+            badge: 'Mahasiswa / MSIB',
+            link: '/program',
         },
         {
-            title: "Preparing Artificial Intelligence (AI) Talents",
-            desc: "Merupakan program PT Artifisial Intelegensia Indonesia (AiCI) bekerjasama dengan Departemen Fisika FMIPA UI dan beberapa praktisi dalam lingkungan kerja start-up dan industri dalam bentuk Studi Independen Bersertifikat Kampus Merdeka ...",
-            linkText: "Mitra Kampus Merdeka",
-            linkHref: "#",
-            accentColor: "bg-amber-500",
+            code: 'PROG-05',
+            category: 'Institutional',
+            title: 'AI for Healthcare & Digital Innovation',
+            desc: 'Pelatihan dan riset kolaboratif pemanfaatan AI dalam simulasi klinik medis, otomasi data analitik, serta transformasi digital bagi organisasi dan industri.',
+            badge: 'Kemitraan Industri',
+            link: '/program',
         },
     ];
 
     const testimonials = [
         {
-            name: "Kahfi",
-            role: "SISWA SD",
-            quote: "“Cool!”",
-            image: "/images/landing/avatar-kahfi.jpg",
+            name: 'Kahfi',
+            role: 'Siswa Sekolah Dasar',
+            school: 'Peserta Fun Learning AI',
+            quote: 'Belajar merakit robot dan melatih komputer ternyata seru sekali! Tidak membosankan karena kita langsung praktik di lab bersama kakak tutor.',
+            image: '/images/landing/avatar-kahfi.jpg',
         },
         {
-            name: "Sachio",
-            role: "SISWA SMP",
-            quote: "“Hi Tech, robots and AI are our future, because now technology is increasingly being used”",
-            image: "/images/landing/avatar-sachio.jpg",
+            name: 'Sachio',
+            role: 'Siswa Sekolah Menengah Pertama',
+            school: 'Peserta AI Robotics Camp',
+            quote: 'Teknologi AI dan robotika adalah masa depan kita. Di AiCI kami diajarkan bukan cuma pakai aplikasi, tapi mengerti bagaimana cara sistem berpikir.',
+            image: '/images/landing/avatar-sachio.jpg',
         },
         {
-            name: "Aulia",
-            role: "SISWA SMA",
-            quote: "“The problem is that the world in the future will also be more sophisticated than now, there will definitely be many more”",
-            image: "/images/landing/avatar-aulia.jpg",
+            name: 'Aulia',
+            role: 'Siswi Sekolah Menengah Atas',
+            school: 'Peserta Program AI Talent',
+            quote: 'Program di FMIPA UI ini membuka wawasan saya tentang riset computer vision dan machine learning sebelum saya memutuskan jurusan kuliah nanti.',
+            image: '/images/landing/avatar-aulia.jpg',
         },
         {
-            name: "Sandhya",
-            role: "SISWA SD",
-            quote: "“Cool, That's Clever!”",
-            image: "/images/landing/avatar-sandhya.jpg",
+            name: 'Sandhya',
+            role: 'Siswa Sekolah Dasar',
+            school: 'Peserta Coding & Robotics',
+            quote: 'Keren banget, robotnya bisa bergerak mengikuti perintah kode yang saya buat sendiri! Fasilitas labnya sangat lengkap.',
+            image: '/images/landing/avatar-sandhya.jpg',
         },
     ];
 
-    const partners = [
-        {
-            name: "bahasakita",
-            logo: (
-                <span className="text-xl md:text-2xl font-bold tracking-tight text-[#088395] font-sans">
-                    bahasakita
-                </span>
-            ),
-        },
-        {
-            name: "Helbér",
-            logo: (
-                <span className="text-xl md:text-2xl font-bold tracking-tight text-[#0284c7] font-sans">
-                    Helbér
-                </span>
-            ),
-        },
-        {
-            name: "IMAJIN",
-            logo: (
-                <span className="text-xl md:text-2xl font-extrabold tracking-widest text-[#1e293b] font-sans">
-                    IMAJIN
-                </span>
-            ),
-        },
-        {
-            name: "KOMINFO",
-            logo: (
-                <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[#0284c7] flex items-center justify-center text-white text-xs font-bold">
-                        <i className="bi bi-broadcast" />
-                    </div>
-                    <span className="text-base md:text-lg font-bold tracking-wider text-[#0f172a]">
-                        KOMINFO
-                    </span>
-                </div>
-            ),
-        },
+    const labFacilities = [
+        { title: 'Laboratorium Robotika & Humanoid', desc: 'Pusat pengujian robot humanoid otonom, kendali servomotor presisi, dan antarmuka sensorik.' },
+        { title: 'Laboratorium Computer Vision', desc: 'Workstation komputasi grafis tinggi untuk pelatihan deteksi objek, gesture recognition, dan citra medis.' },
+        { title: 'Laboratorium AI Literacy (K-12)', desc: 'Ruang kelas interaktif dilengkapi modul kit STEAM modular untuk eksplorasi pemula hingga mahir.' },
+        { title: 'Studio Deep Learning & Komputasi', desc: 'Infrastruktur pemodelan machine learning, natural language processing, dan eksperimen big data.' },
+        { title: 'IoT & Microcontroller Station', desc: 'Area fabrikasi sensor pintar, perakitan mikrokontroler ESP32/Raspberry Pi, dan otomasi embedded.' },
+        { title: 'Smart Seminar & Demonstration Hall', desc: 'Auditorium presentasi hasil riset, pameran inovasi proyek, dan simposium edukasi AI.' },
     ];
 
     return (
-        <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-[#088395] selection:text-white">
-            <Head title="Artificial Intelligence Center Indonesia (AiCI)" />
+        <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-[#0B6282] selection:text-white">
+            <Head title="Artificial Intelligence Center Indonesia - FMIPA Universitas Indonesia" />
+
+            {/* Persistent Standard Institutional Navbar */}
+            <PublicNavbar active="home" />
 
             {/* ============================================================== */}
-            {/* Top Minimal Navigation Bar */}
+            {/* HERO SECTION: Prestige Academic Editorial */}
             {/* ============================================================== */}
-            <nav className="bg-[#034d52] border-b border-teal-800/60 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-20">
-                        <Link href="/" className="flex items-center gap-3">
-                            <div className="bg-white/95 backdrop-blur-sm p-1.5 px-3 rounded-xl shadow-sm">
-                                <img
-                                    src="/images/logo-aici.png"
-                                    alt="AiCI Logo"
-                                    className="h-9 w-auto object-contain"
-                                />
-                            </div>
-                        </Link>
+            <section className="relative bg-[#0B6282] text-white pt-12 pb-24 md:pt-16 md:pb-28 overflow-hidden border-b border-[#08455c]">
+                {/* Subtle Technical Grid Lines */}
+                <div
+                    className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                    style={{
+                        backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
+                        backgroundSize: '24px 24px',
+                    }}
+                ></div>
 
-                        <div className="hidden md:flex items-center gap-7 text-sm font-semibold text-teal-100/90">
-                            <Link href="/program" className="hover:text-white transition-colors">Program</Link>
-                            <Link href="/profil" className="hover:text-white transition-colors">Profil</Link>
-                            <Link href="/fasilitas" className="hover:text-white transition-colors">Fasilitas</Link>
-                            <Link href="/galeri" className="hover:text-white transition-colors">Galeri</Link>
-                            <Link href="/riset" className="hover:text-white transition-colors">Riset</Link>
-                            <Link href="/kontak" className="hover:text-white transition-colors">Kontak</Link>
-                            <a href="#testimoni" className="hover:text-white transition-colors">Testimoni</a>
-                            <a href="#mitra" className="hover:text-white transition-colors">Mitra</a>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <Link
-                                href="/login"
-                                className="px-5 py-2 text-sm font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all shadow-sm"
-                            >
-                                Masuk Portal
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            {/* ============================================================== */}
-            {/* 1. HERO SECTION (Teal Deep Teal Background with Angle Curve) */}
-            {/* ============================================================== */}
-            <section className="relative bg-[#034d52] text-white pt-8 pb-32 md:pb-40 overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-                        {/* Left Column: Heading & Description */}
-                        <div className="lg:col-span-6 space-y-6">
-                            {/* Pill Badge */}
-                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a5c61] border border-teal-500/30 text-xs font-medium text-teal-100">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                Kolaborasi FMIPA UI & UMG IdeaLab
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                        {/* Left Column: Academic Title & Credibility */}
+                        <div className="lg:col-span-7 space-y-6">
+                            {/* Academic Hierarchy Badge */}
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#08455c]/90 border border-white/20 text-xs text-cyan-100">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span className="text-[11px] uppercase tracking-wider text-cyan-200 font-semibold">
+                                    FMIPA Universitas Indonesia × UMG IdeaLab
+                                </span>
                             </div>
 
                             {/* Main Title */}
-                            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.15] text-white">
-                                Artificial <br />
-                                Intelligence <br />
-                                Center Indonesia
+                            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight text-white leading-[1.15]">
+                                Pusat Unggulan <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-cyan-100">
+                                    Kecerdasan Artifisial
+                                </span> <br />
+                                & Robotika Indonesia.
                             </h1>
 
-                            {/* Paragraph */}
-                            <p className="text-sm sm:text-base text-teal-100/90 leading-relaxed max-w-xl font-normal">
-                                Lembaga Yang Didirikan Atas Kerjasama FMIPA Universitas Indonesia Dengan UMG IdeaLab Indonesia Yang Berfokus Pada Pengembangan Sumber Daya Manusia Dalam Bidang Artificial Intelligence (Kecerdasan Artifisial).
+                            {/* Subtitle / Paragraph */}
+                            <p className="text-base sm:text-lg text-cyan-50/90 leading-relaxed max-w-2xl font-normal">
+                                Lembaga riset terapan dan pengembangan sumber daya manusia berbasis sains teknologi. Membina generasi Indonesia dari literasi K-12 hingga kompetensi rekayasa AI tingkat lanjut.
                             </p>
 
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap items-center gap-3.5 pt-2">
-                                <a
-                                    href="#program"
-                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-[#e53935] hover:bg-[#d32f2f] text-white shadow-lg shadow-red-900/30 transition-all hover:scale-[1.02]"
+                            {/* CTA Action Matrix */}
+                            <div className="flex flex-wrap items-center gap-4 pt-2">
+                                <Link
+                                    href="/program"
+                                    className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-sm font-bold bg-[#E62C29] hover:bg-[#d02522] text-white shadow-lg shadow-red-950/20 border border-transparent transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                    JELAJAHI PROGRAM
+                                    <span>Jelajahi Program & Pelatihan</span>
                                     <i className="bi bi-arrow-right text-base"></i>
-                                </a>
-                                <a
-                                    href="#fasilitas"
-                                    className="inline-flex items-center justify-center px-6 py-3 rounded-full text-sm font-medium bg-[#05585e] hover:bg-[#07666e] text-teal-100 border border-teal-600/40 transition-all"
+                                </Link>
+
+                                <Link
+                                    href="/fasilitas"
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/25 transition-all backdrop-blur-sm"
                                 >
-                                    Lihat Fasilitas Lab
-                                </a>
+                                    <i className="bi bi-building text-cyan-200"></i>
+                                    <span>Lihat 6 Lab Riset</span>
+                                </Link>
+                            </div>
+
+                            {/* Institutional Trust Footprint */}
+                            <div className="pt-4 flex items-center gap-6 text-xs text-cyan-100/90">
+                                <div className="flex items-center gap-2">
+                                    <i className="bi bi-geo-alt-fill text-[#E62C29]"></i>
+                                    <span>Depok Campus, Jawa Barat</span>
+                                </div>
+                                <span className="text-cyan-300/40">•</span>
+                                <div className="flex items-center gap-2">
+                                    <i className="bi bi-shield-check text-emerald-400"></i>
+                                    <span>Kurikulum Standar FMIPA UI</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Right Column: Hero Card with Curved Outer Frame */}
-                        <div className="lg:col-span-6 flex justify-center lg:justify-end">
-                            <div className="relative p-2.5 sm:p-3 bg-white/20 backdrop-blur-md rounded-[2.2rem] shadow-2xl max-w-md lg:max-w-none w-full">
-                                <div className="relative rounded-[1.8rem] overflow-hidden bg-slate-900 aspect-[4/3] sm:aspect-[16/11]">
-                                    <img
-                                        src="/images/landing/kids-coding.jpg"
-                                        alt="Pembelajaran Robotika Anak"
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        {/* Right Column: Lab Photograph with Technical Metadata Overlay */}
+                        <div className="lg:col-span-5">
+                            <div className="relative mx-auto max-w-md lg:max-w-none">
+                                {/* Ambient Backdrop Glow */}
+                                <div className="absolute -inset-1.5 bg-gradient-to-tr from-cyan-400/20 to-red-500/20 rounded-[2rem] blur-xl opacity-75"></div>
 
-                                    {/* Bottom Floating Card Inside Frame */}
-                                    <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 p-3.5 sm:p-4 rounded-xl bg-slate-900/85 backdrop-blur-md border border-white/10 text-white">
-                                        <div className="text-[11px] sm:text-xs font-bold tracking-wider text-cyan-300 uppercase mb-1">
-                                            HANDS-ON ROBOTIC & AI
+                                <div className="relative rounded-[1.8rem] overflow-hidden bg-[#08455c] border border-white/20 shadow-2xl">
+                                    <div className="aspect-[4/3] sm:aspect-[16/12] relative">
+                                        <img
+                                            src="/images/landing/kids-coding.jpg"
+                                            alt="Pembelajaran Robotika & AI di Laboratorium AiCI"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#08455c] via-black/20 to-transparent"></div>
+
+                                        {/* Top Badge: Status */}
+                                        <div className="absolute top-4 left-4 bg-[#08455c]/90 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1.5 flex items-center gap-2 text-[11px] font-semibold text-cyan-100">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            <span>ACTIVE SESSION</span>
                                         </div>
-                                        <div className="text-xs sm:text-xs text-slate-300 leading-snug">
-                                            Pembelajaran interaktif robot cerdas untuk generasi muda Indonesia
+                                    </div>
+
+                                    {/* Bottom Information Card */}
+                                    <div className="p-5 bg-[#08455c] border-t border-white/10 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs uppercase tracking-wider text-cyan-200 font-bold">
+                                                Fasilitas Multidisiplin
+                                            </span>
+                                            <span className="text-[10px] text-cyan-200/80 font-medium">
+                                                Gedung Lab. Lt. 4
+                                            </span>
                                         </div>
+                                        <div className="text-sm font-bold text-white leading-snug">
+                                            Laboratorium Hands-on AI & Robotika Cerdas
+                                        </div>
+                                        <p className="text-xs text-cyan-100/80 leading-relaxed font-normal">
+                                            Dilengkapi 6 ruang laboratorium riset terintegrasi, unit robot humanoid, serta komputer komputasi tinggi.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Bottom Angular Diagonal Divider */}
-                <div
-                    className="absolute -bottom-1 left-0 right-0 h-16 sm:h-24 bg-white"
-                    style={{ clipPath: "polygon(0 100%, 100% 100%, 100% 0)" }}
-                ></div>
             </section>
 
             {/* ============================================================== */}
-            {/* 2. PROGRAM UNGGULAN AICI SECTION */}
+            {/* STATS & METRICS BAR */}
             {/* ============================================================== */}
-            <section id="program" className="relative pt-6 pb-20 bg-white">
+            <section className="bg-[#08455c] border-b border-[#062d3d]/50 py-8 text-white relative z-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+                        {metrics.map((item, idx) => (
+                            <div key={idx} className="border-l-2 border-cyan-400/40 pl-4 py-1">
+                                <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                                    {item.value}
+                                </div>
+                                <div className="text-xs sm:text-sm font-bold text-cyan-200 mt-1">
+                                    {item.label}
+                                </div>
+                                <div className="text-[11px] text-cyan-100/70 mt-0.5 leading-snug">
+                                    {item.desc}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ============================================================== */}
+            {/* 2. PROGRAM UNGGULAN AICI (Academic Modular Grid) */}
+            {/* ============================================================== */}
+            <section id="program" className="py-20 bg-slate-50 border-b border-slate-200/80">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Section Header */}
-                    <div className="text-center max-w-2xl mx-auto mb-14">
-                        <div className="inline-block px-4 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-[11px] font-bold tracking-wider text-cyan-700 uppercase mb-3">
-                            KURIKULUM & AKTIVITAS
+                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+                        <div>
+                            <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-[#0B6282] font-bold mb-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0B6282]"></span>
+                                KURIKULUM & PENGEMBANGAN SDM
+                            </div>
+                            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                                Program Pelatihan & Riset Terapan
+                            </h2>
                         </div>
-                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] tracking-tight mb-3">
-                            Program Unggulan AiCI
-                        </h2>
-                        <p className="text-sm sm:text-base text-slate-500 leading-relaxed">
-                            Solusi komprehensif pembelajaran kecerdasan buatan dari usia sekolah hingga profesional di era transformasi teknologi.
+                        <p className="text-sm text-slate-600 max-w-md leading-relaxed">
+                            Jalur pembelajaran komprehensif mulai dari pengenalan awal hingga penerapan rekayasa kecerdasan artifisial profesional.
                         </p>
                     </div>
 
-                    {/* Cards Grid: 3 columns, 2 rows (5 program cards + 1 CTA card) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-                        {programs.map((item, idx) => (
+                    {/* Program Cards Matrix */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {programs.map((prog, idx) => (
                             <div
                                 key={idx}
-                                className="bg-[#034d52] text-white rounded-2xl p-7 flex flex-col justify-between shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-teal-800"
+                                className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-[#0B6282]/50 transition-all flex flex-col justify-between group"
                             >
                                 <div>
-                                    {/* Orange Bar Accent */}
-                                    <div className="w-8 h-1 rounded-full bg-amber-400 mb-6"></div>
-
-                                    {/* Title */}
-                                    <h3 className="text-lg sm:text-xl font-bold tracking-tight leading-snug mb-4 text-white">
-                                        {item.title}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs font-bold text-[#0B6282] bg-cyan-50 px-2.5 py-1 rounded-md border border-cyan-200/70">
+                                            {prog.code}
+                                        </span>
+                                        <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                                            {prog.badge}
+                                        </span>
+                                    </div>
+                                    <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                        {prog.category}
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-3 group-hover:text-[#0B6282] transition-colors">
+                                        {prog.title}
                                     </h3>
-
-                                    {/* Description */}
-                                    <p className="text-xs sm:text-sm text-teal-100/80 leading-relaxed font-normal mb-6">
-                                        {item.desc}
+                                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                                        {prog.desc}
                                     </p>
                                 </div>
 
-                                {/* Link Footer */}
-                                <div>
-                                    <a
-                                        href={item.linkHref}
-                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 hover:text-white transition-colors"
+                                <div className="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between">
+                                    <Link
+                                        href={prog.link}
+                                        className="text-xs font-bold text-[#0B6282] hover:text-[#08455c] inline-flex items-center gap-1.5 transition-colors"
                                     >
-                                        <span>{item.linkText}</span>
-                                        <i className="bi bi-chevron-right text-[11px]"></i>
-                                    </a>
+                                        <span>Rincian Kurikulum & Jadwal</span>
+                                        <i className="bi bi-arrow-right text-[11px]"></i>
+                                    </Link>
+                                    <span className="text-slate-300 group-hover:translate-x-1 transition-transform">
+                                        <i className="bi bi-chevron-right text-xs"></i>
+                                    </span>
                                 </div>
                             </div>
                         ))}
 
-                        {/* 6th Card: "Ingin Tahu Lebih Lanjut?" (Light Blue / Dashed border style) */}
-                        <div className="bg-[#f0f9ff]/70 border-2 border-dashed border-[#b9e6fe] rounded-2xl p-7 flex flex-col justify-center items-center text-center shadow-sm">
-                            {/* Lightning Icon Circle */}
-                            <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4 text-xl">
-                                <i className="bi bi-lightning-charge-fill"></i>
+                        {/* Action Card: Custom Consultation & Partnership */}
+                        <div className="bg-[#0B6282] text-white rounded-2xl p-6 border border-[#08455c] shadow-sm flex flex-col justify-between">
+                            <div>
+                                <div className="w-10 h-10 rounded-full bg-[#E62C29] text-white flex items-center justify-center text-lg mb-4 shadow-sm">
+                                    <i className="bi bi-briefcase-fill"></i>
+                                </div>
+                                <span className="text-[11px] font-semibold text-cyan-200 uppercase tracking-wider">
+                                    Kolaborasi Institusi
+                                </span>
+                                <h3 className="text-lg font-bold text-white mt-1 mb-3">
+                                    Kemitraan Sekolah & Korporasi
+                                </h3>
+                                <p className="text-xs text-cyan-50/90 leading-relaxed">
+                                    Kami melayani perancangan kurikulum robotika sekolah, pelatihan in-house perusahaan, serta riset bersama berbasis kebutuhan nyata.
+                                </p>
                             </div>
 
-                            <h3 className="text-lg font-bold text-slate-800 mb-2">
-                                Ingin Tahu Lebih Lanjut?
-                            </h3>
-                            <p className="text-xs text-slate-500 leading-relaxed mb-6 max-w-xs">
-                                Pelajari rincian silabus lengkap, jadwal workshop berkala, dan paket kerja sama institusi Anda bersama AiCI.
+                            <div className="pt-6 mt-6 border-t border-white/15">
+                                <Link
+                                    href="/kontak"
+                                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold bg-[#E62C29] text-white hover:bg-[#d02522] transition-colors shadow-sm"
+                                >
+                                    <span>Konsultasi Kerja Sama</span>
+                                    <i className="bi bi-arrow-right"></i>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ============================================================== */}
+            {/* 3. VIDEO SHOWCASE & VIRTUAL TOUR */}
+            {/* ============================================================== */}
+            <section className="py-20 bg-white border-b border-slate-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                        {/* Video Player Box (7 cols) */}
+                        <div className="lg:col-span-7">
+                            <div className="bg-slate-950 rounded-2xl overflow-hidden shadow-xl border border-slate-800 relative">
+                                <div className="aspect-[16/9] relative">
+                                    {isVideoPlaying ? (
+                                        <iframe
+                                            className="w-full h-full"
+                                            src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                                            title="Profil AiCI FMIPA UI"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : (
+                                        <>
+                                            <img
+                                                src="/images/landing/seminar-auditorium.jpg"
+                                                alt="AiCI Auditorium & Lab Preview"
+                                                className="w-full h-full object-cover opacity-80"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+
+                                            {/* Play Button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsVideoPlaying(true)}
+                                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-2xl hover:scale-105 transition-all cursor-pointer group"
+                                                aria-label="Putar Video Profil"
+                                            >
+                                                <i className="bi bi-play-fill text-3xl sm:text-4xl translate-x-0.5"></i>
+                                            </button>
+
+                                            <div className="absolute bottom-4 left-4 right-4 text-white">
+                                                <div className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider">
+                                                    VIDEO PROFIL RESMI
+                                                </div>
+                                                <div className="text-sm sm:text-base font-bold">
+                                                    Pengenalan Laboratorium & Ekosistem Riset AiCI FMIPA UI
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Interactive Tour & Institutional Credentials (5 cols) */}
+                        <div className="lg:col-span-5 space-y-6">
+                            <div>
+                                <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-[#0B6282] font-bold mb-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0B6282]"></span>
+                                    FASILITAS KAMPUS DEPOK
+                                </div>
+                                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                                    Eksplorasi Lingkungan Riset & Pembelajaran Langsung
+                                </h2>
+                            </div>
+
+                            <p className="text-sm text-slate-600 leading-relaxed">
+                                Bertempat di Gedung Laboratorium Riset Multidisiplin Pertamina FMIPA UI Lantai 4, seluruh aktivitas riset dan pelatihan didukung infrastruktur komputasi mutakhir, kit modul bersertifikasi, serta tutor berpengalaman.
                             </p>
 
-                            <Link
-                                href="/faq"
-                                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase bg-[#e53935] hover:bg-[#d32f2f] text-white shadow-md shadow-red-600/30 transition-all hover:scale-[1.02]"
+                            {/* Virtual Tour Card */}
+                            <a
+                                href="https://maps.google.com"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#0B6282]/60 hover:bg-cyan-50/30 transition-all group"
                             >
-                                DETAIL PROGRAM
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-lg bg-[#0B6282] text-white flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
+                                        <i className="bi bi-compass-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-[#0B6282] uppercase font-bold">
+                                            Virtual Tour 360°
+                                        </div>
+                                        <div className="text-sm font-bold text-slate-900">
+                                            Jelajahi Lab & Ruang Kelas Secara Virtual
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                            Tinjau denah lab dan ruang robotika dari browser Anda
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+
+                            {/* Partnership Endorsement */}
+                            <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs text-slate-600">
+                                <div className="flex items-center gap-3">
+                                    <span className="font-extrabold text-amber-500 tracking-tight text-sm">UMG IDEALAB</span>
+                                    <span className="text-slate-300">|</span>
+                                    <span className="font-bold text-slate-800">FMIPA UI</span>
+                                </div>
+                                <span className="text-[11px] text-[#0B6282] font-semibold">Kemitraan Strategis</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ============================================================== */}
+            {/* 4. FASILITAS LABORATORIUM (6 Ruang Riset & Pendidikan) */}
+            {/* ============================================================== */}
+            <section id="fasilitas" className="py-20 bg-[#0B6282] text-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-16">
+                        <div className="lg:col-span-7 space-y-4">
+                            <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-cyan-200 font-bold">
+                                <span className="w-2 h-2 rounded-full bg-cyan-300"></span>
+                                INFRASTRUKTUR SAINS & TEKNOLOGI
+                            </div>
+                            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                                6 Ruang Laboratorium Terpadu <br />
+                                Berstandar Universitas Indonesia
+                            </h2>
+                            <p className="text-sm sm:text-base text-cyan-50/90 max-w-2xl leading-relaxed">
+                                Untuk mendukung seluruh siklus riset dan pelatihan, AiCI menyediakan 6 ruang lab tematik lengkap dengan kit robotika, workstation komputasi GPU, dan ruang kolaborasi terbuka.
+                            </p>
+                        </div>
+                        <div className="lg:col-span-5 flex lg:justify-end">
+                            <Link
+                                href="/fasilitas"
+                                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#E62C29] hover:bg-[#d02522] border border-transparent text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-red-950/20"
+                            >
+                                <span>Lihat Rincian Spesifikasi Fasilitas</span>
+                                <i className="bi bi-arrow-right"></i>
                             </Link>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            {/* ============================================================== */}
-            {/* 3. VIDEO PROFILE AICI SECTION */}
-            {/* ============================================================== */}
-            <section className="py-8 bg-white">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Big Rounded Card Frame */}
-                    <div className="bg-[#f8fafc] border border-slate-200/80 rounded-[2.5rem] p-5 sm:p-7 shadow-sm">
-                        {/* Video Card Header */}
-                        <div className="flex items-center justify-between mb-5 px-2">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-[#034d52] text-white font-bold flex items-center justify-center text-sm shadow-sm">
-                                    Ai
-                                </div>
+                    {/* 6 Lab Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {labFacilities.map((lab, idx) => (
+                            <div
+                                key={idx}
+                                className="bg-[#08455c] border border-white/10 rounded-2xl p-6 hover:border-cyan-400/40 transition-all flex flex-col justify-between"
+                            >
                                 <div>
-                                    <h4 className="text-sm font-bold text-slate-800">
-                                        Video Profile AiCI
-                                    </h4>
-                                    <p className="text-xs text-slate-400">
-                                        Artificial Intelligence Center Indonesia
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs text-cyan-200 font-bold">LAB-0{idx + 1}</span>
+                                        <i className="bi bi-cpu text-cyan-300"></i>
+                                    </div>
+                                    <h3 className="text-base font-bold text-white mb-2 leading-snug">
+                                        {lab.title}
+                                    </h3>
+                                    <p className="text-xs text-cyan-100/80 leading-relaxed">
+                                        {lab.desc}
                                     </p>
                                 </div>
+                                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-cyan-200">
+                                    <span>Gedung Riset Lt. 4</span>
+                                    <span className="text-emerald-400 font-medium">Siap Operasional</span>
+                                </div>
                             </div>
-                            <div>
-                                <a
-                                    href="https://www.youtube.com"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-                                >
-                                    Watch on YouTube
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* Video Thumbnail with Large Red Play Button */}
-                        <div className="relative rounded-[2rem] overflow-hidden aspect-[16/9] bg-slate-900 shadow-inner group">
-                            {isVideoPlaying ? (
-                                <iframe
-                                    className="w-full h-full"
-                                    src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                                    title="AiCI Video Showcase"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                ></iframe>
-                            ) : (
-                                <>
-                                    <img
-                                        src="/images/landing/seminar-auditorium.jpg"
-                                        alt="AiCI Video Showcase"
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                    />
-                                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors"></div>
-
-                                    {/* Overlay Stage Graphic Text Mock */}
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="text-center text-white px-4">
-                                            <div className="text-xs md:text-sm tracking-[0.3em] font-semibold text-cyan-300 uppercase mb-1">
-                                                AiCI VIDEO SHOWCASE
-                                            </div>
-                                            <div className="text-lg md:text-2xl font-black tracking-tight text-white drop-shadow">
-                                                ARTIFICIAL INTELLIGENCE CREATIVE INNOVATION
-                                            </div>
-                                            <div className="text-[10px] md:text-xs tracking-widest text-slate-300 mt-1">
-                                                GLOBAL PREMIERE 2024
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Red Play Button */}
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsVideoPlaying(true)}
-                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#e53935] hover:bg-[#d32f2f] text-white flex items-center justify-center shadow-xl shadow-red-950/50 hover:scale-110 transition-transform cursor-pointer"
-                                        aria-label="Putar Video Profile"
-                                    >
-                                        <i className="bi bi-play-fill text-3xl sm:text-4xl translate-x-0.5"></i>
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* ============================================================== */}
-            {/* 4. SPLIT ROW: FMIPA UI & UMG BANNER + VIRTUAL TOUR */}
+            {/* 5. TESTIMONIALS (Peserta Pelatihan & Orang Tua) */}
             {/* ============================================================== */}
-            <section className="py-6 bg-white">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                        {/* Left Card: UMG IDEALAB + FAKULTAS MIPA UI PARTNERSHIP */}
-                        <div className="bg-white border border-slate-200/90 rounded-[2rem] p-7 flex items-center justify-center gap-6 sm:gap-10 shadow-sm">
-                            {/* UMG Idealab */}
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl sm:text-2xl font-black text-amber-500 tracking-tight">
-                                    UMG
-                                </span>
-                                <span className="text-xs sm:text-sm font-bold tracking-wider text-slate-600">
-                                    IDEALAB
-                                </span>
-                            </div>
-
-                            {/* Thin vertical line divider */}
-                            <div className="w-[1px] h-10 bg-slate-200"></div>
-
-                            {/* UI FMIPA */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-amber-400 text-slate-900 font-bold flex items-center justify-center text-xs shadow-sm">
-                                    UI
-                                </div>
-                                <div className="text-[11px] sm:text-xs font-extrabold uppercase leading-tight text-slate-800 tracking-wider">
-                                    Fakultas Matematika dan<br />
-                                    Ilmu Pengetahuan Alam
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right Card: AiCI Virtual Tour 360 */}
-                        <a
-                            href="https://www.google.com/maps"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="relative rounded-[2rem] overflow-hidden p-6 flex flex-col justify-end text-white shadow-sm group min-h-[140px]"
-                        >
-                            <img
-                                src="/images/landing/virtual-tour.jpg"
-                                alt="Virtual Tour AiCI"
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40"></div>
-
-                            <div className="relative z-10">
-                                <div className="inline-block px-2.5 py-0.5 rounded bg-[#e53935] text-[10px] font-bold tracking-wider uppercase mb-1.5 shadow-sm">
-                                    INTERACTIVE 360°
-                                </div>
-                                <h4 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                                    AiCI Virtual Tour
-                                </h4>
-                                <p className="text-xs text-slate-300 leading-snug">
-                                    Jelajahi laboratorium dan ruang riset secara virtual dari browser Anda.
-                                </p>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            {/* ============================================================== */}
-            {/* 5. FASILITAS YANG DISEDIAKAN SECTION */}
-            {/* ============================================================== */}
-            <section id="fasilitas" className="py-16 md:py-20 bg-[#034d52] text-white">
+            <section id="testimoni" className="py-20 bg-white border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-                        {/* Left Column: Heading & Info */}
-                        <div className="lg:col-span-6 space-y-6">
-                            <h2 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight text-white">
-                                Fasilitas yang <br />
-                                disediakan
-                            </h2>
-
-                            <p className="text-sm sm:text-base text-teal-100/85 leading-relaxed max-w-xl font-normal">
-                                Untuk Mendukung Kegiatan Di AiCI, Tersedia Fasilitas-Fasilitas Berupa Ruangan, Lab AI Sebanyak 6 Ruang, Media Pembelajaran/ Pelatihan Berupa Kit Dan Robot, Modul Pembelajaran Tingkat SD/MI, SMP/MTs Dan SMA/MA/SMK Serta Perguruan Tinggi.
-                            </p>
-
-                            <div className="pt-2">
-                                <a
-                                    href="/faq"
-                                    className="inline-flex items-center justify-center px-7 py-3 rounded-full text-xs font-bold tracking-wider uppercase bg-[#e53935] hover:bg-[#d32f2f] text-white shadow-lg shadow-red-900/30 transition-all hover:scale-[1.02]"
-                                >
-                                    SELENGKAPNYA
-                                </a>
-                            </div>
+                    <div className="text-center max-w-2xl mx-auto mb-16">
+                        <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-[#0B6282] font-bold mb-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0B6282]"></span>
+                            PENGALAMAN & ULASAN PESERTA
                         </div>
-
-                        {/* Right Column: Lab Facility Image with Badge Frame */}
-                        <div className="lg:col-span-6 flex justify-center lg:justify-end">
-                            <div className="relative p-2.5 sm:p-3 bg-white/20 backdrop-blur-md rounded-[2.2rem] shadow-2xl max-w-md lg:max-w-none w-full">
-                                <div className="relative rounded-[1.8rem] overflow-hidden aspect-[4/3] bg-slate-900">
-                                    <img
-                                        src="/images/landing/robotics-lab.jpg"
-                                        alt="Fasilitas Lab Robotika dan AI"
-                                        className="w-full h-full object-cover"
-                                    />
-
-                                    {/* Red Floating Badge at Bottom-Right */}
-                                    <div className="absolute -bottom-1 -right-1 sm:bottom-0 sm:right-0 bg-[#e53935] text-white px-5 py-2.5 rounded-tl-2xl rounded-br-[1.6rem] shadow-lg text-right">
-                                        <div className="text-base sm:text-lg font-black leading-none">
-                                            6 Ruang
-                                        </div>
-                                        <div className="text-[10px] font-bold tracking-wider uppercase text-red-100">
-                                            LAB AI MODERN
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ============================================================== */}
-            {/* 6. TESTIMONIALS SECTION */}
-            {/* ============================================================== */}
-            <section id="testimoni" className="py-20 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Section Header */}
-                    <div className="text-center max-w-xl mx-auto mb-14">
-                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#034d52] tracking-tight mb-2">
-                            Testimonials
+                        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B6282] tracking-tight">
+                            Apa Kata Peserta Didik Kami?
                         </h2>
-                        <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                            What Do They Think After Studying At AiCI?
+                        <p className="text-sm text-slate-500 mt-2">
+                            Kesan nyata dari generasi muda setelah mengikuti sesi pembelajaran interaktif di AiCI FMIPA UI.
                         </p>
                     </div>
 
-                    {/* Testimonials 4-Cards Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {testimonials.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="bg-[#f8fafc] border border-slate-100 rounded-3xl p-6 text-center flex flex-col items-center justify-between shadow-sm hover:shadow-md transition-all duration-300"
+                                className="bg-[#EDF2F7] rounded-2xl p-6 border border-slate-200 flex flex-col justify-between hover:shadow-md transition-all"
                             >
-                                <div className="flex flex-col items-center">
-                                    {/* Avatar with rounded corners */}
-                                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden mb-4 shadow-sm border-2 border-white">
+                                <div>
+                                    <div className="flex items-center gap-3.5 mb-4">
                                         <img
                                             src={item.image}
                                             alt={item.name}
-                                            className="w-full h-full object-cover"
+                                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                                         />
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-900">{item.name}</h4>
+                                            <div className="text-[11px] font-semibold text-[#0B6282]">{item.role}</div>
+                                            <div className="text-[10px] text-slate-500">{item.school}</div>
+                                        </div>
                                     </div>
-
-                                    {/* Badge Role */}
-                                    <div className="text-[11px] font-bold text-[#088395] tracking-wider uppercase mb-1">
-                                        {item.role}
-                                    </div>
-
-                                    {/* Name */}
-                                    <h4 className="text-base font-bold text-slate-800 mb-3">
-                                        {item.name}
-                                    </h4>
-                                </div>
-
-                                {/* Quote Text */}
-                                <div className="mt-2">
-                                    <p className="text-xs italic text-slate-500 leading-relaxed">
+                                    <p className="text-xs text-slate-600 italic leading-relaxed">
                                         {item.quote}
                                     </p>
                                 </div>
+
+                                <div className="mt-6 pt-3 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-400">
+                                    <div className="flex text-amber-400 gap-0.5">
+                                        <i className="bi bi-star-fill"></i>
+                                        <i className="bi bi-star-fill"></i>
+                                        <i className="bi bi-star-fill"></i>
+                                        <i className="bi bi-star-fill"></i>
+                                        <i className="bi bi-star-fill"></i>
+                                    </div>
+                                    <span>Verified Student</span>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -563,254 +562,113 @@ export default function Landing() {
             </section>
 
             {/* ============================================================== */}
-            {/* 7. DIDUKUNG & BERKOLABORASI BERSAMA (PARTNERS SECTION) */}
+            {/* 6. MITRA & JARINGAN KOLABORASI */}
             {/* ============================================================== */}
-            <section id="mitra" className="pt-12 pb-14 bg-[#034d52] text-white">
+            <section id="mitra" className="py-14 bg-[#08455c] text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <div className="text-[11px] font-extrabold tracking-[0.2em] uppercase text-cyan-300 mb-8">
-                        DIDUKUNG & BERKOLABORASI BERSAMA
+                    <div className="text-xs font-bold tracking-[0.2em] uppercase text-cyan-200 mb-8">
+                        Didukung & Berkolaborasi Bersama Institusi Terkemuka
                     </div>
 
-                    {/* 4 White Partner Cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                        {partners.map((partner, idx) => (
-                            <div
-                                key={idx}
-                                className="bg-white rounded-2xl h-20 sm:h-24 flex items-center justify-center px-4 shadow-md transition-all hover:scale-[1.02]"
-                            >
-                                {partner.logo}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ============================================================== */}
-            {/* 8. PETA KAMPUS & LOKASI MAP (UI DEPOK) */}
-            {/* ============================================================== */}
-            <section className="relative w-full h-[400px] sm:h-[480px] bg-slate-800 overflow-hidden">
-                <img
-                    src="/images/landing/map-campus-bg.jpg"
-                    alt="Peta Kampus UI Depok AiCI"
-                    className="w-full h-full object-cover"
-                />
-
-                {/* Subtle map overlay banner simulating the university campus map */}
-                <div className="absolute inset-0 bg-slate-900/30"></div>
-
-                {/* Floating Location Card Overlay (Left side) */}
-                <div className="absolute top-8 left-4 sm:left-12 sm:top-12 max-w-sm sm:max-w-md w-[calc(100%-2rem)] sm:w-auto bg-white rounded-2xl p-5 sm:p-6 shadow-2xl border border-slate-100 z-10">
-                    <h4 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 leading-snug">
-                        Artificial Intelligence Center Indonesia (AiCI)
-                    </h4>
-                    <p className="text-xs text-slate-500 leading-relaxed mb-3">
-                        Gedung Lab. Riset Multidisiplin Pertamina FMIPA UI Lantai 4, Pondok Cina, Beji, Depok, Jawa Barat 16424
-                    </p>
-
-                    {/* Rating Stars */}
-                    <div className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold mb-4">
-                        <span className="text-amber-500 font-bold">5.0</span>
-                        <div className="flex text-amber-400 text-xs">
-                            <i className="bi bi-star-fill"></i>
-                            <i className="bi bi-star-fill"></i>
-                            <i className="bi bi-star-fill"></i>
-                            <i className="bi bi-star-fill"></i>
-                            <i className="bi bi-star-fill"></i>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 items-center">
+                        <div className="bg-[#062d3d]/60 border border-white/10 rounded-xl py-4 px-3 text-center">
+                            <span className="font-extrabold text-sm text-slate-200 tracking-wider">FMIPA UI</span>
                         </div>
-                        <span className="text-slate-400 font-normal">(18 ulasan)</span>
+                        <div className="bg-[#062d3d]/60 border border-white/10 rounded-xl py-4 px-3 text-center">
+                            <span className="font-bold text-sm text-amber-400 tracking-wider">UMG IDEALAB</span>
+                        </div>
+                        <div className="bg-[#062d3d]/60 border border-white/10 rounded-xl py-4 px-3 text-center">
+                            <span className="font-bold text-sm text-cyan-300 tracking-tight">bahasakita</span>
+                        </div>
+                        <div className="bg-[#062d3d]/60 border border-white/10 rounded-xl py-4 px-3 text-center">
+                            <span className="font-bold text-sm text-sky-400 tracking-tight">Helbér</span>
+                        </div>
+                        <div className="bg-[#062d3d]/60 border border-white/10 rounded-xl py-4 px-3 text-center">
+                            <span className="font-extrabold text-sm text-red-400 tracking-wider">IMAJIN</span>
+                        </div>
+                        <div className="bg-[#062d3d]/60 border border-white/10 rounded-xl py-4 px-3 text-center">
+                            <span className="font-bold text-xs text-sky-300 uppercase tracking-wider">KOMINFO</span>
+                        </div>
                     </div>
-
-                    <a
-                        href="https://maps.google.com/?q=Gedung+Lab+Riset+Multidisiplin+Pertamina+FMIPA+UI"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#088395] hover:text-[#034d52] transition-colors"
-                    >
-                        <span>Buka di Google Maps</span>
-                        <i className="bi bi-arrow-right text-xs"></i>
-                    </a>
                 </div>
             </section>
 
             {/* ============================================================== */}
-            {/* 9. FOOTER SECTION (Deep Teal Dark Background) */}
+            {/* 7. LOKASI MAPS & KUNJUNGAN KAMPUS */}
             {/* ============================================================== */}
-            <footer className="bg-[#023136] text-slate-300 pt-16 pb-10 border-t border-teal-950">
+            <section className="py-20 bg-[#EDF2F7]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-teal-900/60">
-                        {/* Col 1: AiCI Logo & Address (Span 4) */}
-                        <div className="lg:col-span-4 space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-[#088395] text-white font-bold flex items-center justify-center text-sm shadow-md">
-                                    Ai
-                                </div>
+                    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
+                        <div className="grid grid-cols-1 lg:grid-cols-12">
+                            {/* Left Info (5 cols) */}
+                            <div className="lg:col-span-5 p-8 sm:p-10 flex flex-col justify-between">
                                 <div>
-                                    <div className="text-lg font-bold text-white tracking-tight leading-none">
-                                        AiCI
+                                    <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-[#0B6282] font-bold mb-3">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#0B6282]"></span>
+                                        LOKASI PUSAT RISET
                                     </div>
-                                    <div className="text-[9px] font-semibold tracking-wider text-teal-300 uppercase mt-0.5">
-                                        ARTIFICIAL INTELLIGENCE CENTER INDONESIA
+                                    <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+                                        Kunjungi Laboratorium Kami di Kampus UI Depok
+                                    </h3>
+                                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
+                                        Gedung Lab. Riset Multidisiplin Pertamina FMIPA Universitas Indonesia Lantai 4, Pondok Cina, Beji, Kota Depok, Jawa Barat 16424.
+                                    </p>
+
+                                    <div className="space-y-3 text-xs text-slate-600 pb-6 border-b border-slate-100">
+                                        <div className="flex items-center gap-2">
+                                            <i className="bi bi-clock text-[#0B6282]"></i>
+                                            <span>Operasional: Senin - Jumat (08:00 - 17:00 WIB)</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <i className="bi bi-star-fill text-amber-500"></i>
+                                            <span className="font-bold text-slate-800">5.0 / 5.0</span>
+                                            <span className="text-slate-400 font-sans">(18 ulasan Google Maps)</span>
+                                        </div>
                                     </div>
+                                </div>
+
+                                <div className="pt-6 flex flex-wrap items-center gap-3">
+                                    <a
+                                        href="https://maps.google.com/?q=Gedung+Lab+Riset+Multidisiplin+Pertamina+FMIPA+UI"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#E62C29] hover:bg-[#d02522] text-white text-xs font-bold transition-all shadow-md shadow-red-950/20"
+                                    >
+                                        <i className="bi bi-geo-alt-fill text-white"></i>
+                                        <span>Buka di Google Maps</span>
+                                    </a>
+                                    <Link
+                                        href="/kontak"
+                                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-all"
+                                    >
+                                        <span>Petunjuk Arah & Kontak</span>
+                                    </Link>
                                 </div>
                             </div>
 
-                            <p className="text-xs text-teal-100/70 leading-relaxed pr-4">
-                                Gd. Laboratorium Riset Multidisiplin Pertamina FMIPA UI Lt. 4, Universitas Indonesia Depok, Jawa Barat 16424
-                            </p>
-
-                            <div className="text-xs text-teal-100/70">
-                                Phone:{" "}
-                                <a
-                                    href="tel:082110103938"
-                                    className="text-cyan-300 font-semibold hover:underline"
-                                >
-                                    0821-1010-3938
-                                </a>
+                            {/* Right Map Embed (7 cols) */}
+                            <div className="lg:col-span-7 min-h-[360px] bg-slate-200 relative">
+                                <iframe
+                                    title="Peta Lokasi AiCI FMIPA UI"
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3965.2155797664426!2d106.82522737503889!3d-6.366162993623999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69ec100aa7ec6d%3A0x6b4fb6c956dc8155!2sGedung%20Lab%20Riset%20Multidisiplin%20FMIPA%20UI!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid"
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    allowFullScreen={false}
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    className="w-full h-full min-h-[360px]"
+                                ></iframe>
                             </div>
-                        </div>
-
-                        {/* Col 2: PAGES (Span 2) */}
-                        <div className="lg:col-span-2 space-y-3">
-                            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                                PAGES
-                            </h4>
-                            <ul className="space-y-2 text-xs text-teal-100/70">
-                                <li>
-                                    <a href="#" className="hover:text-white transition-colors">
-                                        Profil
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#fasilitas" className="hover:text-white transition-colors">
-                                        Fasilitas
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        Program
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/faq" className="hover:text-white transition-colors">
-                                        Kontak
-                                    </a>
-                                </li>
-
-                            </ul>
-                        </div>
-
-                        {/* Col 3: DOWNLOAD & PROGRAM (Span 3) */}
-                        <div className="lg:col-span-3 space-y-3">
-                            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                                DOWNLOAD & PROGRAM
-                            </h4>
-                            <ul className="space-y-2 text-xs text-teal-100/70">
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        Fun Learning
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        Workshop Prompt Engineer
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        Extracurricular AI and Robotic
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        AI for Education
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        AI Day
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        AI Edu Fair
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#program" className="hover:text-white transition-colors">
-                                        AI Talents
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* Col 4: SOCIAL MEDIA (Span 3) */}
-                        <div className="lg:col-span-3 space-y-4">
-                            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                                SOCIAL MEDIA
-                            </h4>
-                            <p className="text-xs text-teal-100/70 leading-relaxed">
-                                Ikuti kami untuk update kurikulum, agenda webinar, dan inovasi edukasi kecerdasan buatan.
-                            </p>
-
-                            {/* Circular Icon Buttons */}
-                            <div className="flex items-center gap-3 pt-1">
-                                <a
-                                    href="https://instagram.com"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="w-8 h-8 rounded-full bg-teal-900/80 border border-teal-700/60 flex items-center justify-center text-teal-100 hover:text-white hover:bg-teal-800 transition-colors text-sm"
-                                    aria-label="Instagram"
-                                >
-                                    <i className="bi bi-instagram"></i>
-                                </a>
-                                <a
-                                    href="https://linkedin.com"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="w-8 h-8 rounded-full bg-teal-900/80 border border-teal-700/60 flex items-center justify-center text-teal-100 hover:text-white hover:bg-teal-800 transition-colors text-sm"
-                                    aria-label="LinkedIn"
-                                >
-                                    <i className="bi bi-linkedin"></i>
-                                </a>
-                                <a
-                                    href="mailto:info@aici.id"
-                                    className="w-8 h-8 rounded-full bg-teal-900/80 border border-teal-700/60 flex items-center justify-center text-teal-100 hover:text-white hover:bg-teal-800 transition-colors text-sm"
-                                    aria-label="Email"
-                                >
-                                    <i className="bi bi-envelope"></i>
-                                </a>
-                                <a
-                                    href="https://wa.me/6282110103938"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="w-8 h-8 rounded-full bg-teal-900/80 border border-teal-700/60 flex items-center justify-center text-teal-100 hover:text-white hover:bg-teal-800 transition-colors text-sm"
-                                    aria-label="WhatsApp"
-                                >
-                                    <i className="bi bi-whatsapp"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bottom Copyright & Legal Links */}
-                    <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-teal-100/60">
-                        <div>
-                            &copy; 2026 Artificial Intelligence Center Indonesia (AiCI). All rights reserved.
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <a href="#" className="hover:text-teal-200 transition-colors">
-                                Privacy Policy
-                            </a>
-                            <a href="#" className="hover:text-teal-200 transition-colors">
-                                Terms of Service
-                            </a>
-                            <a href="https://sci.ui.ac.id" target="_blank" rel="noreferrer" className="hover:text-teal-200 transition-colors">
-                                FMIPA UI Hub
-                            </a>
                         </div>
                     </div>
                 </div>
-            </footer>
+            </section>
+
+            {/* Persistent Standard Institutional Footer */}
+            <PublicFooter />
         </div>
     );
 }
+
+

@@ -20,7 +20,7 @@ export default function ResetPassword({ token, email }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-teal-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#EDF2F7] to-blue-50 flex items-center justify-center p-4">
             <Head title="Reset Password - AICI" />
 
             <div className="w-full max-w-md">
@@ -51,7 +51,7 @@ export default function ResetPassword({ token, email }: Props) {
                                 className={`w-full px-4 py-3 rounded-xl border-2 transition-all focus:outline-none ${
                                     errors.email
                                         ? 'border-red-300 bg-red-50 focus:border-red-500'
-                                        : 'border-gray-200 focus:border-teal-500'
+                                        : 'border-gray-200 focus:border-[#0B6282]'
                                 }`}
                                 required
                             />
@@ -71,7 +71,7 @@ export default function ResetPassword({ token, email }: Props) {
                                 className={`w-full px-4 py-3 rounded-xl border-2 transition-all focus:outline-none ${
                                     errors.password
                                         ? 'border-red-300 bg-red-50 focus:border-red-500'
-                                        : 'border-gray-200 focus:border-teal-500'
+                                        : 'border-gray-200 focus:border-[#0B6282]'
                                 }`}
                                 required
                             />
@@ -91,7 +91,7 @@ export default function ResetPassword({ token, email }: Props) {
                                 className={`w-full px-4 py-3 rounded-xl border-2 transition-all focus:outline-none ${
                                     errors.password_confirmation
                                         ? 'border-red-300 bg-red-50 focus:border-red-500'
-                                        : 'border-gray-200 focus:border-teal-500'
+                                        : 'border-gray-200 focus:border-[#0B6282]'
                                 }`}
                                 required
                             />
@@ -103,7 +103,7 @@ export default function ResetPassword({ token, email }: Props) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full py-3.5 px-4 bg-[#034d52] hover:bg-[#023b3f] text-white font-semibold rounded-xl transition duration-150 shadow-md hover:shadow-lg disabled:opacity-60 mt-2"
+                            className="w-full py-3.5 px-4 bg-[#0B6282] hover:bg-[#08455c] text-white font-semibold rounded-xl transition duration-150 shadow-md hover:shadow-lg disabled:opacity-60 mt-2"
                         >
                             {processing ? 'Menyimpan...' : 'Simpan Password Baru'}
                         </button>

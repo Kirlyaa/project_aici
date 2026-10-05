@@ -45,7 +45,13 @@ Route::get('/landing', function () {
 
 Route::get('/program', fn() => Inertia::render('Program'))->name('program');
 
-Route::get('/profil', fn() => Inertia::render('Profil'))->name('profil');
+Route::get('/profil', function (\Illuminate\Http\Request $request) {
+    if (!\Illuminate\Support\Facades\Auth::check() || $request->query('public') || $request->query('view') === 'public') {
+        return Inertia::render('Profil');
+    }
+
+    return app(\App\Http\Controllers\ProfileController::class)->edit($request);
+})->name('profile.edit');
 
 Route::get('/fasilitas', fn() => Inertia::render('Fasilitas'))->name('fasilitas');
 
@@ -95,7 +101,6 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'active'])->group(function () {
 
     // ============ ROUTE UNTUK SEMUA ROLE (User / Tutor / SuperAdmin) ============
-    Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profil', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

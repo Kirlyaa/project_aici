@@ -74,13 +74,13 @@ export default function SuperAdminDashboard() {
                         </div>
                         <div className="flex items-center gap-4">
                             <span className="text-sm text-gray-600">Selamat datang Super Admin</span>
-                            <button className="w-10 h-10 rounded-lg bg-teal-600 text-white flex items-center justify-center hover:bg-teal-700">
+                            <button className="w-10 h-10 rounded-lg bg-[#0B6282] text-white flex items-center justify-center hover:bg-[#08455c] transition-colors">
                                 <i className="bi bi-person-circle text-lg" />
                             </button>
                             <button
                                 type="button"
                                 onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
-                                className="w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors"
+                                className="w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:text-[#E62C29] hover:bg-red-50 flex items-center justify-center transition-colors"
                                 title="Logout"
                             >
                                 <i className="bi bi-box-arrow-right text-lg" />
@@ -147,12 +147,12 @@ export default function SuperAdminDashboard() {
                 <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {/* User & Role Management */}
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
+                        <div className="bg-gradient-to-r from-[#0B6282] to-[#08455c] px-6 py-4">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <i className="bi bi-person-check-fill" />
                                 Kelola Tutor
                             </h2>
-                            <p className="text-teal-100 text-sm mt-1">Kelola akun Tutor dan akses Super Admin.</p>
+                            <p className="text-blue-100 text-sm mt-1">Kelola akun Tutor dan akses Super Admin.</p>
                         </div>
 
                         <div className="p-6 space-y-4">
@@ -162,9 +162,9 @@ export default function SuperAdminDashboard() {
                                     <p className="text-xs text-green-600 font-semibold">Total Tutor</p>
                                     <p className="text-2xl font-bold text-green-900">{stats.totalTutors}</p>
                                 </div>
-                                <div className="bg-teal-50 rounded-lg p-3 text-center">
-                                    <p className="text-xs text-teal-600 font-semibold">Aktif</p>
-                                    <p className="text-2xl font-bold text-teal-900">{stats.activeTutors}</p>
+                                <div className="bg-[#EDF2F7] rounded-lg p-3 text-center">
+                                    <p className="text-xs text-[#0B6282] font-semibold">Aktif</p>
+                                    <p className="text-2xl font-bold text-[#08455c]">{stats.activeTutors}</p>
                                 </div>
                             </div>
 
@@ -192,7 +192,7 @@ export default function SuperAdminDashboard() {
                             {/* Action Button */}
                             <Link
                                 href="/superadmin/tutors"
-                                className="block text-center mt-6 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
+                                className="block text-center mt-6 px-4 py-2.5 bg-[#0B6282] text-white rounded-lg font-medium hover:bg-[#08455c] transition-colors shadow-sm"
                             >
                                 <i className="bi bi-arrow-right mr-2" /> Kelola Akun Tutor
                             </Link>
@@ -414,30 +414,30 @@ export default function SuperAdminDashboard() {
 
                     {/* Kelola Kalender Tutor */}
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-teal-600 to-emerald-700 px-6 py-4">
+                        <div className="bg-gradient-to-r from-[#0B6282] to-[#046BD2] px-6 py-4">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <i className="bi bi-calendar-week" />
                                 Kelola Kalender Tutor
                             </h2>
-                            <p className="text-teal-100 text-sm mt-1">Otoritas penuh Super Admin untuk menyusun dan mengedit jadwal mengajar para tutor.</p>
+                            <p className="text-blue-100 text-sm mt-1">Otoritas penuh Super Admin untuk menyusun dan mengedit jadwal mengajar para tutor.</p>
                         </div>
 
                         <div className="p-6 space-y-4">
                             {/* Quick Stats */}
                             <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-teal-50 rounded-lg p-3 text-center">
-                                    <p className="text-xs text-teal-600 font-semibold">Tutor Aktif</p>
-                                    <p className="text-2xl font-bold text-teal-900">{stats.activeTutors}</p>
+                                <div className="bg-[#EDF2F7] rounded-lg p-3 text-center">
+                                    <p className="text-xs text-[#0B6282] font-semibold">Tutor Aktif</p>
+                                    <p className="text-2xl font-bold text-[#08455c]">{stats.activeTutors}</p>
                                 </div>
-                                <div className="bg-emerald-50 rounded-lg p-3 text-center">
-                                    <p className="text-xs text-emerald-600 font-semibold">Total Tutor</p>
-                                    <p className="text-2xl font-bold text-emerald-900">{stats.totalTutors}</p>
+                                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-[#046BD2] font-semibold">Total Tutor</p>
+                                    <p className="text-2xl font-bold text-blue-900">{stats.totalTutors}</p>
                                 </div>
                             </div>
 
                             <div className="border-t pt-4">
                                 <p className="text-sm text-gray-600 mb-3">
-                                    <i className="bi bi-shield-check mr-1 text-teal-600" />
+                                    <i className="bi bi-shield-check mr-1 text-[#0B6282]" />
                                     Hanya Super Admin yang berwenang menambah dan mengedit agenda mengajar tutor:
                                 </p>
                                 <div className="space-y-2">
@@ -445,13 +445,13 @@ export default function SuperAdminDashboard() {
                                         <Link
                                             key={t.id}
                                             href={`/superadmin/calendar/tutors/${t.id}`}
-                                            className="flex items-center justify-between p-2.5 hover:bg-teal-50 rounded-lg border border-transparent hover:border-teal-200 transition-colors"
+                                            className="flex items-center justify-between p-2.5 hover:bg-[#EDF2F7] rounded-lg border border-transparent hover:border-blue-200 transition-colors"
                                         >
                                             <div>
                                                 <p className="font-medium text-sm text-gray-900">{t.name}</p>
                                                 <p className="text-xs text-gray-500">{t.email}</p>
                                             </div>
-                                            <i className="bi bi-calendar-event text-teal-600" />
+                                            <i className="bi bi-calendar-event text-[#0B6282]" />
                                         </Link>
                                     ))}
                                     {recentTutors.length === 0 && (
@@ -462,7 +462,7 @@ export default function SuperAdminDashboard() {
 
                             <Link
                                 href="/superadmin/calendar/tutors"
-                                className="block text-center mt-4 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors shadow-sm"
+                                className="block text-center mt-4 px-4 py-2.5 bg-[#0B6282] text-white rounded-lg font-medium hover:bg-[#08455c] transition-colors shadow-sm"
                             >
                                 <i className="bi bi-calendar-week mr-2" /> Buka Kelola Kalender Tutor
                             </Link>

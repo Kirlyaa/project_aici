@@ -15,11 +15,11 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
     return (
         <>
             {/* Mobile Header Bar - Matching Mobile Mockup */}
-            <div className="md:hidden bg-[#034d52] text-white px-4 h-14 sticky top-0 z-50 flex items-center justify-between shadow-sm">
+            <div className="md:hidden bg-[#0B6282] text-white px-4 h-14 sticky top-0 z-50 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="text-white hover:text-teal-200 focus:outline-none p-1"
+                        className="text-white hover:text-cyan-200 focus:outline-none p-1"
                         aria-label="Toggle menu"
                     >
                         <i className={`bi ${mobileMenuOpen ? 'bi-x-lg' : 'bi-list'} text-2xl`} />
@@ -32,8 +32,8 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                                 className="h-6 w-auto object-contain"
                             />
                         </div>
-                        {isSuperAdmin && <span className="text-[10px] bg-red-500/80 px-1.5 py-0.5 rounded font-mono uppercase">Admin</span>}
-                        {isTutor && <span className="text-[10px] bg-blue-500/80 px-1.5 py-0.5 rounded font-mono uppercase">Tutor</span>}
+                        {isSuperAdmin && <span className="text-[10px] bg-[#E62C29] px-1.5 py-0.5 rounded font-mono uppercase text-white font-semibold">Admin</span>}
+                        {isTutor && <span className="text-[10px] bg-[#046BD2] px-1.5 py-0.5 rounded font-mono uppercase text-white font-semibold">Tutor</span>}
                     </Link>
                 </div>
 
@@ -49,11 +49,11 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
 
             {/* Mobile Slide-down Drawer Menu */}
             {mobileMenuOpen && (
-                <div className="md:hidden bg-[#034d52] border-t border-teal-800/60 text-white px-4 pt-2 pb-4 space-y-2 sticky top-14 z-40 shadow-lg animate-fadeIn">
-                    <div className="pb-2 border-b border-teal-800 text-xs text-teal-200">
+                <div className="md:hidden bg-[#08455c] border-t border-[#0B6282] text-white px-4 pt-2 pb-4 space-y-2 sticky top-14 z-40 shadow-lg animate-fadeIn">
+                    <div className="pb-2 border-b border-[#0B6282] text-xs text-cyan-200">
                         Selamat datang, <span className="font-semibold text-white">{userName}</span>
-                        {isSuperAdmin && <span className="ml-2 px-1.5 py-0.5 bg-red-500/30 rounded text-[10px]">Super Admin</span>}
-                        {isTutor && <span className="ml-2 px-1.5 py-0.5 bg-blue-500/30 rounded text-[10px]">Tutor</span>}
+                        {isSuperAdmin && <span className="ml-2 px-1.5 py-0.5 bg-[#E62C29] rounded text-[10px] text-white">Super Admin</span>}
+                        {isTutor && <span className="ml-2 px-1.5 py-0.5 bg-[#046BD2] rounded text-[10px] text-white">Tutor</span>}
                     </div>
 
                     {isSuperAdmin ? (
@@ -175,43 +175,43 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                         <div className="flex items-center gap-8 text-sm font-semibold">
                             {isSuperAdmin ? (
                                 <>
-                                    <Link href="/superadmin" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/superadmin" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Dashboard
                                     </Link>
-                                    <Link href="/superadmin/students" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/superadmin/students" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Manajemen Siswa
                                     </Link>
-                                    <Link href="/superadmin/classes" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/superadmin/classes" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Kelas
                                     </Link>
-                                    <Link href="/superadmin/tutors" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/superadmin/tutors" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Tutor
                                     </Link>
-                                    <Link href="/superadmin/calendar" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/superadmin/calendar" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Kalender
                                     </Link>
                                 </>
                             ) : isTutor ? (
                                 <>
-                                    <Link href="/tutor" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/tutor" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Dashboard
                                     </Link>
-                                    <Link href="/tutor/teaching-calendar" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/tutor/teaching-calendar" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Kalender Tutor
                                     </Link>
                                 </>
                             ) : (
                                 <>
-                                    <Link href="/beranda" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/beranda" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Beranda
                                     </Link>
-                                    <Link href="/jadwal" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/jadwal" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Jadwal
                                     </Link>
-                                    <Link href="/nilai" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/nilai" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Nilai
                                     </Link>
-                                    <Link href="/profil" className="text-gray-700 hover:text-[#034d52] transition-colors">
+                                    <Link href="/profil" className="text-gray-700 hover:text-[#0B6282] transition-colors">
                                         Profil
                                     </Link>
                                 </>
@@ -222,7 +222,7 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                             <span className="text-sm text-gray-600 hidden sm:block">Selamat datang</span>
                             <div className="flex items-center gap-2">
                                 <span className="font-medium">{userName}</span>
-                                <div className="w-10 h-10 bg-[#034d52] rounded-full flex items-center justify-center">
+                                <div className="w-10 h-10 bg-[#0B6282] rounded-full flex items-center justify-center">
                                     <i className="bi bi-person-fill text-white text-lg" />
                                 </div>
                                 <button

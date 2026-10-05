@@ -155,17 +155,17 @@ export default function ModulesViewer() {
             <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
                 {/* Context Filter Banner (When filtered by student or class) */}
                 {filterContext && filterContext.className && (
-                    <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 border border-teal-200/90 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="bg-gradient-to-r from-blue-50 via-slate-50 to-blue-50 border border-blue-200/90 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-[#034d52] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <div className="w-10 h-10 rounded-xl bg-[#0B6282] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
                                 <i className="bi bi-funnel-fill text-lg" />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-xs font-bold text-teal-800 uppercase tracking-wide">
+                                    <span className="text-xs font-bold text-[#0B6282] uppercase tracking-wide">
                                         Modul Khusus Kelas:
                                     </span>
-                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#034d52] text-white shadow-sm">
+                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#0B6282] text-white shadow-sm">
                                         {filterContext.className}
                                     </span>
                                     {filterContext.studentName && (
@@ -182,9 +182,9 @@ export default function ModulesViewer() {
 
                         <Link
                             href="/tutor/modules"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-gray-700 hover:text-teal-900 hover:bg-teal-100/60 border border-teal-200 shadow-sm transition-all flex-shrink-0"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-gray-700 hover:text-[#0B6282] hover:bg-blue-50 border border-blue-200 shadow-sm transition-all flex-shrink-0"
                         >
-                            <i className="bi bi-grid text-teal-700" />
+                            <i className="bi bi-grid text-[#0B6282]" />
                             <span>Tampilkan Semua Modul</span>
                         </Link>
                     </div>
@@ -194,7 +194,7 @@ export default function ModulesViewer() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-                            <i className="bi bi-book text-[#034d52]" />
+                            <i className="bi bi-book text-[#0B6282]" />
                             {activeBook ? activeBook.name : 'Daftar Buku Modul Pembelajaran'}
                         </h1>
                         <p className="text-gray-600 text-xs sm:text-sm mt-1">
@@ -206,11 +206,11 @@ export default function ModulesViewer() {
 
                     <div className="flex items-center gap-2">
                         <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-gray-200 text-gray-700 shadow-sm flex items-center gap-1.5">
-                            <i className="bi bi-layers text-teal-600" />
+                            <i className="bi bi-layers text-[#0B6282]" />
                             {rawBooks.length} Buku Panduan
                         </span>
-                        <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-teal-50 border border-teal-200 text-[#034d52] shadow-sm flex items-center gap-1.5">
-                            <i className="bi bi-file-earmark-code text-teal-700" />
+                        <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 border border-blue-200 text-[#0B6282] shadow-sm flex items-center gap-1.5">
+                            <i className="bi bi-file-earmark-code text-[#0B6282]" />
                             {stats?.totalSubModules ?? (rawBooks.reduce((acc, b) => acc + (b.subModulesCount || 0), 0))} Sub Modul
                         </span>
                     </div>

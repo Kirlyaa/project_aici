@@ -32,12 +32,12 @@ export default function SessionDetail({ session }: Props) {
 
             <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 space-y-5 pb-24 md:pb-12">
                 {/* Back Top */}
-                <Link href="/jadwal" className="inline-flex items-center gap-1.5 text-[#034d52] font-semibold text-xs sm:text-sm hover:underline">
+                <Link href="/jadwal" className="inline-flex items-center gap-1.5 text-[#0B6282] font-semibold text-xs sm:text-sm hover:underline">
                     <i className="bi bi-arrow-left" /> Kembali
                 </Link>
 
                 {/* Hero Banner Card - Matching Mobile Mockup */}
-                <div className="relative bg-[#034d52] text-white rounded-2xl p-6 sm:p-8 shadow-md overflow-hidden">
+                <div className="relative bg-[#0B6282] text-white rounded-2xl p-6 sm:p-8 shadow-md overflow-hidden">
                     <div className="absolute right-0 top-0 opacity-10 pointer-events-none translate-x-6 -translate-y-4">
                         <i className="bi bi-robot text-[180px]" />
                     </div>
@@ -47,7 +47,7 @@ export default function SessionDetail({ session }: Props) {
                             <i className={`bi ${cfg.icon}`} /> {cfg.label}
                         </span>
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">{session.title}</h1>
-                        <p className="text-teal-100 text-xs sm:text-sm font-light">
+                        <p className="text-cyan-100 text-xs sm:text-sm font-light">
                             {(session as any).date_string ?? session.date}
                         </p>
                     </div>
@@ -58,7 +58,7 @@ export default function SessionDetail({ session }: Props) {
                     {/* Detail Informasi Tutor & Kelas */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 flex items-center gap-3.5">
-                            <div className="w-12 h-12 bg-teal-50 text-[#034d52] rounded-xl flex items-center justify-center text-xl flex-shrink-0 border border-teal-100">
+                            <div className="w-12 h-12 bg-blue-50 text-[#0B6282] rounded-xl flex items-center justify-center text-xl flex-shrink-0 border border-blue-100">
                                 <i className="bi bi-person-badge" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -81,7 +81,7 @@ export default function SessionDetail({ session }: Props) {
                                 <p className="font-bold text-gray-900 text-sm sm:text-base truncate">
                                     {session.classroom ? session.classroom.name : 'Kelas Reguler'}
                                 </p>
-                                <p className="text-xs text-gray-500">Status Kehadiran: <span className="font-semibold capitalize text-teal-800">{cfg.label}</span></p>
+                                <p className="text-xs text-gray-500">Status Kehadiran: <span className="font-semibold capitalize text-[#0B6282]">{cfg.label}</span></p>
                             </div>
                         </div>
                     </div>
@@ -104,27 +104,27 @@ export default function SessionDetail({ session }: Props) {
                             session.modules.map(mod => (
                                 <div
                                     key={mod.id}
-                                    className="flex items-center gap-3 p-4 bg-[#f0f7f9] rounded-2xl border border-teal-100/80"
+                                    className="flex items-center gap-3 p-4 bg-[#EDF2F7] rounded-2xl border border-slate-200"
                                 >
-                                    <div className="w-10 h-10 bg-[#034d52] rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                                    <div className="w-10 h-10 bg-[#0B6282] rounded-xl flex items-center justify-center text-white flex-shrink-0">
                                         <i className="bi bi-journal-text text-xl" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-[#034d52] text-xs sm:text-sm truncate">{mod.name}</p>
-                                        <p className="text-[11px] text-teal-700/80 font-medium">Materi sesi pembelajaran</p>
+                                        <p className="font-bold text-[#0B6282] text-xs sm:text-sm truncate">{mod.name}</p>
+                                        <p className="text-[11px] text-gray-500 font-medium">Materi sesi pembelajaran</p>
                                     </div>
                                 </div>
                             ))
                         ) : (
                             <div
-                                className="flex items-center gap-3 p-4 bg-[#f0f7f9] rounded-2xl border border-teal-100/80"
+                                className="flex items-center gap-3 p-4 bg-[#EDF2F7] rounded-2xl border border-slate-200"
                             >
-                                <div className="w-10 h-10 bg-[#034d52] rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                                <div className="w-10 h-10 bg-[#0B6282] rounded-xl flex items-center justify-center text-white flex-shrink-0">
                                     <i className="bi bi-journal-text text-xl" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-[#034d52] text-xs sm:text-sm truncate">Modul 1 – Pengenalan Robotika</p>
-                                    <p className="text-[11px] text-teal-700/80 font-medium">Materi sesi pembelajaran</p>
+                                    <p className="font-bold text-[#0B6282] text-xs sm:text-sm truncate">Modul 1 – Pengenalan Robotika</p>
+                                    <p className="text-[11px] text-gray-500 font-medium">Materi sesi pembelajaran</p>
                                 </div>
                             </div>
                         )}
@@ -142,7 +142,7 @@ export default function SessionDetail({ session }: Props) {
                         <h2 className="font-bold text-base text-gray-900">Alat yang Perlu Dibawa</h2>
                         <div className="flex flex-wrap gap-2.5 pt-1">
                             {(session.tools && session.tools.length > 0 ? session.tools : ['Kit Robot Dasar', 'Laptop', 'Kabel USB', 'Modul Fisik']).map(tool => (
-                                <span key={tool} className="inline-flex items-center gap-2 px-4 py-2 bg-[#f0f7f9] text-[#034d52] rounded-full text-xs font-semibold border border-teal-100/80">
+                                <span key={tool} className="inline-flex items-center gap-2 px-4 py-2 bg-[#EDF2F7] text-[#0B6282] rounded-full text-xs font-semibold border border-slate-200">
                                     <i className={`bi ${toolIcons[tool] ?? 'bi-box'} text-sm`} />
                                     {tool}
                                 </span>
@@ -153,7 +153,7 @@ export default function SessionDetail({ session }: Props) {
 
                 {/* Footer Back Link */}
                 <div className="text-center pt-2">
-                    <Link href="/jadwal" className="inline-flex items-center gap-1.5 text-[#034d52] font-semibold text-xs sm:text-sm hover:underline">
+                    <Link href="/jadwal" className="inline-flex items-center gap-1.5 text-[#0B6282] font-semibold text-xs sm:text-sm hover:underline">
                         <i className="bi bi-chevron-left" /> Kembali ke Daftar Sesi
                     </Link>
                 </div>

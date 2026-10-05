@@ -201,7 +201,7 @@ export default function GradeReport() {
                         <div className="bg-white rounded-2xl shadow-sm border border-teal-100 p-6 sm:p-7 mb-8 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-gray-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-teal-50 text-[#034d52] flex items-center justify-center text-xl flex-shrink-0">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0B6282] flex items-center justify-center text-xl flex-shrink-0">
                                         <i className="bi bi-chat-quote-fill" />
                                     </div>
                                     <div>

@@ -121,7 +121,7 @@ export default function UserModulesViewer() {
                                     setSubSearch('');
                                     setSelectedSubModule(null);
                                 }}
-                                className="inline-flex items-center gap-2 text-[#034d52] font-semibold text-xs sm:text-sm hover:underline mb-2 transition-all group"
+                                className="inline-flex items-center gap-2 text-[#0B6282] font-semibold text-xs sm:text-sm hover:underline mb-2 transition-all group"
                             >
                                 <i className="bi bi-arrow-left text-base group-hover:-translate-x-0.5 transition-transform" />
                                 <span>Kembali ke Pilihan Buku</span>
@@ -129,13 +129,13 @@ export default function UserModulesViewer() {
                         ) : (
                             <Link
                                 href="/jadwal"
-                                className="inline-flex items-center gap-1.5 text-[#034d52] font-semibold text-xs sm:text-sm hover:underline mb-2"
+                                className="inline-flex items-center gap-1.5 text-[#0B6282] font-semibold text-xs sm:text-sm hover:underline mb-2"
                             >
                                 <i className="bi bi-arrow-left" /> Kembali ke Jadwal
                             </Link>
                         )}
                         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2.5">
-                            <i className="bi bi-book-half text-teal-700" />
+                            <i className="bi bi-book-half text-[#0B6282]" />
                             {activeBook ? activeBook.name : 'Katalog Buku Modul Pembelajaran'}
                         </h1>
                         <p className="text-gray-500 text-xs sm:text-sm mt-1">
@@ -147,8 +147,8 @@ export default function UserModulesViewer() {
 
                     {/* Quick Badge / Stats */}
                     <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-teal-50 text-[#034d52] border border-teal-100 shadow-sm">
-                            <i className="bi bi-collection-fill text-teal-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 text-[#0B6282] border border-blue-100 shadow-sm">
+                            <i className="bi bi-collection-fill text-[#0B6282]" />
                             {rawBooks.length} Buku Kurikulum
                         </span>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm">

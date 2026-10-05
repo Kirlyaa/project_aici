@@ -16,7 +16,7 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-teal-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#EDF2F7] to-blue-50 flex items-center justify-center p-4">
             <Head title="Login - AICI" />
 
             {/* Main Card Container */}
@@ -47,7 +47,7 @@ export default function Login() {
                         {/* Email Input */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2.5">
-                                <i className="bi bi-envelope-fill mr-2 text-teal-600" />
+                                <i className="bi bi-envelope-fill mr-2 text-[#0B6282]" />
                                 Email
                             </label>
                             <input
@@ -57,7 +57,7 @@ export default function Login() {
                                 className={`w-full px-4 py-3.5 rounded-xl border-2 transition-all focus:outline-none ${
                                     errors.email 
                                         ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' 
-                                        : 'border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100'
+                                        : 'border-gray-200 focus:border-[#0B6282] focus:ring-2 focus:ring-[#0B6282]/20'
                                 }`}
                                 placeholder="you@email.com"
                                 disabled={processing}
@@ -72,7 +72,7 @@ export default function Login() {
                         {/* Password Input */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2.5">
-                                <i className="bi bi-lock-fill mr-2 text-teal-600" />
+                                <i className="bi bi-lock-fill mr-2 text-[#0B6282]" />
                                 Password
                             </label>
                             <input
@@ -82,7 +82,7 @@ export default function Login() {
                                 className={`w-full px-4 py-3.5 rounded-xl border-2 transition-all focus:outline-none ${
                                     errors.password 
                                         ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' 
-                                        : 'border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100'
+                                        : 'border-gray-200 focus:border-[#0B6282] focus:ring-2 focus:ring-[#0B6282]/20'
                                 }`}
                                 placeholder="••••••••"
                                 disabled={processing}
@@ -98,7 +98,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full mt-8 px-4 py-3.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-xl font-bold hover:from-teal-700 hover:to-teal-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 active:scale-95"
+                            className="w-full mt-8 px-4 py-3.5 bg-gradient-to-r from-[#0B6282] to-[#08455c] hover:from-[#08455c] hover:to-[#062d3d] text-white rounded-xl font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 active:scale-95"
                         >
                             <i className="bi bi-box-arrow-in-right text-lg" />
                             {processing ? 'Sedang Masuk...' : 'Masuk'}

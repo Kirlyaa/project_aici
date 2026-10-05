@@ -14,7 +14,7 @@ export default function VerifyEmail({ status }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-teal-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#EDF2F7] to-blue-50 flex items-center justify-center p-4">
             <Head title="Verifikasi Email - AICI" />
 
             <div className="w-full max-w-md">
@@ -47,7 +47,7 @@ export default function VerifyEmail({ status }: Props) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full py-3 px-4 bg-[#034d52] hover:bg-[#023b3f] text-white font-semibold rounded-xl transition duration-150 shadow-md disabled:opacity-60"
+                            className="w-full py-3 px-4 bg-[#0B6282] hover:bg-[#08455c] text-white font-semibold rounded-xl transition duration-150 shadow-md disabled:opacity-60"
                         >
                             {processing ? 'Mengirim...' : 'Kirim Ulang Email Verifikasi'}
                         </button>

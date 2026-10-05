@@ -161,7 +161,7 @@ export default function HolidayAnnouncementModal() {
                     {/* Official Badge Header */}
                     <div className={`mb-4 text-center transition-all duration-300 ${animPhase === 'closed' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
                         <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/90 text-slate-800 font-bold text-xs tracking-wider uppercase shadow-lg border border-slate-200/80 backdrop-blur-sm">
-                            <i className="bi bi-shield-check text-[#034d52]" />
+                            <i className="bi bi-shield-check text-[#0B6282]" />
                             Pengumuman Resmi Lembaga
                         </span>
                         <p className="text-white/90 text-xs font-medium mt-1.5 drop-shadow">
@@ -205,13 +205,13 @@ export default function HolidayAnnouncementModal() {
                                     className="h-4 w-auto object-contain"
                                 />
                             </div>
-                            <span className="text-[8px] font-bold tracking-widest text-[#034d52] uppercase block border-b border-slate-200 pb-1 w-full">
+                            <span className="text-[8px] font-bold tracking-widest text-[#0B6282] uppercase block border-b border-slate-200 pb-1 w-full">
                                 SURAT PEMBERITAHUAN RESMI
                             </span>
                             <h4 className="text-[11px] font-bold text-slate-800 mt-2 line-clamp-1">
                                 {announcement.title}
                             </h4>
-                            <div className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-teal-50 text-[#034d52] border border-teal-200 text-[10px] font-semibold">
+                            <div className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-blue-50 text-[#0B6282] border border-blue-200 text-[10px] font-semibold">
                                 <i className="bi bi-calendar3 text-[9px]" />
                                 {announcement.holiday_date}
                             </div>
@@ -225,9 +225,9 @@ export default function HolidayAnnouncementModal() {
 
                         {/* ============ LAYER 3: FRONT POCKET OF ENVELOPE (Formal Deep Navy/Teal with Gold Trim) ============ */}
                         <div 
-                            className="absolute inset-0 rounded-xl border border-teal-700/60 pointer-events-none overflow-hidden"
+                            className="absolute inset-0 rounded-xl border border-[#08455c] pointer-events-none overflow-hidden"
                             style={{ 
-                                background: 'linear-gradient(145deg, #034d52 0%, #02383c 100%)',
+                                background: 'linear-gradient(145deg, #0B6282 0%, #08455c 100%)',
                                 zIndex: 10 
                             }}
                         >
@@ -240,8 +240,8 @@ export default function HolidayAnnouncementModal() {
                                 viewBox="0 0 320 208" 
                                 preserveAspectRatio="none"
                             >
-                                <line x1="0" y1="208" x2="160" y2="116" stroke="#012427" strokeWidth="1.5" opacity="0.7" />
-                                <line x1="320" y1="208" x2="160" y2="116" stroke="#012427" strokeWidth="1.5" opacity="0.7" />
+                                <line x1="0" y1="208" x2="160" y2="116" stroke="#062d3d" strokeWidth="1.5" opacity="0.7" />
+                                <line x1="320" y1="208" x2="160" y2="116" stroke="#062d3d" strokeWidth="1.5" opacity="0.7" />
                             </svg>
                         </div>
 
@@ -262,8 +262,8 @@ export default function HolidayAnnouncementModal() {
                             >
                                 <defs>
                                     <linearGradient id="flapGrad" x1="0" y1="0" x2="0" y2="100%">
-                                        <stop offset="0%" stopColor="#045a60" />
-                                        <stop offset="100%" stopColor="#034d52" />
+                                        <stop offset="0%" stopColor="#0d769c" />
+                                        <stop offset="100%" stopColor="#0B6282" />
                                     </linearGradient>
                                 </defs>
                                 <polygon 
@@ -310,7 +310,7 @@ export default function HolidayAnnouncementModal() {
                                 onClick={handleOpen}
                                 className="px-5 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold shadow-lg transition-all flex items-center gap-2 border border-slate-200 active:scale-95"
                             >
-                                <i className="bi bi-envelope-open text-[#034d52]" />
+                                <i className="bi bi-envelope-open text-[#0B6282]" />
                                 Buka Dokumen Pengumuman
                             </button>
                             <button
@@ -341,7 +341,7 @@ export default function HolidayAnnouncementModal() {
                                 className="h-8 w-auto object-contain"
                             />
                             <div className="border-l border-slate-300 pl-3">
-                                <h4 className="text-xs font-extrabold text-[#034d52] tracking-wider uppercase">
+                                <h4 className="text-xs font-extrabold text-[#0B6282] tracking-wider uppercase">
                                     Artificial Intelligence Center Indonesia
                                 </h4>
                                 <p className="text-[10px] text-slate-500">
@@ -373,7 +373,7 @@ export default function HolidayAnnouncementModal() {
 
                     {/* Formal Date Alert Box */}
                     <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-[#034d52] text-white flex flex-col items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-[#0B6282] text-white flex flex-col items-center justify-center shrink-0">
                             <i className="bi bi-calendar-event text-base" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -411,7 +411,7 @@ export default function HolidayAnnouncementModal() {
                                 href={announcement.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3 py-1.5 bg-[#034d52] hover:bg-[#02383c] text-white text-xs font-medium rounded-lg shrink-0 flex items-center gap-1.5 transition-colors"
+                                className="px-3 py-1.5 bg-[#0B6282] hover:bg-[#08455c] text-white text-xs font-medium rounded-lg shrink-0 flex items-center gap-1.5 transition-colors"
                             >
                                 <i className="bi bi-download text-xs" />
                                 Unduh
@@ -436,7 +436,7 @@ export default function HolidayAnnouncementModal() {
                         <button
                             type="button"
                             onClick={handleAcknowledge}
-                            className="flex-1 py-2 px-4 bg-[#034d52] hover:bg-[#02383c] text-white text-xs font-semibold rounded-lg shadow-sm text-center transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                            className="flex-1 py-2 px-4 bg-[#0B6282] hover:bg-[#08455c] text-white text-xs font-semibold rounded-lg shadow-sm text-center transition-all flex items-center justify-center gap-1.5 active:scale-95"
                         >
                             <i className="bi bi-check-lg text-base" />
                             Saya Mengerti

@@ -112,8 +112,8 @@ export default function Profil() {
 
             <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-24 md:pb-12 font-sans">
 
-                {/* Dark Teal Header Card */}
-                <div className="relative bg-[#034d52] text-white rounded-2xl p-6 sm:p-8 shadow-md overflow-hidden">
+                {/* Official Brand Header Card */}
+                <div className="relative bg-[#0B6282] text-white rounded-2xl p-6 sm:p-8 shadow-md overflow-hidden">
                     {/* Watermark Robot Image */}
                     <div className="absolute right-0 top-0 opacity-10 pointer-events-none translate-x-6 -translate-y-4">
                         <i className="bi bi-robot text-[220px]" />
@@ -127,9 +127,9 @@ export default function Profil() {
 
                         {/* Info details */}
                         <div className="space-y-1">
-                            <p className="text-teal-200 text-xs font-medium uppercase tracking-wider">PESERTA PROGRAM</p>
+                            <p className="text-cyan-200 text-xs font-medium uppercase tracking-wider">PESERTA PROGRAM</p>
                             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{userName}</h1>
-                            <p className="text-teal-100 text-xs font-light">{studentStats?.class}</p>
+                            <p className="text-cyan-100 text-xs font-light">{studentStats?.class}</p>
 
                             {/* Stat Pills */}
                             <div className="pt-3 flex flex-wrap gap-2">
@@ -154,7 +154,7 @@ export default function Profil() {
                             onClick={() => setActiveTab('robot')}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                                 activeTab === 'robot'
-                                    ? 'bg-white text-[#034d52] shadow-sm'
+                                    ? 'bg-white text-[#0B6282] shadow-sm'
                                     : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
                             }`}
                         >
@@ -164,7 +164,7 @@ export default function Profil() {
                             onClick={() => setActiveTab('focus')}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                                 activeTab === 'focus'
-                                    ? 'bg-white text-[#034d52] shadow-sm'
+                                    ? 'bg-white text-[#0B6282] shadow-sm'
                                     : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
                             }`}
                         >
@@ -379,14 +379,14 @@ export default function Profil() {
                             {sessions.map((s, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <i className={`bi ${s.status === 'hadir' ? 'bi-check-circle-fill text-green-500' : s.status === 'absen' ? 'bi-x-circle-fill text-red-500' : 'bi-arrow-repeat text-yellow-500'} text-lg`} />
+                                        <i className={`bi ${s.status === 'hadir' ? 'bi-check-circle-fill text-blue-500' : s.status === 'absen' ? 'bi-x-circle-fill text-amber-500' : s.status === 'libur' ? 'bi-bookmark-fill text-red-500' : 'bi-arrow-repeat text-purple-500'} text-lg`} />
                                         <div>
                                             <p className="text-sm font-medium text-gray-800">{s.title ?? '—'}</p>
                                             <p className="text-xs text-gray-500">{s.date ?? '—'}</p>
                                         </div>
                                     </div>
-                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.status === 'hadir' ? 'bg-green-100 text-green-700' : s.status === 'absen' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                        {s.status ?? '—'}
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.status === 'hadir' ? 'bg-blue-100 text-blue-700' : s.status === 'absen' ? 'bg-amber-100 text-amber-800' : s.status === 'libur' ? 'bg-red-100 text-red-700' : 'bg-purple-100 text-purple-700'}`}>
+                                        {s.status === 'absen' ? 'Tidak Hadir' : s.status ?? '—'}
                                     </span>
                                 </div>
                             ))}

@@ -171,12 +171,12 @@ export default function FAQ() {
                             />
                         </Link>
                         <div className="flex items-center gap-4">
-                            <Link href="/" className="text-gray-600 hover:text-gray-900">Kembali</Link>
+                            <Link href="/" className="text-gray-600 hover:text-gray-900">Kembali ke Beranda</Link>
                             <Link
-                                href="/login"
-                                className="px-6 py-2.5 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700"
+                                href="/kontak"
+                                className="px-6 py-2.5 bg-[#0B6282] text-white font-medium rounded-full hover:bg-[#08455c]"
                             >
-                                Masuk
+                                Hubungi Kami
                             </Link>
                         </div>
                     </div>
@@ -198,7 +198,7 @@ export default function FAQ() {
                             onClick={() => setSelectedCategory(cat)}
                             className={`px-4 py-2 rounded-full font-medium transition-colors ${
                                 selectedCategory === cat
-                                    ? 'bg-teal-600 text-white'
+                                    ? 'bg-[#0B6282] text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
@@ -241,13 +241,13 @@ export default function FAQ() {
                 </div>
 
                 {/* Help Section */}
-                <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-2xl p-12 border border-teal-200 text-center">
-                    <i className="bi bi-chat-left-quote text-5xl text-teal-600 mb-4 block" />
+                <div className="bg-gradient-to-r from-sky-50 to-slate-100 rounded-2xl p-12 border border-slate-200 text-center">
+                    <i className="bi bi-chat-left-quote text-5xl text-[#0B6282] mb-4 block" />
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">Belum menemukan jawaban?</h2>
                     <p className="text-gray-600 mb-6">Hubungi tim support kami atau gunakan chatbot di bawah untuk bantuan lebih lanjut.</p>
                     <button
                         onClick={() => setChatOpen(!chatOpen)}
-                        className="px-8 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 inline-flex items-center gap-2"
+                        className="px-8 py-3 bg-[#0B6282] text-white font-semibold rounded-full hover:bg-[#08455c] inline-flex items-center gap-2"
                     >
                         <i className="bi bi-chat-dots" /> Tanya Chatbot
                     </button>
@@ -261,19 +261,19 @@ export default function FAQ() {
                 {chatOpen ? (
                     <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 h-full flex flex-col">
                         {/* Chat Header */}
-                        <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+                        <div className="bg-[#0B6282] px-6 py-4 rounded-t-2xl flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
-                                    <i className="bi bi-robot text-teal-600 text-lg" />
+                                    <i className="bi bi-robot text-[#0B6282] text-lg" />
                                 </div>
                                 <div>
                                     <p className="font-bold text-white">AICI Bot</p>
-                                    <p className="text-xs text-teal-100">Powered by Kepercayaan masing masing</p>
+                                    <p className="text-xs text-cyan-100">Powered by Kepercayaan masing masing</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setChatOpen(false)}
-                                className="text-white hover:text-teal-100"
+                                className="text-white hover:text-cyan-100"
                             >
                                 <i className="bi bi-x-lg text-xl" />
                             </button>
@@ -285,7 +285,7 @@ export default function FAQ() {
                                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-xs px-4 py-2 rounded-lg ${
                                         msg.role === 'user'
-                                            ? 'bg-teal-600 text-white rounded-br-none'
+                                            ? 'bg-[#0B6282] text-white rounded-br-none'
                                             : 'bg-gray-100 text-gray-900 rounded-bl-none'
                                     }`}>
                                         <p className="text-sm">{msg.text}</p>
@@ -311,12 +311,12 @@ export default function FAQ() {
                                     onKeyPress={e => e.key === 'Enter' && !isLoading && handleSendMessage()}
                                     placeholder="Tanya sesuatu..."
                                     disabled={isLoading}
-                                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B6282] text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 />
                                 <button
                                     onClick={handleSendMessage}
                                     disabled={isLoading || !chatInput.trim()}
-                                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 flex items-center justify-center disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 bg-[#0B6282] text-white rounded-lg hover:bg-[#08455c] flex items-center justify-center disabled:bg-gray-300 disabled:cursor-not-allowed"
                                 >
                                     <i className="bi bi-send-fill" />
                                 </button>
@@ -326,7 +326,7 @@ export default function FAQ() {
                 ) : (
                     <button
                         onClick={() => setChatOpen(true)}
-                        className="w-full h-full bg-teal-600 text-white rounded-full shadow-lg hover:bg-teal-700 flex items-center justify-center group"
+                        className="w-full h-full bg-[#0B6282] text-white rounded-full shadow-lg hover:bg-[#08455c] flex items-center justify-center group"
                         title="Open Chatbot"
                     >
                         <i className="bi bi-chat-dots text-2xl group-hover:scale-110 transition-transform" />

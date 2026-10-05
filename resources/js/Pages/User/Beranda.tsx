@@ -26,7 +26,7 @@ export default function Beranda({ sessions }: Props) {
                         onClick={() => setCalendarView('bulanan')}
                         className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
                             calendarView === 'bulanan'
-                                ? 'bg-teal-600 text-white'
+                                ? 'bg-[#0B6282] text-white'
                                 : 'text-gray-600 hover:bg-gray-100'
                         }`}
                     >
@@ -37,7 +37,7 @@ export default function Beranda({ sessions }: Props) {
                         onClick={() => setCalendarView('tahunan')}
                         className={`flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
                             calendarView === 'tahunan'
-                                ? 'bg-teal-600 text-white'
+                                ? 'bg-[#0B6282] text-white'
                                 : 'text-gray-600 hover:bg-gray-100'
                         }`}
                     >
@@ -61,7 +61,7 @@ export default function Beranda({ sessions }: Props) {
                 <div>
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold">Sesi Terbaru</h2>
-                        <a href="/jadwal" className="text-teal-600 text-sm font-medium flex items-center gap-1">
+                        <a href="/jadwal" className="text-[#0B6282] hover:text-[#08455c] text-sm font-medium flex items-center gap-1">
                             Lihat semua <i className="bi bi-arrow-right" />
                         </a>
                     </div>

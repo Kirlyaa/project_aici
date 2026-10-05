@@ -16,39 +16,39 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
 
     if (isSuperAdmin) {
         return (
-            <nav className="fixed bottom-0 left-0 right-0 bg-[#034d52] border-t border-teal-800/80 md:hidden z-50 shadow-lg">
+            <nav className="fixed bottom-0 left-0 right-0 bg-[#0B6282] border-t border-[#08455c] md:hidden z-50 shadow-lg">
                 <div className="flex justify-around items-center h-16 px-2">
                     <Link
                         href="/superadmin"
-                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                        className="flex flex-col items-center gap-1 text-cyan-100 hover:text-white transition-all"
                     >
                         <i className="bi bi-speedometer2 text-xl" />
                         <span className="text-[11px] tracking-wide">Dashboard</span>
                     </Link>
                     <Link
                         href="/superadmin/students"
-                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                        className="flex flex-col items-center gap-1 text-cyan-100 hover:text-white transition-all"
                     >
                         <i className="bi bi-people-fill text-xl" />
                         <span className="text-[11px] tracking-wide">Siswa</span>
                     </Link>
                     <Link
                         href="/superadmin/classes"
-                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                        className="flex flex-col items-center gap-1 text-cyan-100 hover:text-white transition-all"
                     >
                         <i className="bi bi-diagram-3-fill text-xl" />
                         <span className="text-[11px] tracking-wide">Kelas</span>
                     </Link>
                     <Link
                         href="/superadmin/tutors"
-                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                        className="flex flex-col items-center gap-1 text-cyan-100 hover:text-white transition-all"
                     >
                         <i className="bi bi-person-badge-fill text-xl" />
                         <span className="text-[11px] tracking-wide">Tutor</span>
                     </Link>
                     <Link
                         href="/superadmin/calendar"
-                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                        className="flex flex-col items-center gap-1 text-cyan-100 hover:text-white transition-all"
                     >
                         <i className="bi bi-calendar3 text-xl" />
                         <span className="text-[11px] tracking-wide">Kalender</span>
@@ -60,18 +60,18 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
 
     if (isTutor) {
         return (
-            <nav className="fixed bottom-0 left-0 right-0 bg-[#034d52] border-t border-teal-800/80 md:hidden z-50 shadow-lg">
+            <nav className="fixed bottom-0 left-0 right-0 bg-[#0B6282] border-t border-[#08455c] md:hidden z-50 shadow-lg">
                 <div className="flex justify-around items-center h-16 px-2">
                     <Link
                         href="/tutor"
-                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                        className="flex flex-col items-center gap-1 text-cyan-100 hover:text-white transition-all"
                     >
                         <i className="bi bi-speedometer2 text-xl" />
                         <span className="text-[11px] tracking-wide">Dashboard</span>
                     </Link>
                     <Link
                         href="/tutor/teaching-calendar"
-                        className="flex flex-col items-center gap-1 text-teal-200/80 hover:text-white transition-all"
+                        className="flex flex-col items-center gap-1 text-cyan-100 hover:text-white transition-all"
                     >
                         <i className="bi bi-calendar3 text-xl" />
                         <span className="text-[11px] tracking-wide">Kalender</span>
@@ -82,13 +82,13 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
     }
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-[#034d52] border-t border-teal-800/80 md:hidden z-50 shadow-lg">
+        <nav className="fixed bottom-0 left-0 right-0 bg-[#0B6282] border-t border-[#08455c] md:hidden z-50 shadow-lg">
             <div className="flex justify-around items-center h-16 px-2">
                 {/* Beranda */}
                 <Link
                     href="/beranda"
                     className={`flex flex-col items-center gap-1 transition-all ${
-                        isHome ? 'text-white font-bold scale-105' : 'text-teal-200/80 hover:text-white'
+                        isHome ? 'text-white font-bold scale-105' : 'text-cyan-100 hover:text-white'
                     }`}
                 >
                     <i className="bi bi-house-door-fill text-xl" />
@@ -99,7 +99,7 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
                 <Link
                     href="/jadwal"
                     className={`flex flex-col items-center gap-1 transition-all ${
-                        isTugas ? 'text-white font-bold scale-105' : 'text-teal-200/80 hover:text-white'
+                        isTugas ? 'text-white font-bold scale-105' : 'text-cyan-100 hover:text-white'
                     }`}
                 >
                     <i className="bi bi-mortarboard-fill text-xl" />
@@ -110,7 +110,7 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
                 <Link
                     href="/nilai"
                     className={`flex flex-col items-center gap-1 transition-all ${
-                        isNilai ? 'text-white font-bold scale-105' : 'text-teal-200/80 hover:text-white'
+                        isNilai ? 'text-white font-bold scale-105' : 'text-cyan-100 hover:text-white'
                     }`}
                 >
                     <i className="bi bi-bar-chart-fill text-xl" />
@@ -121,7 +121,7 @@ export default function MobileNavbar({ currentPage, userRole = 'user' }: MobileN
                 <Link
                     href="/profil"
                     className={`flex flex-col items-center gap-1 transition-all ${
-                        isProfil ? 'text-white font-bold scale-105' : 'text-teal-200/80 hover:text-white'
+                        isProfil ? 'text-white font-bold scale-105' : 'text-cyan-100 hover:text-white'
                     }`}
                 >
                     <i className="bi bi-person-fill text-xl" />

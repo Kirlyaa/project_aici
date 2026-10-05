@@ -167,21 +167,21 @@ export default function TutorDashboard() {
                                 </Link>
                                 <Link
                                     href="/tutor/teaching-calendar"
-                                    className="text-gray-600 hover:text-teal-700 transition flex items-center gap-1.5"
+                                    className="text-gray-600 hover:text-[#0B6282] transition flex items-center gap-1.5"
                                 >
                                     <i className="bi bi-calendar3" />
                                     Kalender Tutor
                                 </Link>
                             </div>
                             <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
-                                <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
+                                <div className="w-10 h-10 bg-[#0B6282] rounded-full flex items-center justify-center">
                                     <i className="bi bi-person-fill text-white" />
                                 </div>
                                 <span className="font-medium text-sm text-gray-800">{(props.auth as any)?.user?.name || 'Tutor'}</span>
                                 <button
                                     type="button"
                                     onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
-                                    className="text-gray-600 hover:text-red-600 transition-colors ml-1"
+                                    className="text-gray-600 hover:text-[#E62C29] transition-colors ml-1"
                                     title="Logout"
                                 >
                                     <i className="bi bi-box-arrow-right text-xl" />
@@ -200,7 +200,7 @@ export default function TutorDashboard() {
                 <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-800">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EDF2F7] text-[#0B6282]">
                                 Portal Tutor
                             </span>
                         </div>
@@ -211,16 +211,16 @@ export default function TutorDashboard() {
                     <div className="flex items-center gap-3">
                         <Link
                             href="/tutor/teaching-calendar"
-                            className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-semibold text-sm shadow-sm transition hover:shadow-md group"
+                            className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-[#0B6282] hover:bg-[#08455c] text-white font-semibold text-sm shadow-sm transition hover:shadow-md group"
                         >
-                            <div className="w-8 h-8 rounded-lg bg-teal-600/70 flex items-center justify-center text-teal-100 group-hover:scale-105 transition-transform">
+                            <div className="w-8 h-8 rounded-lg bg-[#08455c] flex items-center justify-center text-white group-hover:scale-105 transition-transform">
                                 <i className="bi bi-calendar3 text-base" />
                             </div>
                             <div className="text-left">
                                 <div className="leading-tight">Kalender Tutor</div>
-                                <span className="text-[11px] text-teal-200 font-normal">Agenda &amp; Jadwal Mengajar</span>
+                                <span className="text-[11px] text-blue-200 font-normal">Agenda &amp; Jadwal Mengajar</span>
                             </div>
-                            <i className="bi bi-arrow-right ml-1 text-teal-300" />
+                            <i className="bi bi-arrow-right ml-1 text-blue-200" />
                         </Link>
                     </div>
                 </div>
@@ -241,7 +241,7 @@ export default function TutorDashboard() {
                                             <button
                                                 key={cls.name}
                                                 onClick={() => { setSelectedClass(cls.name); setSelectedStudent(null); }}
-                                                className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-teal-50 hover:border-teal-300 border border-transparent transition-colors"
+                                                className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-[#EDF2F7] hover:border-[#0B6282]/30 border border-transparent transition-colors"
                                             >
                                                 <p className="font-medium text-sm text-gray-900">{cls.name}</p>
                                                 <p className="text-xs text-gray-500 mt-0.5">{cls.total} murid</p>
@@ -255,11 +255,11 @@ export default function TutorDashboard() {
                                     <div className="flex items-center justify-between mb-3">
                                         <button
                                             onClick={() => { setSelectedClass(null); setSelectedStudent(null); }}
-                                            className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800 font-medium"
+                                            className="flex items-center gap-1 text-xs text-[#0B6282] hover:text-[#08455c] font-medium"
                                         >
                                             <i className="bi bi-arrow-left" /> Kembali
                                         </button>
-                                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-teal-50 text-teal-700">
+                                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#EDF2F7] text-[#0B6282]">
                                             {studentsInClass.length} Murid
                                         </span>
                                     </div>
@@ -271,7 +271,7 @@ export default function TutorDashboard() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsAttendanceModalOpen(true)}
-                                                className="w-full py-2 px-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5"
+                                                className="w-full py-2 px-3 rounded-lg bg-[#0B6282] hover:bg-[#08455c] text-white text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5"
                                                 title="Input kehadiran untuk seluruh murid dalam kelas ini sekaligus per materi/pertemuan"
                                             >
                                                 <i className="bi bi-clipboard2-check text-sm" />
@@ -290,13 +290,13 @@ export default function TutorDashboard() {
                                                     onClick={() => setSelectedStudent(student.id)}
                                                     className={`w-full text-left p-3 rounded-lg transition-colors ${
                                                         currentStudent?.id === student.id
-                                                            ? 'bg-teal-600 text-white'
+                                                            ? 'bg-[#0B6282] text-white'
                                                             : 'bg-gray-50 text-gray-900 hover:bg-gray-100'
                                                     }`}
                                                 >
                                                     <p className="font-medium text-sm">{student.name}</p>
                                                     <p className={`text-xs mt-0.5 ${
-                                                        currentStudent?.id === student.id ? 'text-teal-100' : 'text-gray-600'
+                                                        currentStudent?.id === student.id ? 'text-blue-100' : 'text-gray-600'
                                                     }`}>
                                                         {student.level}
                                                     </p>
@@ -314,7 +314,7 @@ export default function TutorDashboard() {
                         {currentStudent ? (
                             <>
                                 {/* Student Info Card */}
-                                <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-xl shadow-sm p-6">
+                                <div className="bg-gradient-to-r from-[#0B6282] to-[#08455c] text-white rounded-xl shadow-sm p-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
@@ -323,22 +323,22 @@ export default function TutorDashboard() {
                                                     {currentStudent.class}
                                                 </span>
                                             </div>
-                                            <p className="text-teal-100">{currentStudent.email}</p>
+                                            <p className="text-blue-100">{currentStudent.email}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             {selectedClassroomId && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsAttendanceModalOpen(true)}
-                                                    className="px-4 py-2 rounded-xl bg-white text-teal-800 hover:bg-teal-50 font-bold text-xs shadow-sm transition flex items-center gap-2"
+                                                    className="px-4 py-2 rounded-xl bg-white text-[#0B6282] hover:bg-[#EDF2F7] font-bold text-xs shadow-sm transition flex items-center gap-2"
                                                 >
-                                                    <i className="bi bi-clipboard2-check text-base text-teal-600" />
+                                                    <i className="bi bi-clipboard2-check text-base text-[#0B6282]" />
                                                     <span>Presensi Kelas Ini</span>
                                                 </button>
                                             )}
                                             <div className="text-right pl-3 border-l border-white/20">
                                                 <p className="text-3xl font-bold">{currentStudent.progress}%</p>
-                                                <p className="text-teal-100 text-xs">Progress Rata-rata</p>
+                                                <p className="text-blue-100 text-xs">Progress Rata-rata</p>
                                             </div>
                                         </div>
                                     </div>
@@ -492,8 +492,8 @@ export default function TutorDashboard() {
                         ) : (
                             <div className="space-y-6">
                                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
-                                    <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <i className="bi bi-person-lines-fill text-teal-600 text-2xl" />
+                                    <div className="w-16 h-16 bg-[#EDF2F7] rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i className="bi bi-person-lines-fill text-[#0B6282] text-2xl" />
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 mb-1">
                                         {selectedClass ? `Kelas: ${selectedClass}` : 'Pilih Kelas & Murid'}
@@ -509,7 +509,7 @@ export default function TutorDashboard() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsAttendanceModalOpen(true)}
-                                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow transition"
+                                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B6282] hover:bg-[#08455c] text-white font-bold text-sm shadow transition"
                                             >
                                                 <i className="bi bi-clipboard2-check text-lg" />
                                                 <span>Input Kehadiran Pertemuan Kelas Ini</span>
@@ -523,7 +523,7 @@ export default function TutorDashboard() {
                                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-700">
+                                                <div className="w-8 h-8 rounded-lg bg-[#EDF2F7] flex items-center justify-center text-[#0B6282]">
                                                     <i className="bi bi-calendar-event text-base" />
                                                 </div>
                                                 <div>
@@ -531,7 +531,7 @@ export default function TutorDashboard() {
                                                     <p className="text-xs text-gray-500">Modul pembelajaran yang diajarkan pada setiap pertemuan di kelas ini</p>
                                                 </div>
                                             </div>
-                                            <span className="text-xs font-semibold px-2.5 py-1 bg-teal-50 text-teal-700 rounded-full">
+                                            <span className="text-xs font-semibold px-2.5 py-1 bg-[#EDF2F7] text-[#0B6282] rounded-full">
                                                 {meetingsForSelectedClass.length} Pertemuan
                                             </span>
                                         </div>

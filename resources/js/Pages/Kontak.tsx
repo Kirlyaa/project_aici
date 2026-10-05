@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import PublicNavbar from '@/Components/PublicNavbar';
+import PublicFooter from '@/Components/PublicFooter';
 
 export default function Kontak() {
     const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -32,77 +34,21 @@ export default function Kontak() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans flex flex-col selection:bg-teal-500 selection:text-white">
+        <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans flex flex-col selection:bg-[#0B6282] selection:text-white">
             <Head title="Kontak & Layanan Konsultasi - Artificial Intelligence Center Indonesia (AiCI) FMIPA UI" />
 
-            {/* ==================== 1. TOP NAVBAR ==================== */}
-            <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    {/* Brand */}
-                    <div className="flex items-center gap-3.5">
-                        <Link href="/landing" className="flex items-center gap-3 group">
-                            <div className="w-11 h-11 rounded-xl bg-teal-800 text-white flex items-center justify-center font-black text-xl shadow-md shadow-teal-900/20 group-hover:scale-105 transition-transform">
-                                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-4 4 4 4 0 0 0 4 4" />
-                                    <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 4 4 4 4 0 0 1-4 4" />
-                                    <path d="M12 6v12" />
-                                </svg>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-extrabold text-base tracking-wider text-teal-950 uppercase leading-none">AiCI</span>
-                                <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-1">
-                                    Artificial Intelligence Center Indonesia
-                                </span>
-                            </div>
-                        </Link>
-                    </div>
-
-                    {/* Nav Links */}
-                    <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-600">
-                        <Link href="/landing" className="hover:text-teal-800 transition-colors">Home</Link>
-                        <Link href="/program" className="hover:text-teal-800 transition-colors">Program</Link>
-                        <Link href="/profil" className="hover:text-teal-800 transition-colors">Profil</Link>
-                        <Link href="/fasilitas" className="hover:text-teal-800 transition-colors">Fasilitas</Link>
-                        <Link href="/galeri" className="hover:text-teal-800 transition-colors">Galeri</Link>
-                        <Link href="/riset" className="hover:text-teal-800 transition-colors">Riset</Link>
-                        {/* Active Item with Red Underline */}
-                        <div className="relative py-2 text-teal-950 font-bold">
-                            <span>Kontak</span>
-                            <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-red-600 rounded-full"></span>
-                        </div>
-                    </nav>
-
-                    {/* CTA Actions */}
-                    <div className="flex items-center gap-3">
-                        <a
-                            href={getWhatsAppUrl('Konsultasi Umum AiCI')}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-sm hover:shadow transition-all uppercase tracking-wide"
-                        >
-                            <i className="bi bi-headset text-sm"></i>
-                            <span>KONSULTASI AI</span>
-                        </a>
-                        <Link
-                            href="/login"
-                            className="w-9 h-9 rounded-full border border-teal-800/30 flex items-center justify-center text-teal-900 hover:bg-teal-50 transition-colors"
-                            title="Login"
-                        >
-                            <i className="bi bi-person-circle text-lg"></i>
-                        </Link>
-                    </div>
-                </div>
-            </header>
+            {/* Persistent Standard Institutional Navbar */}
+            <PublicNavbar active="kontak" />
 
             {/* ==================== 2. HERO SECTION ==================== */}
-            <section className="relative bg-[#034d52] text-white pt-14 pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <section className="relative bg-[#0B6282] text-white pt-14 pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
                 <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px]"></div>
 
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
                     {/* Left: Photo Card with badges */}
                     <div className="lg:col-span-6">
-                        <div className="relative rounded-3xl p-2 bg-gradient-to-tr from-cyan-400/40 via-teal-300/20 to-transparent shadow-2xl">
-                            <div className="relative rounded-2xl overflow-hidden shadow-inner h-80 sm:h-96 group bg-teal-950">
+                        <div className="relative rounded-3xl p-2 bg-gradient-to-tr from-cyan-400/40 via-sky-300/20 to-transparent shadow-2xl">
+                            <div className="relative rounded-2xl overflow-hidden shadow-inner h-80 sm:h-96 group bg-slate-900">
                                 <img
                                     src="/images/landing/kontak-hero.jpg"
                                     alt="Laboratorium Pembelajaran AiCI FMIPA UI"
@@ -630,106 +576,8 @@ export default function Kontak() {
                 </div>
             </section>
 
-            {/* ==================== 6. FOOTER ==================== */}
-            <footer className="bg-[#023136] text-white pt-16 pb-8 border-t border-teal-950">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-teal-900/60">
-                        {/* Col 1 & 2: Brand & Address */}
-                        <div className="lg:col-span-2 space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-teal-800 text-white flex items-center justify-center font-black text-xl">
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-4 4 4 4 0 0 0 4 4" />
-                                        <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 4 4 4 4 0 0 1-4 4" />
-                                        <path d="M12 6v12" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <span className="font-extrabold text-lg tracking-wider uppercase block leading-none">AiCI</span>
-                                    <span className="text-[9px] font-semibold text-teal-300 uppercase tracking-widest">
-                                        Artificial Intelligence Center Indonesia
-                                    </span>
-                                </div>
-                            </div>
-
-                            <p className="text-xs text-teal-200/80 leading-relaxed max-w-sm">
-                                Gedung Lab. Riset Multidisiplin Pertamina FMIPA UI Lt. 4, Kampus UI Depok, Jawa Barat 16424
-                            </p>
-
-                            <div className="space-y-1 text-xs text-teal-200/70 pt-1">
-                                <p>Email: info@aici.id</p>
-                                <p>Tel: +62 21 7888-2424 / 0821-1010-3938</p>
-                            </div>
-                        </div>
-
-                        {/* Col 3: Halaman */}
-                        <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">HALAMAN</h4>
-                            <ul className="space-y-2.5 text-xs text-teal-100/80">
-                                <li>
-                                    <Link href="/landing" className="hover:text-white transition-colors">Home</Link>
-                                </li>
-                                <li>
-                                    <Link href="/program" className="hover:text-white transition-colors">Program Pelatihan</Link>
-                                </li>
-                                <li>
-                                    <Link href="/profil" className="hover:text-white transition-colors">Profil Lembaga</Link>
-                                </li>
-                                <li>
-                                    <Link href="/fasilitas" className="hover:text-white transition-colors">Laboratorium & Fasilitas</Link>
-                                </li>
-                                <li>
-                                    <Link href="/galeri" className="hover:text-white transition-colors">Publikasi Riset & Galeri</Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* Col 4: Download */}
-                        <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">DOWNLOAD</h4>
-                            <ul className="space-y-2.5 text-xs text-teal-100/80">
-                                <li><a href="#brosur" className="hover:text-white transition-colors">Brosur Program 2026</a></li>
-                                <li><a href="#kurikulum" className="hover:text-white transition-colors">Kurikulum AI K-12</a></li>
-                                <li><a href="#silabus" className="hover:text-white transition-colors">Silabus Profesional & Industri</a></li>
-                                <li><a href="#laporan" className="hover:text-white transition-colors">Laporan Riset Tahunan</a></li>
-                                <li><a href="#panduan" className="hover:text-white transition-colors">Panduan Kerjasama Institusi</a></li>
-                            </ul>
-                        </div>
-
-                        {/* Col 5: Media Sosial */}
-                        <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">MEDIA SOSIAL</h4>
-                            <p className="text-xs text-teal-200/80 mb-4 leading-relaxed">
-                                Ikuti pembaruan terkini riset, workshop kecerdasan artifisial, dan agenda edukasi AiCI.
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <a href="https://aici.id" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-globe"></i>
-                                </a>
-                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-share"></i>
-                                </a>
-                                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-youtube"></i>
-                                </a>
-                                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-newspaper"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bottom copyright */}
-                    <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-teal-300/60 gap-4">
-                        <p>© 2026 Artificial Intelligence Center Indonesia (AiCI). Hak Cipta Dilindungi.</p>
-                        <div className="flex items-center gap-6">
-                            <a href="#kebijakan" className="hover:text-teal-200 transition-colors">Kebijakan Privasi</a>
-                            <a href="#syarat" className="hover:text-teal-200 transition-colors">Syarat & Ketentuan</a>
-                            <a href="#peta" className="hover:text-teal-200 transition-colors">Peta Situs</a>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            {/* Persistent Standard Institutional Public Footer */}
+            <PublicFooter />
         </div>
     );
 }

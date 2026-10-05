@@ -1,79 +1,27 @@
 import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import PublicNavbar from '@/Components/PublicNavbar';
+import PublicFooter from '@/Components/PublicFooter';
 
 export default function Fasilitas() {
     const [activeFilter, setActiveFilter] = useState<'all' | 'ruangan' | 'modul' | 'media-kit' | 'robot'>('all');
     const [subFilter, setSubFilter] = useState<'all' | 'ruangan' | 'modul' | 'media-kit' | 'robot'>('ruangan');
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans flex flex-col selection:bg-teal-500 selection:text-white">
+        <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans flex flex-col selection:bg-[#0B6282] selection:text-white">
             <Head title="Fasilitas & Sarana Riset - Artificial Intelligence Center Indonesia (AiCI) FMIPA UI" />
 
-            {/* ==================== 1. TOP NAVBAR (DESKTOP) ==================== */}
-            <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    {/* Brand */}
-                    <div className="flex items-center gap-3.5">
-                        <Link href="/landing" className="flex items-center gap-3 group">
-                            <div className="w-11 h-11 rounded-xl bg-teal-800 text-white flex items-center justify-center font-black text-xl shadow-md shadow-teal-900/20 group-hover:scale-105 transition-transform">
-                                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-4 4 4 4 0 0 0 4 4v1a4 4 0 0 0 4 4" />
-                                    <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 4 4 4 4 0 0 1-4 4v1a4 4 0 0 1-4 4" />
-                                    <path d="M12 6v12" />
-                                </svg>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-extrabold text-base tracking-wider text-teal-950 uppercase leading-none">AiCI</span>
-                                <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-1">
-                                    Artificial Intelligence Center Indonesia
-                                </span>
-                            </div>
-                        </Link>
-                    </div>
-
-                    {/* Nav Links */}
-                    <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-600">
-                        <Link href="/landing" className="hover:text-teal-800 transition-colors">Home</Link>
-                        <Link href="/program" className="hover:text-teal-800 transition-colors">Program</Link>
-                        <Link href="/profil" className="hover:text-teal-800 transition-colors">Profil</Link>
-                        {/* Active Item with Red Underline */}
-                        <div className="relative py-2 text-teal-950 font-bold">
-                            <span>Fasilitas</span>
-                            <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-red-600 rounded-full"></span>
-                        </div>
-                        <Link href="/galeri" className="hover:text-teal-800 transition-colors">Galeri</Link>
-                        <Link href="/riset" className="hover:text-teal-800 transition-colors">Riset</Link>
-                        <Link href="/kontak" className="hover:text-teal-800 transition-colors">Kontak</Link>
-                    </nav>
-
-                    {/* CTA Actions */}
-                    <div className="flex items-center gap-3">
-                        <a
-                            href="https://wa.me/6282110103938?text=Halo%20AiCI%20FMIPA%20UI,%20saya%20tertarik%20dengan%20fasilitas%20dan%20kunjungan%20laboratorium"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-sm hover:shadow transition-all uppercase tracking-wide"
-                        >
-                            KONSULTASI AI
-                        </a>
-                        <Link
-                            href="/login"
-                            className="inline-flex items-center justify-center text-xs font-semibold text-teal-900 border border-teal-800/30 hover:bg-teal-50 px-4 py-2 rounded-full transition-colors"
-                        >
-                            LOGIN
-                        </Link>
-                    </div>
-                </div>
-            </header>
+            {/* Persistent Standard Institutional Navbar */}
+            <PublicNavbar active="fasilitas" />
 
             {/* ==================== 2. HERO SECTION DENGAN CURVED TEAL HEADER ==================== */}
-            <section className="relative bg-[#034d52] text-white pt-16 pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <section className="relative bg-[#0B6282] text-white pt-16 pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
                 {/* Subtle background decoration */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px]"></div>
 
                 <div className="relative max-w-5xl mx-auto text-center flex flex-col items-center">
                     {/* Pill badge */}
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-medium tracking-wide text-teal-100 uppercase mb-4 shadow-sm">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#08455c]/90 border border-white/20 text-xs font-semibold tracking-wide text-cyan-100 uppercase mb-4 shadow-sm">
                         <i className="bi bi-gear-wide-connected text-cyan-300"></i>
                         <span>SARANA & INFRASTRUKTUR RISET FMIPA UI</span>
                     </div>
@@ -84,7 +32,7 @@ export default function Fasilitas() {
                     </h1>
 
                     {/* Subtitle */}
-                    <p className="max-w-2xl text-teal-100/90 text-sm sm:text-base leading-relaxed mb-8">
+                    <p className="max-w-2xl text-cyan-50/90 text-sm sm:text-base leading-relaxed mb-8">
                         Fasilitas Utama Yang Mendukung Proses Pembelajaran Artificial Intelligence Berupa Ruangan, Modul, Media Kit, Serta Robot.
                     </p>
 
@@ -104,8 +52,8 @@ export default function Fasilitas() {
                                     onClick={() => setActiveFilter(btn.id as any)}
                                     className={`px-4 sm:px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
                                         isActive
-                                            ? 'bg-white text-teal-900 shadow-md scale-105'
-                                            : 'bg-white/10 hover:bg-white/20 text-teal-100 border border-white/15'
+                                            ? 'bg-white text-[#0B6282] shadow-md scale-105'
+                                            : 'bg-[#08455c]/80 hover:bg-[#08455c] text-cyan-100 border border-white/15'
                                     }`}
                                 >
                                     {btn.label}
@@ -126,11 +74,11 @@ export default function Fasilitas() {
 
             {/* ==================== 3. FLOATING HIGHLIGHT CARD WITH 4 THUMBNAILS ==================== */}
             <section className="relative -mt-14 z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-                <div className="bg-gradient-to-br from-[#cff2ff] via-[#e2f7ff] to-[#d8f4ff] rounded-3xl p-6 sm:p-10 shadow-xl border border-sky-200/80">
+                <div className="bg-gradient-to-br from-[#EDF2F7] via-sky-50 to-[#e2f7ff] rounded-3xl p-6 sm:p-10 shadow-xl border border-sky-200/80">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                         {/* Left column: Overview text */}
                         <div className="lg:col-span-5 space-y-5">
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#034d52] text-white text-xs font-semibold tracking-wide uppercase shadow-sm">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0B6282] text-white text-xs font-semibold tracking-wide uppercase shadow-sm">
                                 <i className="bi bi-bank"></i>
                                 <span>SARANA & INFRASTRUKTUR RISET FMIPA UI</span>
                             </div>
@@ -146,7 +94,7 @@ export default function Fasilitas() {
                             <div className="flex flex-wrap items-center gap-3 pt-2">
                                 <a
                                     href="#detail-fasilitas"
-                                    className="inline-flex items-center gap-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white text-xs font-bold px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-all uppercase tracking-wide"
+                                    className="inline-flex items-center gap-2 bg-[#E62C29] hover:bg-[#d02522] text-white text-xs font-bold px-7 py-3 rounded-full shadow-md shadow-red-950/20 hover:shadow-lg transition-all uppercase tracking-wide"
                                 >
                                     <span>JELAJAHI FASILITAS</span>
                                     <i className="bi bi-arrow-down-short text-base"></i>
@@ -155,9 +103,9 @@ export default function Fasilitas() {
                                     href="https://wa.me/6282110103938?text=Halo%20AiCI%20FMIPA%20UI,%20kami%20ingin%20menjadwalkan%20kunjungan%20lab%20studi"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold px-5 py-3 rounded-full shadow-sm border border-slate-200 transition-all uppercase tracking-wide"
+                                    className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold px-6 py-3 rounded-full shadow-sm border border-slate-200 transition-all uppercase tracking-wide"
                                 >
-                                    <i className="bi bi-calendar-check text-teal-800"></i>
+                                    <i className="bi bi-calendar-check text-[#0B6282]"></i>
                                     <span>JADWALKAN KUNJUNGAN LAB</span>
                                 </a>
                             </div>
@@ -179,7 +127,7 @@ export default function Fasilitas() {
                                 </div>
                                 <div className="flex items-center justify-between px-1">
                                     <span className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">MODUL STEAM</span>
-                                    <i className="bi bi-journal-bookmark text-teal-700 text-sm"></i>
+                                    <i className="bi bi-journal-bookmark text-[#0B6282] text-sm"></i>
                                 </div>
                             </div>
 
@@ -257,7 +205,7 @@ export default function Fasilitas() {
                                 onClick={() => setSubFilter(tab.id as any)}
                                 className={`px-7 py-2.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all duration-200 border ${
                                     isSubActive
-                                        ? 'bg-[#034d52] text-white border-[#034d52] shadow-sm'
+                                        ? 'bg-[#0B6282] text-white border-[#0B6282] shadow-sm'
                                         : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                                 }`}
                             >
@@ -592,7 +540,7 @@ export default function Fasilitas() {
 
             {/* ==================== 7. INSTITUTIONAL COOPERATION CTA BANNER ==================== */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-                <div className="bg-[#034d52] rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-xl">
+                <div className="bg-[#0B6282] rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-xl">
                     <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
                     <div className="relative z-10 max-w-3xl space-y-4">
@@ -604,7 +552,7 @@ export default function Fasilitas() {
                             Tertarik Menyelenggarakan Program AI di Sekolah atau Institusi Anda?
                         </h2>
 
-                        <p className="text-teal-100/90 text-sm leading-relaxed">
+                        <p className="text-cyan-50/90 text-sm leading-relaxed">
                             Dapatkan silabus kurikulum lengkap, proposal kemitraan sekolah, serta jadwal kunjungan workshop praktikum AI bersama tutor departemen sains FMIPA Universitas Indonesia.
                         </p>
 
@@ -613,7 +561,7 @@ export default function Fasilitas() {
                                 href="https://wa.me/6282110103938?text=Halo%20AiCI%20FMIPA%20UI,%20kami%20tertarik%20bekerjasama%20untuk%20program%20sekolah%20kami"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white text-xs font-bold px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-all uppercase tracking-wide"
+                                className="inline-flex items-center gap-2 bg-[#E62C29] hover:bg-[#d02522] text-white text-xs font-bold px-7 py-3 rounded-full shadow-md shadow-red-950/20 hover:shadow-lg transition-all uppercase tracking-wide"
                             >
                                 <i className="bi bi-whatsapp"></i>
                                 <span>HUBUNGI TIM KONSULTAN AICI</span>
@@ -683,134 +631,8 @@ export default function Fasilitas() {
                 </div>
             </section>
 
-            {/* ==================== 9. FOOTER LENGKAP ==================== */}
-            <footer className="bg-[#023136] text-white pt-16 pb-8 border-t border-teal-950">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-teal-900/60">
-                        {/* Col 1 & 2: Brand & Address */}
-                        <div className="lg:col-span-2 space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-teal-800 text-white flex items-center justify-center font-black text-xl">
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-4 4 4 4 0 0 0 4 4v1a4 4 0 0 0 4 4" />
-                                        <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 4 4 4 4 0 0 1-4 4v1a4 4 0 0 1-4 4" />
-                                        <path d="M12 6v12" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <span className="font-extrabold text-lg tracking-wider uppercase block leading-none">AiCI</span>
-                                    <span className="text-[9px] font-semibold text-teal-300 uppercase tracking-widest">
-                                        Artificial Intelligence Center Indonesia
-                                    </span>
-                                </div>
-                            </div>
-
-                            <p className="text-xs text-teal-200/80 leading-relaxed max-w-sm">
-                                Lembaga pengembangan kecerdasan artifisial dan robotika terapan hasil kolaborasi strategis antara Universitas Indonesia (FMIPA UI) dan UMG IdeaLab untuk memajukan talenta digital bangsa.
-                            </p>
-
-                            <div className="space-y-1.5 text-xs text-teal-200/70 pt-2">
-                                <p className="font-medium text-white">Gedung Lab. Riset Multidisiplin Pertamina FMIPA UI Lt. 4</p>
-                                <p>Kampus UI Depok, Jawa Barat 16424</p>
-                                <p className="flex items-center gap-2 pt-1 text-teal-100">
-                                    <i className="bi bi-telephone-fill text-xs text-teal-400"></i>
-                                    <span>Phone: 0821-1010-3938</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Col 3: Pages */}
-                        <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">PAGES</h4>
-                            <ul className="space-y-2.5 text-xs text-teal-100/80">
-                                <li>
-                                    <Link href="/landing" className="hover:text-white flex items-center gap-1.5 transition-colors">
-                                        <i className="bi bi-chevron-right text-[10px] text-teal-400"></i>
-                                        <span>Home</span>
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/program" className="hover:text-white flex items-center gap-1.5 transition-colors">
-                                        <i className="bi bi-chevron-right text-[10px] text-teal-400"></i>
-                                        <span>Program</span>
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/fasilitas" className="hover:text-white flex items-center gap-1.5 transition-colors font-bold text-white">
-                                        <i className="bi bi-chevron-right text-[10px] text-teal-400"></i>
-                                        <span>Fasilitas</span>
-                                    </Link>
-                                </li>
-                                <li>
-                                    <a href="#profil" className="hover:text-white flex items-center gap-1.5 transition-colors">
-                                        <i className="bi bi-chevron-right text-[10px] text-teal-400"></i>
-                                        <span>Profil</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#kontak" className="hover:text-white flex items-center gap-1.5 transition-colors">
-                                        <i className="bi bi-chevron-right text-[10px] text-teal-400"></i>
-                                        <span>Kontak</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <Link href="/faq" className="hover:text-white flex items-center gap-1.5 transition-colors">
-                                        <i className="bi bi-chevron-right text-[10px] text-teal-400"></i>
-                                        <span>FAQ</span>
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* Col 4: Download / Program */}
-                        <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">DOWNLOAD</h4>
-                            <ul className="space-y-2.5 text-xs text-teal-100/80">
-                                {['FunLearning', 'Workshop Prompt Engineer', 'Extracurricular AI and Robotic', 'AI for Education', 'AI Day', 'AI Edu Fair', 'AI Talents'].map((item) => (
-                                    <li key={item}>
-                                        <Link href="/program" className="hover:text-white flex items-center gap-1.5 transition-colors">
-                                            <i className="bi bi-chevron-right text-[10px] text-teal-400"></i>
-                                            <span>{item}</span>
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Col 5: Social Media */}
-                        <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">SOCIAL MEDIA</h4>
-                            <p className="text-xs text-teal-200/80 mb-4 leading-relaxed">
-                                Ikuti perkembangan riset, modul robotika, dan kegiatan AiCI FMIPA UI.
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-instagram text-sm"></i>
-                                </a>
-                                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-linkedin text-sm"></i>
-                                </a>
-                                <a href="mailto:info@aici.id" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-envelope text-sm"></i>
-                                </a>
-                                <a href="https://wa.me/6282110103938" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-teal-900/80 hover:bg-teal-700 flex items-center justify-center text-teal-200 hover:text-white transition-colors">
-                                    <i className="bi bi-whatsapp text-sm"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bottom copyright */}
-                    <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-teal-300/60 gap-4">
-                        <p>© 2026 Artificial Intelligence Center Indonesia (AiCI). All rights reserved.</p>
-                        <div className="flex items-center gap-6">
-                            <a href="#privacy" className="hover:text-teal-200 transition-colors">Privacy Policy</a>
-                            <a href="#terms" className="hover:text-teal-200 transition-colors">Terms of Service</a>
-                            <a href="#fmipa-ui" className="hover:text-teal-200 transition-colors">FMIPA UI Hub</a>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            {/* Persistent Standard Institutional Public Footer */}
+            <PublicFooter />
         </div>
     );
 }
