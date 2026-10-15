@@ -62,15 +62,38 @@ class StudentBulkImportService
                 continue;
             }
 
-            // Expected format:
-            // 0: Nama Lengkap, 1: Email, 2: Password, 3: Kelas, 4: Modul, 5: Jadwal, 6: Tutor
+            // Jika seluruh baris terbungkus tanda petik (misal copy-paste dari Excel atau Google Sheets),
+            // fgetcsv menganggap 1 baris utuh sebagai 1 kolom tunggal. Kita re-parse string di dalamnya.
+            if (count($row) === 1 && (str_contains($row[0], ',') || str_contains($row[0], ';'))) {
+                $innerDelimiter = (strpos($row[0], ';') !== false && strpos($row[0], ',') === false) ? ';' : ',';
+                $row = str_getcsv($row[0], $innerDelimiter);
+            }
+
+            if (count($row) > 8) {
+                $row = $this->normalizeUnquotedMultiValueRow($row);
+            }
+
+                // Format dukung:
+            // Baru: Nama Lengkap, Email, Password, Kelas, Modul, Sub Modul, Jadwal, Tutor
+            // Lama: Nama Lengkap, Email, Password, Kelas, Modul, Jadwal, Tutor
             $name = trim((string) ($row[0] ?? ''));
             $email = strtolower(trim((string) ($row[1] ?? '')));
+            if ($email === '') {
+                $email = $this->generateUniqueEmail($name, $rowNumber);
+            }
             $password = trim((string) ($row[2] ?? ''));
             $className = trim((string) ($row[3] ?? ''));
             $moduleName = trim((string) ($row[4] ?? ''));
-            $scheduleRaw = trim((string) ($row[5] ?? ''));
-            $tutorIdentifier = trim((string) ($row[6] ?? ''));
+
+            if (count($row) >= 8) {
+                $subModuleRaw = trim((string) ($row[5] ?? ''));
+                $scheduleRaw = trim((string) ($row[6] ?? ''));
+                $tutorIdentifier = trim((string) ($row[7] ?? ''));
+            } else {
+                $subModuleRaw = '';
+                $scheduleRaw = trim((string) ($row[5] ?? ''));
+                $tutorIdentifier = trim((string) ($row[6] ?? ''));
+            }
 
             // Abaikan jika baris sepenuhnya kosong
             if ($name === '' && $email === '' && $password === '' && $className === '' && $scheduleRaw === '') {
@@ -87,11 +110,14 @@ class StudentBulkImportService
             } elseif (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = "Baris {$rowNumber}: Format email '{$email}' tidak valid.";
             } elseif (isset($seenEmails[$email])) {
-                $errors[] = "Baris {$rowNumber}: Email '{$email}' duplikat di dalam file CSV.";
-            } elseif (User::where('email', $email)->exists()) {
-                $errors[] = "Baris {$rowNumber}: Email '{$email}' sudah terdaftar di sistem.";
+                continue;
             } else {
-                $seenEmails[$email] = true;
+                $existingUser = User::withTrashed()->where('email', $email)->first();
+                if ($existingUser && $existingUser->role !== 'user') {
+                    $errors[] = "Baris {$rowNumber}: Email '{$email}' sudah terdaftar di sistem.";
+                } else {
+                    $seenEmails[$email] = true;
+                }
             }
 
             if ($password === '') {
@@ -123,6 +149,11 @@ class StudentBulkImportService
                 usort($parsedDates, fn(Carbon $a, Carbon $b) => $a->timestamp <=> $b->timestamp);
             }
 
+            $subModuleNames = $this->parseList($subModuleRaw, [';', '|', "\n"]);
+            if (empty($subModuleNames) && $moduleName !== '') {
+                $subModuleNames = [$moduleName];
+            }
+
             $validRows[] = [
                 'row' => $rowNumber,
                 'name' => $name,
@@ -130,6 +161,7 @@ class StudentBulkImportService
                 'password' => $password,
                 'class_name' => $className,
                 'module_name' => $moduleName,
+                'submodule_names' => $subModuleNames,
                 'schedule_dates' => $parsedDates,
                 'tutor_identifier' => $tutorIdentifier,
             ];
@@ -172,56 +204,133 @@ class StudentBulkImportService
                     }
                 }
 
-                // 2. Resolve Classroom
-                $classroomId = null;
-                $className = $item['class_name'] !== '' ? $item['class_name'] : null;
-                if ($className) {
-                    $classroom = Classroom::firstOrCreate(
-                        ['name' => $className],
-                        ['description' => "Kelas {$className}"]
-                    );
-                    $classroomId = $classroom->id;
+                // 2. Resolve Classroom(s)
+                $classroomIds = [];
+                $classNames = $this->parseList((string) ($item['class_name'] ?? ''), [';', '|', "\n", ',']);
+                if (empty($classNames) && ($item['class_name'] ?? '') !== '') {
+                    $classNames = [(string) $item['class_name']];
                 }
 
+                foreach ($classNames as $className) {
+                    $cleanClassName = trim((string) $className);
+                    if ($cleanClassName === '') {
+                        continue;
+                    }
+
+                    $classroom = Classroom::firstOrCreate(
+                        ['name' => $cleanClassName],
+                        ['description' => "Kelas {$cleanClassName}"]
+                    );
+                    $classroomIds[] = $classroom->id;
+                }
+
+                $classroomId = $classroomIds[0] ?? null;
+                $primaryClassName = $classroomId ? Classroom::find($classroomId)?->name : null;
+
                 // 3. Buat User Siswa Baru
-                /** @var User $student */
-                $student = User::create([
+                $studentData = [
                     'name' => $item['name'],
                     'email' => $item['email'],
                     'password' => Hash::make($item['password']),
                     'role' => 'user',
                     'status' => 'aktif',
-                    'class' => $className,
+                    'class' => $primaryClassName,
                     'classroom_id' => $classroomId,
                     'tutor_id' => $tutorId,
-                ]);
+                ];
 
-                // 4. Resolve Module jika ada
+                /** @var User|null $student */
+                $student = User::withTrashed()->where('email', $item['email'])->first();
+                $isNewStudent = false;
+
+                if ($student?->role === 'user') {
+                    if ($student->trashed()) {
+                        $student->restore();
+                        $isNewStudent = true;
+                    }
+                    $student->update($studentData);
+                } else {
+                    $student = User::create($studentData);
+                    $isNewStudent = true;
+                }
+
+                $student->syncClassrooms($classroomIds, $classroomId);
+
+                // 4. Resolve Module / buku induk dan sub modul sesuai urutan jadwal
                 $module = null;
+                $resolvedSubModules = [];
                 if ($item['module_name'] !== '') {
-                    $module = Module::where('name', $item['module_name'])
-                        ->orWhere('name', 'like', "%{$item['module_name']}%")
-                        ->first();
+                    $module = Module::where(function ($query) use ($item) {
+                        $query->where('name', $item['module_name'])
+                            ->orWhere('book_title', $item['module_name'])
+                            ->orWhere('name', 'like', "%{$item['module_name']}%")
+                            ->orWhere('book_title', 'like', "%{$item['module_name']}%")
+                            ->whereNull('parent_id');
+                    })->first();
+
+                    if (! $module) {
+                        $module = Module::where('name', $item['module_name'])
+                            ->orWhere('book_title', $item['module_name'])
+                            ->first();
+                    }
 
                     if (! $module) {
                         $isCoding = (bool) preg_match('/coding|program|ai|python|scratch/i', $item['module_name']);
                         $module = Module::create([
                             'name' => $item['module_name'],
+                            'book_title' => $item['module_name'],
+                            'parent_id' => null,
+                            'order_index' => 1,
                             'module_type' => $isCoding ? 'coding' : 'robot',
-                            'format' => 'PDF',
+                            'format' => 'Buku Panduan',
                             'size' => '2.5 MB',
                         ]);
+                    }
+
+                    $subModuleNames = $item['submodule_names'] ?? [];
+                    if (! empty($subModuleNames)) {
+                        foreach ($subModuleNames as $index => $subName) {
+                            $cleanName = trim((string) $subName);
+                            if ($cleanName === '') {
+                                continue;
+                            }
+
+                            $resolved = Module::where('name', $cleanName)
+                                ->where(function ($query) use ($module) {
+                                    $query->where('parent_id', $module->id)
+                                        ->orWhereNull('parent_id');
+                                })
+                                ->first();
+
+                            if (! $resolved) {
+                                $resolved = Module::create([
+                                    'name' => $cleanName,
+                                    'book_title' => $module->book_title ?? $module->name,
+                                    'parent_id' => $module->id,
+                                    'order_index' => $index + 1,
+                                    'module_type' => $module->module_type,
+                                    'format' => 'Sub Modul',
+                                    'description' => 'Dibuat dari import CSV siswa.',
+                                ]);
+                            }
+
+                            $resolvedSubModules[] = $resolved;
+                        }
                     }
                 }
 
                 // 5. Buat Jadwal Pertemuan / LearningSession (Looping Dinamis Multi-Tanggal)
                 if (! empty($item['schedule_dates'])) {
-                    $totalDates = count($item['schedule_dates']);
+                    $sessionModuleNames = ! empty($resolvedSubModules)
+                        ? $resolvedSubModules
+                        : ($module ? [$module] : []);
+
                     foreach ($item['schedule_dates'] as $index => $dateCarbon) {
                         /** @var Carbon $dateCarbon */
                         $meetingNumber = $index + 1;
+                        $titleName = $sessionModuleNames[$index]->name ?? $sessionModuleNames[0]->name ?? $item['module_name'] ?? 'Sesi Pembelajaran';
                         $sessionTitle = $item['module_name'] !== ''
-                            ? "Pertemuan {$meetingNumber}: {$item['module_name']}"
+                            ? "Pertemuan {$meetingNumber}: {$titleName}"
                             : "Pertemuan {$meetingNumber}: Sesi Pembelajaran {$student->name}";
 
                         $session = LearningSession::create([
@@ -233,13 +342,19 @@ class StudentBulkImportService
                             'status' => 'akan-datang',
                         ]);
 
-                        if ($module) {
-                            $session->modules()->sync([$module->id]);
+                        $sessionModuleIds = ! empty($resolvedSubModules)
+                            ? [($sessionModuleNames[$index]->id ?? $resolvedSubModules[0]->id)]
+                            : ($module ? [$module->id] : []);
+
+                        if (! empty($sessionModuleIds)) {
+                            $session->syncModules($sessionModuleIds);
                         }
                     }
                 }
 
-                $importedCount++;
+                if ($isNewStudent) {
+                    $importedCount++;
+                }
             }
         });
 
@@ -261,6 +376,7 @@ class StudentBulkImportService
             'Password',
             'Kelas',
             'Modul',
+            'Sub Modul',
             'Jadwal',
             'Tutor',
         ];
@@ -271,8 +387,9 @@ class StudentBulkImportService
                 'fauzan@student.aici.id',
                 'password123',
                 'Robotik Dasar A',
-                'Modul 1 – Pengenalan Robotika',
-                '2026-10-15, 2026-10-22, 2026-10-29, 2026-11-05, 2026-11-12, 2026-11-19, 2026-11-26, 2026-12-03',
+                'Buku Robotika Dasar',
+                'Modul 1 – Between Inches;Modul 2 – Sensor Jarak;Modul 3 – Motor Driver',
+                '2026-10-15;2026-10-22;2026-10-29',
                 'tutor@aici.id',
             ],
             [
@@ -280,8 +397,9 @@ class StudentBulkImportService
                 'clarissa@student.aici.id',
                 'password123',
                 'Coding AI Pemula',
-                'Modul AI & Machine Learning Dasar',
-                '2026-10-18, 2026-10-25, 2026-11-01, 2026-11-08',
+                'Buku AI & Coding Dasar',
+                'Modul 1 – Logika Komputasi;Modul 2 – Scratch;Modul 3 – Python',
+                '2026-10-18;2026-10-25;2026-11-01',
                 'tutor@aici.id',
             ],
         ];
@@ -300,6 +418,104 @@ class StudentBulkImportService
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
+    }
+
+    protected function normalizeUnquotedMultiValueRow(array $row): array
+    {
+        if (count($row) <= 8) {
+            return $row;
+        }
+
+        $name = trim((string) ($row[0] ?? ''));
+        $email = strtolower(trim((string) ($row[1] ?? '')));
+        $password = trim((string) ($row[2] ?? ''));
+        $className = trim((string) ($row[3] ?? ''));
+        $moduleName = trim((string) ($row[4] ?? ''));
+
+        $rest = array_slice($row, 5);
+        $tutorIdentifier = trim((string) array_pop($rest));
+
+        $subParts = [];
+        $dateParts = [];
+        $seenDate = false;
+
+        foreach ($rest as $value) {
+            $clean = trim((string) $value, " \t\n\r,;|");
+            if ($clean === '') {
+                continue;
+            }
+
+            if ($this->parseDate($clean) !== null) {
+                $seenDate = true;
+                $dateParts[] = $clean;
+                continue;
+            }
+
+            if ($seenDate) {
+                $dateParts[] = $clean;
+            } else {
+                $subParts[] = $clean;
+            }
+        }
+
+        if (empty($subParts) && empty($dateParts) && ! empty($rest)) {
+            foreach ($rest as $value) {
+                $clean = trim((string) $value, " \t\n\r,;|");
+                if ($clean === '') {
+                    continue;
+                }
+
+                if ($this->parseDate($clean) !== null) {
+                    $dateParts[] = $clean;
+                } else {
+                    $subParts[] = $clean;
+                }
+            }
+        }
+
+        return [
+            $name,
+            $email,
+            $password,
+            $className,
+            $moduleName,
+            implode(';', $subParts),
+            implode(';', $dateParts),
+            $tutorIdentifier,
+        ];
+    }
+
+    protected function generateUniqueEmail(string $name, int $rowNumber): string
+    {
+        $base = preg_replace('/[^a-z0-9]+/i', '-', strtolower(trim($name))) ?: 'student';
+        $base = trim($base, '-');
+        $base = $base !== '' ? $base : 'student';
+
+        $suffix = substr(md5($base . ':' . $rowNumber . ':' . microtime(true)), 0, 8);
+
+        return $base . '.' . $suffix . '@student.local';
+    }
+
+    protected function parseList(string $raw, array $preferredSeparators = [';', '|', "\n", ',']): array
+    {
+        $value = trim($raw);
+        if ($value === '') {
+            return [];
+        }
+
+        foreach ($preferredSeparators as $separator) {
+            if ($separator !== '' && str_contains($value, $separator)) {
+                $parts = array_map('trim', explode($separator, $value));
+                return array_values(array_filter($parts, fn ($part) => $part !== ''));
+            }
+        }
+
+        if (str_contains($value, ',')) {
+            $parts = array_map('trim', preg_split('/\s*,\s*/', $value) ?: []);
+            return array_values(array_filter($parts, fn ($part) => $part !== ''));
+        }
+
+        return [$value];
     }
 
     /**

@@ -86,7 +86,7 @@ class StudentController extends Controller
             }
         }
 
-        User::create([
+        $student = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -96,6 +96,11 @@ class StudentController extends Controller
             'classroom_id' => $classroomId,
             'class' => $className,
         ]);
+
+        if ($classroomId) {
+            $student->syncClassrooms([$classroomId], $classroomId);
+        }
+
         return back()->with('success', 'Murid berhasil ditambahkan.');
     }
 
@@ -114,6 +119,8 @@ class StudentController extends Controller
             $className = null;
         }
 
+        $oldTutorId = $student->tutor_id;
+
         $student->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -126,6 +133,19 @@ class StudentController extends Controller
         if (! empty($validated['password'])) {
             $student->update(['password' => Hash::make($validated['password'])]);
         }
+
+        if (array_key_exists('classroom_id', $validated)) {
+            $student->syncClassrooms($classroomId ? [$classroomId] : [], $classroomId);
+        }
+
+        // Sinkronkan sesi murid jika tutor_id berubah atau classroom_id berubah
+        if (array_key_exists('tutor_id', $validated) && $validated['tutor_id'] !== $oldTutorId) {
+            $student->learningSessions()->update(['tutor_id' => $validated['tutor_id']]);
+        }
+        if (array_key_exists('classroom_id', $validated)) {
+            $student->learningSessions()->update(['classroom_id' => $classroomId]);
+        }
+
         return back()->with('success', 'Murid berhasil diperbarui.');
     }
 

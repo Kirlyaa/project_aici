@@ -15,15 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Call tutor seeder
+        // Hanya menyertakan akun superadmin sesuai permintaan
         $this->call([
-            TutorSeeder::class,
-            ClassroomSeeder::class,
-            CommentTemplateSeeder::class,
-            LearningSessionSeeder::class,
-            AiraLearningSessionSeeder::class,
-            RaporSeeder::class,
-            TutorChatAndNoteSeeder::class,
+            SuperAdminSeeder::class,
         ]);
     }
 }

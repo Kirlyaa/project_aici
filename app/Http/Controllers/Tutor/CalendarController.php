@@ -226,11 +226,12 @@ class CalendarController extends Controller
         $validated = $request->validated();
         $student = User::find($validated['student_id']);
         $classroomId = $validated['classroom_id'] ?? $student?->classroom_id;
+        $tutorId = $validated['tutor_id'] ?? $student?->tutor_id;
 
-        DB::transaction(function () use ($validated, $classroomId, $user) {
+        DB::transaction(function () use ($validated, $classroomId, $tutorId) {
             $session = LearningSession::create([
                 'user_id' => $validated['student_id'],
-                'tutor_id' => $validated['tutor_id'] ?? null,
+                'tutor_id' => $tutorId,
                 'classroom_id' => $classroomId,
                 'title' => $validated['title'],
                 'date_string' => $validated['date_string'],
@@ -242,7 +243,7 @@ class CalendarController extends Controller
             ]);
 
             if (!empty($validated['module_ids'])) {
-                $session->modules()->sync($validated['module_ids']);
+                $session->syncModules($validated['module_ids']);
             }
         });
 

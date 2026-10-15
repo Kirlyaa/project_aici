@@ -30,7 +30,23 @@ class Module extends Model
         ];
     }
 
+    public static function resolveBookId(?int $moduleId): ?int
+    {
+        if ($moduleId === null) {
+            return null;
+        }
+
+        $module = static::find($moduleId);
+
+        return $module?->parent_id ?? $module?->id;
+    }
+
     public function parent()
+    {
+        return $this->belongsTo(Module::class, 'parent_id');
+    }
+
+    public function book()
     {
         return $this->belongsTo(Module::class, 'parent_id');
     }

@@ -1,6 +1,13 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
+interface ClassroomItem {
+    id: number;
+    name: string;
+    students_count: number;
+    meetings_count: number;
+}
+
 interface Tutor {
     id: number;
     name: string;
@@ -9,6 +16,8 @@ interface Tutor {
     status: string;
     terdaftar: string;
     students_count: number;
+    classrooms_count: number;
+    classrooms: ClassroomItem[];
     sessions_count: number;
 }
 
@@ -235,8 +244,9 @@ export default function TutorManagement() {
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
                                     <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Tutor</th>
-                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Murid</th>
-                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Sesi</th>
+                                    <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Kelas Diampu</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Total Murid</th>
+                                    <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Pertemuan</th>
                                     <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                                     <th className="px-4 py-4 text-left text-sm font-semibold text-gray-700">Terdaftar</th>
                                     <th className="px-4 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
@@ -245,7 +255,7 @@ export default function TutorManagement() {
                             <tbody>
                                 {users.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-8 text-center">
+                                        <td colSpan={7} className="px-6 py-8 text-center">
                                             <i className="bi bi-inbox text-4xl text-gray-300 block mb-3" />
                                             <p className="text-gray-600">Tidak ada tutor yang ditemukan</p>
                                         </td>
@@ -257,11 +267,39 @@ export default function TutorManagement() {
                                                 <p className="font-semibold text-gray-900">{tutor.name}</p>
                                                 <p className="text-xs text-gray-500">{tutor.email}</p>
                                             </td>
-                                            <td className="px-4 py-4 text-center">
-                                                <span className="text-sm font-semibold text-teal-700">{tutor.students_count}</span>
+                                            <td className="px-4 py-4">
+                                                {tutor.classrooms && tutor.classrooms.length > 0 ? (
+                                                    <div className="flex flex-col gap-1.5 max-w-xs">
+                                                        {tutor.classrooms.map((cls) => (
+                                                            <div
+                                                                key={cls.id}
+                                                                className="inline-flex items-center justify-between gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                                                            >
+                                                                <span className="font-medium text-slate-700 truncate max-w-[150px]" title={cls.name}>
+                                                                    {cls.name}
+                                                                </span>
+                                                                <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100 shrink-0">
+                                                                    {cls.meetings_count} sesi &bull; {cls.students_count} murid
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-gray-400 italic">Belum ada kelas</span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-4 text-center">
-                                                <span className="text-sm font-semibold text-blue-700">{tutor.sessions_count}</span>
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                                    {tutor.students_count} murid
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <div className="inline-flex flex-col items-center">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                                        {tutor.sessions_count} pertemuan
+                                                    </span>
+                                                    <span className="text-[10px] text-gray-400 mt-0.5"></span>
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4">
                                                 <button

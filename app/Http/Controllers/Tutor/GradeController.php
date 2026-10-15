@@ -76,6 +76,7 @@ class GradeController extends Controller
             'student_id' => $validated['student_id'],
             'tutor_id' => $request->user()->role === 'tutor' ? $request->user()->id : null,
             'module_id' => $validated['module_id'] ?? null,
+            'book_id' => Module::resolveBookId($validated['module_id'] ?? null),
             'learning_session_id' => $validated['learning_session_id'] ?? null,
             'meeting_number' => $validated['meeting_number'],
             'module_type' => $validated['module_type'],
@@ -99,6 +100,7 @@ class GradeController extends Controller
 
         $gradeEntry->update([
             'module_id' => $validated['module_id'] ?? null,
+            'book_id' => Module::resolveBookId($validated['module_id'] ?? null),
             'learning_session_id' => $validated['learning_session_id'] ?? null,
             'meeting_number' => $validated['meeting_number'],
             'module_type' => $validated['module_type'],

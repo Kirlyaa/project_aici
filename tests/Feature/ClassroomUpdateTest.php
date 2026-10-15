@@ -38,6 +38,49 @@ class ClassroomUpdateTest extends TestCase
         ]);
     }
 
+    public function test_updating_classroom_tutor_updates_all_students_in_the_classroom(): void
+    {
+        $admin = User::factory()->create(['role' => 'superadmin']);
+        $oldTutor = User::factory()->create(['role' => 'tutor']);
+        $newTutor = User::factory()->create(['role' => 'tutor']);
+
+        $classroom = Classroom::create([
+            'name' => 'Kelas Awal',
+            'description' => 'Deskripsi Awal',
+            'tutor_id' => $oldTutor->id,
+        ]);
+
+        $student1 = User::factory()->create([
+            'role' => 'user',
+            'classroom_id' => $classroom->id,
+            'tutor_id' => $oldTutor->id,
+        ]);
+        $student1->classrooms()->attach($classroom->id);
+
+        $student2 = User::factory()->create([
+            'role' => 'user',
+            'classroom_id' => $classroom->id,
+            'tutor_id' => null,
+        ]);
+        $student2->classrooms()->attach($classroom->id);
+
+        $response = $this->actingAs($admin)->post(route('superadmin.classes.update', $classroom->id), [
+            '_method' => 'PUT',
+            'name' => 'Kelas Diperbarui',
+            'description' => 'Deskripsi Baru',
+            'tutor_id' => $newTutor->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('classrooms', [
+            'id' => $classroom->id,
+            'tutor_id' => $newTutor->id,
+        ]);
+
+        $this->assertEquals($newTutor->id, $student1->fresh()->tutor_id);
+        $this->assertEquals($newTutor->id, $student2->fresh()->tutor_id);
+    }
+
     public function test_superadmin_can_update_classroom_with_empty_tutor_and_image(): void
     {
         $admin = User::factory()->create(['role' => 'superadmin']);

@@ -69,8 +69,10 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Recent Modules
-        $recentModules = \App\Models\Module::latest('created_at')
+        // Recent Modules (hanya modul utama / buku kurikulum: parent_id = null)
+        $recentModules = \App\Models\Module::whereNull('parent_id')
+            ->withCount('subModules')
+            ->latest('created_at')
             ->limit(5)
             ->get()
             ->map(function (\App\Models\Module $m) {
@@ -80,10 +82,11 @@ class DashboardController extends Controller
                     'type' => $m->module_type,
                     'typeLabel' => $m->getTypeLabel(),
                     'image' => $m->image,
+                    'subModulesCount' => $m->sub_modules_count,
                 ];
             });
 
-        $totalModules = \App\Models\Module::count();
+        $totalModules = \App\Models\Module::whereNull('parent_id')->count();
 
         // Grade Distribution (Histogram Data)
         $gradeRanges = [

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'student_id',
     'tutor_id',
     'module_id',
+    'book_id',
     'learning_session_id',
     'meeting_number',
     'module_type',
@@ -88,6 +89,11 @@ class GradeEntry extends Model
     public function module()
     {
         return $this->belongsTo(Module::class);
+    }
+
+    public function book()
+    {
+        return $this->belongsTo(Module::class, 'book_id');
     }
 
     public function learningSession()

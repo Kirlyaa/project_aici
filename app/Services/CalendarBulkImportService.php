@@ -336,7 +336,7 @@ class CalendarBulkImportService
                         ]);
                     }
 
-                    $session->modules()->sync([$modul->id]);
+                    $session->syncModules([$modul->id]);
                 }
 
                 $importedCount++;

@@ -26,9 +26,9 @@ class ClassroomController extends Controller
             ->with([
                 'tutor:id,name,email,avatar',
                 'students' => function ($q) {
-                    $q->select('id', 'name', 'email', 'avatar', 'classroom_id', 'status', 'tutor_id')
+                    $q->select('users.id', 'users.name', 'users.email', 'users.avatar', 'users.classroom_id', 'users.status', 'users.tutor_id')
                         ->with('tutor:id,name')
-                        ->orderBy('name');
+                        ->orderBy('users.name');
                 },
             ])
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
@@ -145,16 +145,47 @@ class ClassroomController extends Controller
         // Sinkronkan nama class di tabel users jika diperlukan
         User::where('classroom_id', $classroom->id)->update(['class' => $classroom->name]);
 
+        // Otomatis sinkronkan tutor_id kelas ke seluruh murid di kelas ini dan ke sesi pembelajaran mereka
+        $studentIds = $classroom->students()->pluck('users.id')
+            ->merge(User::where('classroom_id', $classroom->id)->pluck('id'))
+            ->unique()
+            ->filter();
+
+        if ($studentIds->isNotEmpty()) {
+            User::whereIn('id', $studentIds)
+                ->where('role', 'user')
+                ->update(['tutor_id' => $classroom->tutor_id]);
+
+            // Sinkronkan juga sesi kelas ini atau sesi murid di kelas ini
+            \App\Models\LearningSession::where(function ($q) use ($classroom, $studentIds) {
+                $q->where('classroom_id', $classroom->id)
+                  ->orWhereIn('user_id', $studentIds);
+            })->update(['tutor_id' => $classroom->tutor_id]);
+        }
+
         return back()->with('success', 'Informasi kelas berhasil diperbarui.');
     }
 
     public function destroy(Classroom $classroom): RedirectResponse
     {
-        // Unassign all students before deleting classroom
-        User::where('classroom_id', $classroom->id)->update([
-            'classroom_id' => null,
-            'class' => null,
-        ]);
+        $students = $classroom->students()->get();
+
+        foreach ($students as $student) {
+            $remainingClassroomIds = $student->classrooms()->whereKeyNot($classroom->id)->pluck('classrooms.id')->all();
+
+            if (empty($remainingClassroomIds)) {
+                $student->update([
+                    'classroom_id' => null,
+                    'class' => null,
+                ]);
+                $student->classrooms()->detach();
+            } else {
+                $primaryId = $student->classroom_id === $classroom->id ? $remainingClassroomIds[0] : $student->classroom_id;
+                $student->syncClassrooms($remainingClassroomIds, $primaryId);
+            }
+        }
+
+        $classroom->users()->detach();
 
         if ($classroom->photo && !str_starts_with($classroom->photo, 'http') && Storage::disk('public')->exists($classroom->photo)) {
             Storage::disk('public')->delete($classroom->photo);
@@ -192,17 +223,26 @@ class ClassroomController extends Controller
 
         DB::transaction(function () use ($students, $classroom, $request) {
             foreach ($students as $student) {
-                $updateData = [
-                    'classroom_id' => $classroom->id,
-                    'class' => $classroom->name,
-                ];
+                $classroomIds = $student->classrooms()->pluck('classrooms.id')->push($classroom->id)->unique()->values()->all();
+                $primaryClassroomId = $student->classroom_id ?? $classroom->id;
+
+                $student->syncClassrooms($classroomIds, $primaryClassroomId);
+
+                $updateData = [];
 
                 // Jika kelas memiliki tutor dan murid belum punya tutor atau auto_assign dicentang
                 if ($classroom->tutor_id && ($request->boolean('auto_assign_tutor') || empty($student->tutor_id))) {
                     $updateData['tutor_id'] = $classroom->tutor_id;
                 }
 
-                $student->update($updateData);
+                if (! empty($updateData)) {
+                    $student->update($updateData);
+
+                    // Update sesi murid jika tutor ikut disinkronkan
+                    if (isset($updateData['tutor_id'])) {
+                        $student->learningSessions()->update(['tutor_id' => $updateData['tutor_id']]);
+                    }
+                }
             }
         });
 
@@ -224,16 +264,22 @@ class ClassroomController extends Controller
         $targetClass = Classroom::findOrFail($validated['target_classroom_id']);
         $student = User::where('id', $validated['student_id'])->where('role', 'user')->firstOrFail();
 
-        $updateData = [
-            'classroom_id' => $targetClass->id,
-            'class' => $targetClass->name,
-        ];
+        $classroomIds = $student->classrooms()->pluck('classrooms.id')->push($targetClass->id)->unique()->values()->all();
+        $student->syncClassrooms($classroomIds, $targetClass->id);
+
+        $updateData = [];
 
         if ($targetClass->tutor_id && $request->boolean('auto_assign_tutor')) {
             $updateData['tutor_id'] = $targetClass->tutor_id;
         }
 
-        $student->update($updateData);
+        if (! empty($updateData)) {
+            $student->update($updateData);
+
+            if (isset($updateData['tutor_id'])) {
+                $student->learningSessions()->update(['tutor_id' => $updateData['tutor_id']]);
+            }
+        }
 
         return back()->with('success', "Murid {$student->name} berhasil dipindahkan ke kelas {$targetClass->name}.");
     }
@@ -249,6 +295,7 @@ class ClassroomController extends Controller
             'classroom_id' => null,
             'class' => null,
         ]);
+        $student->classrooms()->detach();
 
         return back()->with('success', "Murid {$student->name} berhasil dikeluarkan dari kelas.");
     }
@@ -309,7 +356,7 @@ class ClassroomController extends Controller
                 ]);
 
                 if (!empty($moduleIds)) {
-                    $session->modules()->sync($moduleIds);
+                    $session->syncModules($moduleIds);
                 }
             }
         });

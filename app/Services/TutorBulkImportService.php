@@ -80,7 +80,7 @@ class TutorBulkImportService
         $seenEmails = [];
 
         // Preload existing user emails for fast O(1) in-memory collision check
-        $existingEmails = User::pluck('email')->map(fn($e) => strtolower(trim($e)))->flip()->toArray();
+        $existingEmails = User::withTrashed()->pluck('email')->map(fn($e) => strtolower(trim((string) $e)))->filter()->flip()->toArray();
 
         $rowNumber = 0;
         while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
@@ -94,6 +94,12 @@ class TutorBulkImportService
             // Skip header row
             if ($rowNumber === 1) {
                 continue;
+            }
+
+            // Jika seluruh baris terbungkus tanda petik ganda
+            if (count($row) === 1 && (str_contains($row[0], ',') || str_contains($row[0], ';'))) {
+                $innerDelimiter = (strpos($row[0], ';') !== false && strpos($row[0], ',') === false) ? ';' : ',';
+                $row = str_getcsv($row[0], $innerDelimiter);
             }
 
             $name     = isset($row[0]) ? trim((string) $row[0]) : '';
@@ -116,8 +122,13 @@ class TutorBulkImportService
                 continue;
             }
 
-            if (isset($existingEmails[$email]) || isset($seenEmails[$email])) {
+            if (isset($existingEmails[$email])) {
                 $errors[] = "Baris {$rowNumber}: Email '{$email}' sudah terdaftar di sistem.";
+                continue;
+            }
+
+            if (isset($seenEmails[$email])) {
+                $errors[] = "Baris {$rowNumber}: Email '{$email}' duplikat di dalam file CSV.";
                 continue;
             }
 
@@ -139,24 +150,30 @@ class TutorBulkImportService
 
         fclose($handle);
 
-        if (!empty($errors)) {
-            return [
-                'success' => false,
-                'errors' => $errors,
-                'imported_count' => 0,
-            ];
-        }
-
         if (empty($tutorsToInsert)) {
             return [
                 'success' => false,
-                'errors' => ['File CSV tidak memuat data tutor yang valid untuk diimpor.'],
+                'errors' => ! empty($errors) ? $errors : ['File CSV tidak memuat data tutor yang valid untuk diimpor.'],
                 'imported_count' => 0,
             ];
         }
 
+        if (! empty($errors)) {
+            $errors = array_values(array_unique($errors));
+        }
+
         DB::transaction(function () use ($tutorsToInsert) {
-            User::insert($tutorsToInsert);
+            foreach ($tutorsToInsert as $tutor) {
+                User::updateOrCreate(
+                    ['email' => $tutor['email']],
+                    [
+                        'name' => $tutor['name'],
+                        'password' => $tutor['password'],
+                        'role' => $tutor['role'],
+                        'status' => $tutor['status'],
+                    ]
+                );
+            }
         });
 
         return [

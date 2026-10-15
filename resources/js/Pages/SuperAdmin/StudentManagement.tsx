@@ -636,7 +636,10 @@ export default function StudentManagement() {
                             <p className="font-semibold flex items-center gap-1.5">
                                 <i className="bi bi-info-circle-fill" /> Urutan Kolom Template:
                             </p>
-                            <p>1. Nama Lengkap | 2. Email | 3. Password | 4. Kelas | 5. Modul | 6. Jadwal (YYYY-MM-DD) | 7. Tutor</p>
+                            <p>1. Nama Lengkap | 2. Email | 3. Password | 4. Kelas | 5. Modul | 6. Sub Modul | 7. Jadwal (YYYY-MM-DD) | 8. Tutor</p>
+                            <p className="text-[11px] text-amber-700">
+                                Sub modul akan dipetakan sesuai urutan jadwal: sub modul pertama ke pertemuan pertama, sub modul kedua ke pertemuan kedua, dan seterusnya.
+                            </p>
                         </div>
 
                         <form onSubmit={handleImportSubmit} className="space-y-4">

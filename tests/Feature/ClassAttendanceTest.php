@@ -126,4 +126,41 @@ class ClassAttendanceTest extends TestCase
         $this->assertNotNull($session1);
         $this->assertTrue($session1->modules->contains($module->id));
     }
+
+    public function test_submodule_book_context_is_persisted_on_session_relations(): void
+    {
+        $book = Module::create([
+            'name' => 'Buku Robotika Dasar',
+            'book_title' => 'Buku Robotika Dasar',
+            'parent_id' => null,
+            'order_index' => 1,
+            'module_type' => 'robot',
+            'description' => 'Kurikulum robotika dasar',
+        ]);
+
+        $subModule = Module::create([
+            'name' => 'Sub Modul Sensor',
+            'book_title' => $book->name,
+            'parent_id' => $book->id,
+            'order_index' => 1,
+            'module_type' => 'robot',
+            'description' => 'Mengenal sensor',
+        ]);
+
+        $session = LearningSession::create([
+            'user_id' => User::factory()->create(['role' => 'user'])->id,
+            'title' => 'Pertemuan 1 - Sensor',
+            'date' => '2026-10-06',
+            'date_string' => 'Rabu, 6 Oktober 2026',
+            'status' => 'akan-datang',
+        ]);
+
+        $session->syncModules([$subModule->id]);
+
+        $this->assertDatabaseHas('learning_session_module', [
+            'learning_session_id' => $session->id,
+            'module_id' => $subModule->id,
+            'book_id' => $book->id,
+        ]);
+    }
 }

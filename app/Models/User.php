@@ -89,6 +89,41 @@ class User extends Authenticatable
         return $this->belongsTo(Classroom::class, 'classroom_id');
     }
 
+    public function classrooms()
+    {
+        return $this->belongsToMany(Classroom::class, 'classroom_user')->withTimestamps();
+    }
+
+    public function syncClassrooms(array $classroomIds, ?int $primaryClassroomId = null): void
+    {
+        $ids = collect($classroomIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($ids)) {
+            $this->classrooms()->detach();
+            $this->update([
+                'classroom_id' => null,
+                'class' => null,
+            ]);
+            return;
+        }
+
+        $this->classrooms()->sync($ids);
+
+        $selectedPrimary = $primaryClassroomId ?? $this->classroom_id ?? $ids[0];
+        $selectedPrimary = in_array((int) $selectedPrimary, $ids, true) ? (int) $selectedPrimary : $ids[0];
+        $primaryClassroom = Classroom::find($selectedPrimary);
+
+        $this->update([
+            'classroom_id' => $selectedPrimary,
+            'class' => $primaryClassroom?->name ?? $this->class,
+        ]);
+    }
+
     public function managedClassrooms()
     {
         return $this->hasMany(Classroom::class, 'tutor_id');

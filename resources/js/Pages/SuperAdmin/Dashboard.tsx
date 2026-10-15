@@ -47,6 +47,7 @@ interface Props {
         type: string;
         typeLabel: string;
         image: string | null;
+        subModulesCount?: number;
     }>;
 }
 
@@ -316,7 +317,9 @@ export default function SuperAdminDashboard() {
                                         </div>
                                         <div className="flex-1">
                                             <p className="font-semibold text-sm text-gray-900">{m.name}</p>
-                                            <p className="text-xs text-gray-600 mt-0.5">{m.typeLabel}</p>
+                                            <p className="text-xs text-gray-600 mt-0.5">
+                                                {m.subModulesCount !== undefined ? `${m.subModulesCount} Sub Modul • ` : ''}{m.typeLabel}
+                                            </p>
                                         </div>
                                     </div>
                                 ))}

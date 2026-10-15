@@ -4,10 +4,13 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SuperAdmin\StoreUserRequest;
+use App\Models\Classroom;
+use App\Models\LearningSession;
 use App\Models\User;
 use App\Services\TutorBulkImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,7 +23,7 @@ class TutorController extends Controller
         $search = $request->input('search', '');
         $status = $request->input('filter_status', 'Semua');
 
-        $tutors = User::where('role', 'tutor')
+        $paginator = User::where('role', 'tutor')
             ->when($search, function ($q, $s) {
                 $q->where(function ($inner) use ($s) {
                     $inner->where('name', 'like', "%{$s}%")
@@ -28,22 +31,68 @@ class TutorController extends Controller
                 });
             })
             ->when($status !== 'Semua', fn($q) => $q->where('status', $status))
-            ->withCount(['students', 'tutoredSessions'])
+            ->withCount('students')
             ->orderByDesc('created_at')
             ->paginate(15)
-            ->through(function (User $u) {
-                return [
-                    'id' => $u->id,
-                    'name' => $u->name,
-                    'email' => $u->email,
-                    'peran' => 'Tutor',
-                    'status' => $u->status ?? 'aktif',
-                    'terdaftar' => $u->created_at?->toDateString(),
-                    'students_count' => $u->students_count,
-                    'sessions_count' => $u->tutored_sessions_count,
-                ];
-            })
             ->withQueryString();
+
+        $tutorIds = collect($paginator->items())->pluck('id')->all();
+
+        // 1. Ambil managed classrooms beserta jumlah muridnya
+        $managedClassrooms = Classroom::whereIn('tutor_id', $tutorIds)
+            ->withCount('students')
+            ->get(['id', 'name', 'tutor_id'])
+            ->groupBy('tutor_id');
+
+        // 2. Ambil distinct (classroom_id, date) per tutor untuk sesi pertemuan kelas
+        $classMeetings = DB::table('learning_sessions')
+            ->whereIn('tutor_id', $tutorIds)
+            ->whereNull('deleted_at')
+            ->whereNotNull('classroom_id')
+            ->select('tutor_id', 'classroom_id', 'date')
+            ->distinct()
+            ->get()
+            ->groupBy('tutor_id');
+
+        // 3. Ambil distinct date untuk sesi perorangan tanpa kelas (jika ada)
+        $individualMeetings = DB::table('learning_sessions')
+            ->whereIn('tutor_id', $tutorIds)
+            ->whereNull('deleted_at')
+            ->whereNull('classroom_id')
+            ->select('tutor_id', 'date')
+            ->distinct()
+            ->get()
+            ->groupBy('tutor_id');
+
+        $tutors = $paginator->through(function (User $u) use ($managedClassrooms, $classMeetings, $individualMeetings) {
+            $tutorClassMeetings = $classMeetings->get($u->id, collect());
+            $classes = $managedClassrooms->get($u->id, collect())->map(function ($c) use ($tutorClassMeetings) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'students_count' => $c->students_count,
+                    'meetings_count' => $tutorClassMeetings->where('classroom_id', $c->id)->count(),
+                ];
+            })->values()->all();
+
+            $classCount = count($classes);
+            $totalClassMeetings = $tutorClassMeetings->count();
+            $indMeetingCount = ($individualMeetings->get($u->id) ?? collect())->count();
+            $totalPertemuan = $totalClassMeetings + $indMeetingCount;
+
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'peran' => 'Tutor',
+                'status' => $u->status ?? 'aktif',
+                'terdaftar' => $u->created_at?->toDateString(),
+                'students_count' => $u->students_count,
+                'classrooms_count' => $classCount,
+                'classrooms' => $classes,
+                'sessions_count' => $totalPertemuan,
+            ];
+        });
 
         return Inertia::render('SuperAdmin/TutorManagement', [
             'users' => $tutors,
@@ -83,6 +132,7 @@ class TutorController extends Controller
     public function destroy(User $tutor): RedirectResponse
     {
         $tutor->students()->update(['tutor_id' => null]);
+        $tutor->tutoredSessions()->update(['tutor_id' => null]);
         $tutor->delete();
         return back()->with('success', 'Tutor berhasil dihapus.');
     }
@@ -145,9 +195,29 @@ class TutorController extends Controller
             ->orderByDesc('date')
             ->get();
 
+        // Hitung total sesi pertemuan per kelas & tanggal (bukan perkalian murid)
+        $classMeetingCount = DB::table('learning_sessions')
+            ->where('tutor_id', $resolvedTutor->id)
+            ->whereNull('deleted_at')
+            ->whereNotNull('classroom_id')
+            ->select('classroom_id', 'date')
+            ->distinct()
+            ->count();
+
+        $indMeetingCount = DB::table('learning_sessions')
+            ->where('tutor_id', $resolvedTutor->id)
+            ->whereNull('deleted_at')
+            ->whereNull('classroom_id')
+            ->select('date')
+            ->distinct()
+            ->count();
+
+        $totalPertemuan = $classMeetingCount + $indMeetingCount;
+
         $stats = [
             'total_students' => $assignedStudents->count(),
-            'total_sessions' => $sessions->count(),
+            'total_sessions' => $totalPertemuan,
+            'total_student_sessions' => $sessions->count(),
             'hadir_count' => $sessions->where('status', 'hadir')->count(),
             'absen_count' => $sessions->where('status', 'absen')->count(),
             'akan_datang_count' => $sessions->where('status', 'akan-datang')->count(),
@@ -193,6 +263,9 @@ class TutorController extends Controller
         $student = User::where('id', $validated['student_id'])->where('role', 'user')->firstOrFail();
         $student->update(['tutor_id' => $tutor->id]);
 
+        // Sinkronkan seluruh sesi murid ini ke tutor yang baru
+        $student->learningSessions()->update(['tutor_id' => $tutor->id]);
+
         return back()->with('success', "Murid {$student->name} berhasil ditugaskan ke Tutor {$tutor->name}.");
     }
 
@@ -205,6 +278,7 @@ class TutorController extends Controller
 
         if ($student->tutor_id === $tutor->id) {
             $student->update(['tutor_id' => null]);
+            $student->learningSessions()->where('tutor_id', $tutor->id)->update(['tutor_id' => null]);
         }
 
         return back()->with('success', "Murid {$student->name} berhasil dilepas dari Tutor {$tutor->name}.");

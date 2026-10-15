@@ -93,7 +93,7 @@ class SessionController extends Controller
         $validated['tutor_id'] = Auth::id();
 
         $session = LearningSession::create($validated);
-        $session->modules()->sync($moduleIds);
+        $session->syncModules($moduleIds);
 
         return back()->with('success', 'Sesi berhasil ditambahkan.');
     }
@@ -117,7 +117,7 @@ class SessionController extends Controller
         }
 
         $session->update($validated);
-        $session->modules()->sync($moduleIds);
+        $session->syncModules($moduleIds);
 
         return back()->with('success', 'Sesi berhasil diperbarui.');
     }

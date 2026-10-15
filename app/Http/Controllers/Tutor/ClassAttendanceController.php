@@ -25,9 +25,13 @@ class ClassAttendanceController extends Controller
         /** @var User $tutor */
         $tutor = Auth::user();
 
-        // Ambil murid yang terdaftar di kelas ini
-        $studentsQuery = $classroom->students()
+        // Ambil murid yang terdaftar di kelas ini (baik via pivot classroom_user maupun kolom classroom_id)
+        $studentsQuery = User::where('role', 'user')
             ->whereIn('status', ['aktif', 'pending'])
+            ->where(function ($q) use ($classroom) {
+                $q->where('classroom_id', $classroom->id)
+                    ->orWhereHas('classrooms', fn($c) => $c->where('classrooms.id', $classroom->id));
+            })
             ->orderBy('name');
 
         // Jika tutor bukan superadmin, pastikan tutor ini mengajar di kelas ini atau murid-murid di dalamnya
@@ -125,7 +129,7 @@ class ClassAttendanceController extends Controller
                 ]);
 
                 if ($moduleId) {
-                    $session->modules()->sync([$moduleId]);
+                    $session->syncModules([$moduleId]);
                 }
             }
         });

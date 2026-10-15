@@ -31,7 +31,23 @@ class LearningSession extends Model
 
     public function modules()
     {
-        return $this->belongsToMany(Module::class, 'learning_session_module');
+        return $this->belongsToMany(Module::class, 'learning_session_module')
+            ->withPivot(['book_id'])
+            ->withTimestamps();
+    }
+
+    public function syncModules(array $moduleIds): void
+    {
+        $syncData = [];
+
+        foreach (array_unique(array_filter($moduleIds, fn ($id) => $id !== null && $id !== '' && $id !== 0)) as $moduleId) {
+            $module = Module::find((int) $moduleId);
+            $syncData[(int) $moduleId] = [
+                'book_id' => $module?->parent_id ?? $module?->id ?? null,
+            ];
+        }
+
+        $this->modules()->sync($syncData);
     }
 
     public function user()

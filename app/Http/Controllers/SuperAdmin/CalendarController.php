@@ -204,7 +204,7 @@ class CalendarController extends Controller
             ]);
 
             if (! empty($validated['module_ids'])) {
-                $session->modules()->sync($validated['module_ids']);
+                $session->syncModules($validated['module_ids']);
             }
         });
 
@@ -234,7 +234,7 @@ class CalendarController extends Controller
             ]);
 
             $modules = $validated['module_ids'] ?? [];
-            $session->modules()->sync($modules);
+            $session->syncModules($modules);
         });
 
         return back()->with('success', 'Sesi pembelajaran berhasil diperbarui.');

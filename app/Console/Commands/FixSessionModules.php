@@ -47,7 +47,7 @@ class FixSessionModules extends Command
                 ]
             );
 
-            $session->modules()->sync([$module->id]);
+            $session->syncModules([$module->id]);
 
             // Perbaiki date_string jika masih format ISO YYYY-MM-DD
             if ($session->date && preg_match('/^\d{4}-\d{2}-\d{2}$/', $session->date_string)) {

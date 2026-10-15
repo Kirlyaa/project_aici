@@ -113,7 +113,30 @@ class ExportController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $tutors = $query->withCount(['students', 'learningSessions'])->get();
+        $tutors = $query->withCount('students')->get();
+        $tutorIds = $tutors->pluck('id')->all();
+
+        $managedClassrooms = \App\Models\Classroom::whereIn('tutor_id', $tutorIds)
+            ->get(['id', 'name', 'tutor_id'])
+            ->groupBy('tutor_id');
+
+        $classMeetings = \Illuminate\Support\Facades\DB::table('learning_sessions')
+            ->whereIn('tutor_id', $tutorIds)
+            ->whereNull('deleted_at')
+            ->whereNotNull('classroom_id')
+            ->select('tutor_id', 'classroom_id', 'date')
+            ->distinct()
+            ->get()
+            ->groupBy('tutor_id');
+
+        $individualMeetings = \Illuminate\Support\Facades\DB::table('learning_sessions')
+            ->whereIn('tutor_id', $tutorIds)
+            ->whereNull('deleted_at')
+            ->whereNull('classroom_id')
+            ->select('tutor_id', 'date')
+            ->distinct()
+            ->get()
+            ->groupBy('tutor_id');
 
         $headers = [
             "Content-type" => "text/csv; charset=UTF-8",
@@ -123,7 +146,7 @@ class ExportController extends Controller
             "Expires" => "0",
         ];
 
-        $callback = function () use ($tutors) {
+        $callback = function () use ($tutors, $managedClassrooms, $classMeetings, $individualMeetings) {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
@@ -132,19 +155,29 @@ class ExportController extends Controller
                 'Nama',
                 'Email',
                 'Status',
+                'Total Kelas',
+                'Daftar Kelas',
                 'Total Siswa',
-                'Total Sesi',
+                'Total Sesi (Pertemuan)',
                 'Terdaftar',
             ]);
 
             foreach ($tutors as $tutor) {
+                $classes = $managedClassrooms->get($tutor->id, collect());
+                $classNames = $classes->pluck('name')->join(', ');
+                $totalClassMeetings = ($classMeetings->get($tutor->id) ?? collect())->count();
+                $indMeetingCount = ($individualMeetings->get($tutor->id) ?? collect())->count();
+                $totalPertemuan = $totalClassMeetings + $indMeetingCount;
+
                 self::putCsv($file, [
                     $tutor->id,
                     $tutor->name,
                     $tutor->email,
                     $tutor->status ?? 'aktif',
+                    $classes->count(),
+                    $classNames ?: '-',
                     $tutor->students_count,
-                    $tutor->learning_sessions_count,
+                    $totalPertemuan,
                     $tutor->created_at?->toDateString(),
                 ]);
             }
