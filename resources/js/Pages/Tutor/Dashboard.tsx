@@ -13,6 +13,7 @@ interface Student {
     class: string;
     classroom_id?: number | null;
     avatar?: string;
+    avatar_url?: string;
     level: string;
     progress: number;
     averageGrade: number;
@@ -174,9 +175,14 @@ export default function TutorDashboard() {
                                 </Link>
                             </div>
                             <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
-                                <div className="w-10 h-10 bg-[#0B6282] rounded-full flex items-center justify-center">
-                                    <i className="bi bi-person-fill text-white" />
-                                </div>
+                                <img
+                                    src={(props.auth as any)?.user?.avatar_url || (props as any)?.currentTutor?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent((props.auth as any)?.user?.name || 'Tutor')}&background=0B6282&color=fff&size=200`}
+                                    alt={(props.auth as any)?.user?.name || 'Tutor'}
+                                    className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent((props.auth as any)?.user?.name || 'Tutor')}&background=0B6282&color=fff&size=200`;
+                                    }}
+                                />
                                 <span className="font-medium text-sm text-gray-800">{(props.auth as any)?.user?.name || 'Tutor'}</span>
                                 <button
                                     type="button"
@@ -288,18 +294,30 @@ export default function TutorDashboard() {
                                                 <button
                                                     key={student.id}
                                                     onClick={() => setSelectedStudent(student.id)}
-                                                    className={`w-full text-left p-3 rounded-lg transition-colors ${
+                                                    className={`w-full text-left p-2.5 rounded-lg transition-colors flex items-center gap-3 ${
                                                         currentStudent?.id === student.id
                                                             ? 'bg-[#0B6282] text-white'
                                                             : 'bg-gray-50 text-gray-900 hover:bg-gray-100'
                                                     }`}
                                                 >
-                                                    <p className="font-medium text-sm">{student.name}</p>
-                                                    <p className={`text-xs mt-0.5 ${
-                                                        currentStudent?.id === student.id ? 'text-blue-100' : 'text-gray-600'
-                                                    }`}>
-                                                        {student.level}
-                                                    </p>
+                                                    <img
+                                                        src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                                                        alt={student.name}
+                                                        className={`w-9 h-9 rounded-full object-cover shrink-0 ${
+                                                            currentStudent?.id === student.id ? 'border border-white/40' : 'border border-gray-200'
+                                                        }`}
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                                                        }}
+                                                    />
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-medium text-sm truncate">{student.name}</p>
+                                                        <p className={`text-xs mt-0.5 truncate ${
+                                                            currentStudent?.id === student.id ? 'text-blue-100' : 'text-gray-600'
+                                                        }`}>
+                                                            {student.level}
+                                                        </p>
+                                                    </div>
                                                 </button>
                                             ))}
                                         </div>
@@ -316,14 +334,24 @@ export default function TutorDashboard() {
                                 {/* Student Info Card */}
                                 <div className="bg-gradient-to-r from-[#0B6282] to-[#08455c] text-white rounded-xl shadow-sm p-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h2 className="text-2xl font-bold">{currentStudent.name}</h2>
-                                                <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
-                                                    {currentStudent.class}
-                                                </span>
+                                        <div className="flex items-center gap-4">
+                                            <img
+                                                src={currentStudent.avatar_url || currentStudent.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentStudent.name)}&background=14b8a6&color=fff&size=200`}
+                                                alt={currentStudent.name}
+                                                className="w-16 h-16 rounded-2xl object-cover border-2 border-white/30 shadow-sm shrink-0"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentStudent.name)}&background=14b8a6&color=fff&size=200`;
+                                                }}
+                                            />
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                    <h2 className="text-2xl font-bold">{currentStudent.name}</h2>
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
+                                                        {currentStudent.class}
+                                                    </span>
+                                                </div>
+                                                <p className="text-blue-100 text-sm">{currentStudent.email}</p>
                                             </div>
-                                            <p className="text-blue-100">{currentStudent.email}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             {selectedClassroomId && (

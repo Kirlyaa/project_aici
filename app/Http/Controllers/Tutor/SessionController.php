@@ -49,6 +49,7 @@ class SessionController extends Controller
             'tools'         => $s->tools ?? [],
             'studentId'     => $s->user_id,
             'studentName'   => $s->student?->name ?? '-',
+            'studentAvatar' => $s->student?->avatar_url,
             'classroomId'   => $s->classroom_id,
             'classroomName' => $s->classroom?->name ?? ($s->student?->class ?? '-'),
             'modules'       => $s->modules->map(fn($m) => ['id' => $m->id, 'name' => $m->name])->toArray(),

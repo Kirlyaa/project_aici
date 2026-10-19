@@ -101,7 +101,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'active'])->group(function () {
 
     // ============ ROUTE UNTUK SEMUA ROLE (User / Tutor / SuperAdmin) ============
-    Route::patch('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::match(['patch', 'post'], '/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profil', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Tutor Sessions - bisa diakses tutor (dan superadmin sebagai bypass)

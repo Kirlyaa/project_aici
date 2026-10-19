@@ -17,6 +17,8 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
+    protected $appends = ['avatar_url'];
+
     protected static function booted(): void
     {
         static::deleting(function (User $user) {
@@ -44,7 +46,11 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+            if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+                return $this->avatar;
+            }
+            $cleanPath = ltrim(str_replace('storage/', '', $this->avatar), '/');
+            return asset('storage/' . $cleanPath);
         }
         // Fallback to avatar based on initials
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=14b8a6&color=fff&size=200';

@@ -8,12 +8,16 @@ interface Props {
             id: number;
             name: string;
             role: string;
+            avatar?: string;
+            avatar_url?: string;
         };
     };
     tutorsList?: Array<{
         id: number;
         name: string;
         email: string;
+        avatar?: string;
+        avatar_url?: string;
     }>;
     stats: {
         totalUsers: number;
@@ -31,6 +35,8 @@ interface Props {
         id: number;
         name: string;
         email: string;
+        avatar?: string;
+        avatar_url?: string;
         tutor: string;
         avgGrade: number;
         status: string;
@@ -39,6 +45,8 @@ interface Props {
         id: number;
         name: string;
         email: string;
+        avatar?: string;
+        avatar_url?: string;
         status: string;
     }>;
     recentModules: Array<{
@@ -74,10 +82,15 @@ export default function SuperAdminDashboard() {
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-600">Selamat datang Super Admin</span>
-                            <button className="w-10 h-10 rounded-lg bg-[#0B6282] text-white flex items-center justify-center hover:bg-[#08455c] transition-colors">
-                                <i className="bi bi-person-circle text-lg" />
-                            </button>
+                            <span className="text-sm text-gray-600">Selamat datang, {auth?.user?.name || 'Super Admin'}</span>
+                            <img
+                                src={auth?.user?.avatar_url || (auth?.user as any)?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'Super Admin')}&background=0B6282&color=fff&size=200`}
+                                alt={auth?.user?.name || 'Super Admin'}
+                                className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'Super Admin')}&background=0B6282&color=fff&size=200`;
+                                }}
+                            />
                             <button
                                 type="button"
                                 onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
@@ -175,11 +188,21 @@ export default function SuperAdminDashboard() {
                                 <div className="space-y-2">
                                     {recentTutors.map(t => (
                                         <div key={t.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
-                                            <div>
-                                                <p className="font-medium text-sm text-gray-900">{t.name}</p>
-                                                <p className="text-xs text-gray-500">{t.email}</p>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <img
+                                                    src={t.avatar_url || t.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=0B6282&color=fff&size=200`}
+                                                    alt={t.name}
+                                                    className="w-9 h-9 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=0B6282&color=fff&size=200`;
+                                                    }}
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-sm text-gray-900 truncate">{t.name}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{t.email}</p>
+                                                </div>
                                             </div>
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded ${t.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded shrink-0 ml-2 ${t.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                                                 {t.status === 'aktif' ? 'Aktif' : t.status === 'pending' ? 'Pending' : 'Nonaktif'}
                                             </span>
                                         </div>
@@ -229,11 +252,21 @@ export default function SuperAdminDashboard() {
                                 <div className="space-y-2">
                                     {recentStudents.slice(0, 2).map(s => (
                                         <div key={s.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
-                                            <div>
-                                                <p className="font-medium text-sm text-gray-900">{s.name}</p>
-                                                <p className="text-xs text-gray-500">{s.email}</p>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <img
+                                                    src={s.avatar_url || s.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=14b8a6&color=fff&size=200`}
+                                                    alt={s.name}
+                                                    className="w-9 h-9 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=14b8a6&color=fff&size=200`;
+                                                    }}
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-sm text-gray-900 truncate">{s.name}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{s.email}</p>
+                                                </div>
                                             </div>
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded ${s.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded shrink-0 ml-2 ${s.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                                                 {s.status === 'aktif' ? 'Aktif' : s.status === 'pending' ? 'Pending' : 'Nonaktif'}
                                             </span>
                                         </div>
@@ -393,11 +426,21 @@ export default function SuperAdminDashboard() {
                                             href={`/superadmin/calendar/${s.id}`}
                                             className="flex items-center justify-between p-2.5 hover:bg-violet-50 rounded-lg border border-transparent hover:border-violet-200 transition-colors"
                                         >
-                                            <div>
-                                                <p className="font-medium text-sm text-gray-900">{s.name}</p>
-                                                <p className="text-xs text-gray-500">{s.tutor ? `Tutor: ${s.tutor}` : 'Belum ada tutor'}</p>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <img
+                                                    src={s.avatar_url || s.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=14b8a6&color=fff&size=200`}
+                                                    alt={s.name}
+                                                    className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=14b8a6&color=fff&size=200`;
+                                                    }}
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-sm text-gray-900 truncate">{s.name}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{s.tutor ? `Tutor: ${s.tutor}` : 'Belum ada tutor'}</p>
+                                                </div>
                                             </div>
-                                            <i className="bi bi-calendar-check text-violet-500" />
+                                            <i className="bi bi-calendar-check text-violet-500 shrink-0 ml-2" />
                                         </Link>
                                     ))}
                                     {recentStudents.length === 0 && (
@@ -450,11 +493,21 @@ export default function SuperAdminDashboard() {
                                             href={`/superadmin/calendar/tutors/${t.id}`}
                                             className="flex items-center justify-between p-2.5 hover:bg-[#EDF2F7] rounded-lg border border-transparent hover:border-blue-200 transition-colors"
                                         >
-                                            <div>
-                                                <p className="font-medium text-sm text-gray-900">{t.name}</p>
-                                                <p className="text-xs text-gray-500">{t.email}</p>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <img
+                                                    src={t.avatar_url || t.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=0B6282&color=fff&size=200`}
+                                                    alt={t.name}
+                                                    className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=0B6282&color=fff&size=200`;
+                                                    }}
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-sm text-gray-900 truncate">{t.name}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{t.email}</p>
+                                                </div>
                                             </div>
-                                            <i className="bi bi-calendar-event text-[#0B6282]" />
+                                            <i className="bi bi-calendar-event text-[#0B6282] shrink-0 ml-2" />
                                         </Link>
                                     ))}
                                     {recentTutors.length === 0 && (

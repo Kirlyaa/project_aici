@@ -1,5 +1,5 @@
-import { Head, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useRef, useState } from 'react';
 import UserLayout from '@/Layouts/UserLayout';
 
 interface CategoryScore {
@@ -33,6 +33,9 @@ export default function Profil() {
         (props as any).pdfRanges ?? [];
 
     const userName = studentStats?.name || auth?.user?.name || 'Siswa AICI';
+    const userAvatarUrl = studentStats?.avatar_url || auth?.user?.avatar_url || null;
+    const userEmail = studentStats?.email || auth?.user?.email || '';
+
     const [activeTab, setActiveTab] = useState<'robot' | 'focus'>('robot');
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [selectedRange, setSelectedRange] = useState<string>('all');
@@ -40,6 +43,98 @@ export default function Profil() {
     const [customFrom, setCustomFrom] = useState<number>(1);
     const [customTo, setCustomTo] = useState<number>(4);
     const [selectedCommentCycle, setSelectedCommentCycle] = useState<string>('all');
+
+    // State untuk Pengaturan Foto Profil
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(userAvatarUrl);
+    const [removeAvatar, setRemoveAvatar] = useState(false);
+    const [editError, setEditError] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const openEditModal = () => {
+        setAvatarFile(null);
+        setAvatarPreview(userAvatarUrl);
+        setRemoveAvatar(false);
+        setEditError(null);
+        setShowEditModal(true);
+    };
+
+    const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validasi ukuran max 2MB
+        if (file.size > 2 * 1024 * 1024) {
+            setEditError('Ukuran file foto maksimal 2MB. Silakan pilih foto dengan resolusi lebih kecil.');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        // Validasi tipe file
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            setEditError('Format file foto tidak didukung. Harap gunakan format JPG, PNG, GIF, atau WEBP.');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        setEditError(null);
+        setAvatarFile(file);
+        setRemoveAvatar(false);
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            setAvatarPreview(event.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveAvatar = () => {
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        setRemoveAvatar(true);
+        setEditError(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleSaveProfile = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!avatarFile && !removeAvatar) {
+            setShowEditModal(false);
+            return;
+        }
+
+        setIsSaving(true);
+        setEditError(null);
+
+        router.post(
+            '/profil',
+            {
+                _method: 'PATCH',
+                avatar: avatarFile,
+                remove_avatar: removeAvatar ? '1' : '0',
+            },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowEditModal(false);
+                    setAvatarFile(null);
+                    setRemoveAvatar(false);
+                },
+                onError: (errors: any) => {
+                    const firstError = Object.values(errors)[0] as string;
+                    setEditError(firstError || 'Terjadi kesalahan saat menyimpan foto profil.');
+                },
+                onFinish: () => {
+                    setIsSaving(false);
+                },
+            }
+        );
+    };
 
     // Data skor per pertemuan
     const meetingScores: MeetingScoreItem[] = studentStats?.meetingScores ?? [];
@@ -119,32 +214,71 @@ export default function Profil() {
                         <i className="bi bi-robot text-[220px]" />
                     </div>
 
-                    <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                        {/* Profile Avatar */}
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center flex-shrink-0">
-                            <i className="bi bi-person-circle text-5xl text-white/90" />
+                    <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                            {/* Profile Avatar with Camera Trigger */}
+                            <div className="relative group cursor-pointer" onClick={openEditModal} title="Ubah foto profil & nama">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 border-2 border-white/20 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-inner group-hover:border-cyan-300 transition-colors">
+                                    {userAvatarUrl ? (
+                                        <img
+                                            src={userAvatarUrl}
+                                            alt={userName}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            onError={(e) => {
+                                                (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=14b8a6&color=fff&size=200`;
+                                            }}
+                                        />
+                                    ) : (
+                                        <i className="bi bi-person-circle text-5xl text-white/90" />
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditModal();
+                                    }}
+                                    title="Ubah foto profil"
+                                    aria-label="Ubah foto profil"
+                                    className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white flex items-center justify-center shadow-md transition-all group-hover:scale-110 border-2 border-[#0B6282]"
+                                >
+                                    <i className="bi bi-camera-fill text-xs" />
+                                </button>
+                            </div>
+
+                            {/* Info details */}
+                            <div className="space-y-1">
+                                <p className="text-cyan-200 text-xs font-medium uppercase tracking-wider">PESERTA PROGRAM</p>
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{userName}</h1>
+                                <p className="text-cyan-100 text-xs font-light">{studentStats?.class}</p>
+
+                                {/* Stat Pills */}
+                                <div className="pt-3 flex flex-wrap gap-2">
+                                    {studentStats?.level && (
+                                        <span className="px-3.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium border border-white/15">
+                                            {studentStats.level}
+                                        </span>
+                                    )}
+                                    <span className="px-3.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium border border-white/15">
+                                        {studentStats?.completedSessions ?? 0} Sesi Selesai
+                                    </span>
+                                    <span className="px-3.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium border border-white/15">
+                                        {studentStats?.averagePercentage ?? 0}% Rata-rata
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Info details */}
-                        <div className="space-y-1">
-                            <p className="text-cyan-200 text-xs font-medium uppercase tracking-wider">PESERTA PROGRAM</p>
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{userName}</h1>
-                            <p className="text-cyan-100 text-xs font-light">{studentStats?.class}</p>
-
-                            {/* Stat Pills */}
-                            <div className="pt-3 flex flex-wrap gap-2">
-                                {studentStats?.level && (
-                                    <span className="px-3.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium border border-white/15">
-                                        {studentStats.level}
-                                    </span>
-                                )}
-                                <span className="px-3.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium border border-white/15">
-                                    {studentStats?.completedSessions ?? 0} Sesi Selesai
-                                </span>
-                                <span className="px-3.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium border border-white/15">
-                                    {studentStats?.averagePercentage ?? 0}% Rata-rata
-                                </span>
-                            </div>
+                        {/* Edit Profile Action Button */}
+                        <div className="sm:self-start flex-shrink-0">
+                            <button
+                                type="button"
+                                onClick={openEditModal}
+                                className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-white text-xs font-bold transition-all border border-white/20 flex items-center gap-2 shadow-sm backdrop-blur-sm"
+                            >
+                                <i className="bi bi-camera text-sm" />
+                                <span>Ubah Foto Profil</span>
+                            </button>
                         </div>
                     </div>
 
@@ -406,6 +540,167 @@ export default function Profil() {
                     </button>
                 </div>
             </div>
+
+            {/* Modal Edit Profil & Foto */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
+                    <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-gray-100 my-8">
+                        {/* Modal Header */}
+                        <div className="bg-gradient-to-r from-[#0B6282] to-[#0d7ea7] text-white px-6 py-5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white">
+                                    <i className="bi bi-camera text-xl" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-base tracking-tight">Foto Profil</h3>
+                                    <p className="text-xs text-cyan-100">Atur atau unggah foto profil akun siswa Anda</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowEditModal(false)}
+                                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                                aria-label="Tutup"
+                            >
+                                <i className="bi bi-x-lg text-sm" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body / Form */}
+                        <form onSubmit={handleSaveProfile} className="p-6 space-y-5">
+                            {/* Error Alert if any */}
+                            {editError && (
+                                <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2.5 animate-fadeIn">
+                                    <i className="bi bi-exclamation-triangle-fill text-red-500 text-sm shrink-0 mt-0.5" />
+                                    <div className="flex-1 font-medium">{editError}</div>
+                                </div>
+                            )}
+
+                            {/* Foto Profil Section */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+                                    Foto Profil
+                                </label>
+                                <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                                    {/* Avatar Preview */}
+                                    <div className="relative flex-shrink-0">
+                                        <div className="w-20 h-20 rounded-2xl bg-white border-2 border-teal-200 overflow-hidden shadow-sm flex items-center justify-center">
+                                            {avatarPreview ? (
+                                                <img
+                                                    src={avatarPreview}
+                                                    alt="Preview Avatar"
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'AICI')}&background=14b8a6&color=fff&size=200`;
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-teal-500 to-[#0B6282] flex items-center justify-center text-white text-2xl font-bold">
+                                                    {(userName || 'U').charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons & Hints */}
+                                    <div className="flex-1 min-w-0 space-y-2">
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                                            onChange={handleAvatarFileSelect}
+                                            className="hidden"
+                                        />
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="px-3.5 py-1.5 bg-[#0B6282] hover:bg-[#08455c] active:bg-[#073648] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5"
+                                            >
+                                                <i className="bi bi-upload" />
+                                                Pilih Foto
+                                            </button>
+
+                                            {(avatarPreview || userAvatarUrl) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemoveAvatar}
+                                                    className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 rounded-xl text-xs font-semibold transition flex items-center gap-1"
+                                                >
+                                                    <i className="bi bi-trash3" />
+                                                    Hapus Foto
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-gray-500 leading-tight">
+                                            JPG, PNG, GIF, atau WEBP. Maksimal 2MB.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Info Detail Akun Siswa (Read-only) */}
+                            <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-gray-500 font-medium flex items-center gap-1.5">
+                                        <i className="bi bi-person text-gray-400" /> Nama Siswa
+                                    </span>
+                                    <span className="text-gray-800 font-bold truncate max-w-[200px]" title={userName}>
+                                        {userName}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-200/60">
+                                    <span className="text-gray-500 font-medium flex items-center gap-1.5">
+                                        <i className="bi bi-envelope text-gray-400" /> Email
+                                    </span>
+                                    <span className="text-gray-800 font-semibold truncate max-w-[200px]" title={userEmail}>
+                                        {userEmail || '—'}
+                                    </span>
+                                </div>
+                                {studentStats?.class && (
+                                    <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-200/60">
+                                        <span className="text-gray-500 font-medium flex items-center gap-1.5">
+                                            <i className="bi bi-diagram-3 text-gray-400" /> Kelas
+                                        </span>
+                                        <span className="text-gray-800 font-semibold">
+                                            {studentStats.class}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Modal Footer Buttons */}
+                            <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    disabled={isSaving}
+                                    className="px-4 py-2 rounded-xl border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition disabled:opacity-50"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSaving || (!avatarFile && !removeAvatar)}
+                                    className="px-5 py-2.5 bg-[#0B6282] hover:bg-[#08455c] active:bg-[#073648] text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <i className="bi bi-arrow-repeat animate-spin text-sm" />
+                                            <span>Menyimpan...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-check2-circle text-sm" />
+                                            <span>Simpan Foto</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Modal Pilihan Rentang Pertemuan PDF */}
             {showPdfModal && (

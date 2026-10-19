@@ -57,6 +57,8 @@ interface Props {
         id: number;
         name: string;
         email: string;
+        avatar?: string | null;
+        avatar_url?: string;
     };
 }
 
@@ -132,11 +134,21 @@ export default function GradeReport() {
                     )}
 
                     {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">Laporan Nilai</h1>
-                        <p className="text-gray-600">
-                            Pantau progres pembelajaran {student.name}
-                        </p>
+                    <div className="mb-8 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex items-center gap-4">
+                        <img
+                            src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                            alt={student.name}
+                            className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                            }}
+                        />
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Laporan Nilai Siswa</h1>
+                            <p className="text-gray-600 text-sm mt-0.5">
+                                Pantau progres pembelajaran dan capaian <span className="font-semibold text-gray-800">{student.name}</span>
+                            </p>
+                        </div>
                     </div>
 
                     {/* Statistics Cards */}

@@ -470,8 +470,16 @@ export default function ClassroomManagement() {
                                                     Detail Kelas
                                                 </span>
                                                 {selectedClass.tutor ? (
-                                                    <span className="px-2.5 py-0.5 bg-teal-500/80 backdrop-blur-md text-[11px] font-semibold rounded-full flex items-center gap-1">
-                                                        <i className="bi bi-person-badge" /> Wali / Tutor: {selectedClass.tutor.name}
+                                                    <span className="px-2.5 py-0.5 bg-teal-500/80 backdrop-blur-md text-[11px] font-semibold rounded-full flex items-center gap-1.5">
+                                                        <img
+                                                            src={selectedClass.tutor.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedClass.tutor.name)}&background=0B6282&color=fff&size=100`}
+                                                            alt={selectedClass.tutor.name}
+                                                            className="w-4 h-4 rounded-full object-cover shrink-0"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedClass.tutor?.name || 'Tutor')}&background=0B6282&color=fff&size=100`;
+                                                            }}
+                                                        />
+                                                        Wali / Tutor: {selectedClass.tutor.name}
                                                     </span>
                                                 ) : (
                                                     <span className="px-2.5 py-0.5 bg-white/20 backdrop-blur-md text-[11px] font-normal rounded-full text-gray-200">
@@ -546,9 +554,12 @@ export default function ClassroomManagement() {
                                                         <td className="py-3 px-4">
                                                             <div className="flex items-center gap-3">
                                                                 <img
-                                                                    src={st.avatar}
+                                                                    src={st.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(st.name)}&background=14b8a6&color=fff&size=100`}
                                                                     alt={st.name}
                                                                     className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(st.name)}&background=14b8a6&color=fff&size=100`;
+                                                                    }}
                                                                 />
                                                                 <div>
                                                                     <p className="font-semibold text-gray-900">{st.name}</p>
@@ -630,9 +641,12 @@ export default function ClassroomManagement() {
                                     <div key={st.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <img
-                                                src={st.avatar}
+                                                src={st.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(st.name)}&background=14b8a6&color=fff&size=100`}
                                                 alt={st.name}
-                                                className="w-8 h-8 rounded-full object-cover"
+                                                className="w-8 h-8 rounded-full object-cover shrink-0"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(st.name)}&background=14b8a6&color=fff&size=100`;
+                                                }}
                                             />
                                             <div className="min-w-0">
                                                 <p className="font-bold text-xs text-gray-900 truncate">{st.name}</p>
@@ -876,6 +890,14 @@ export default function ClassroomManagement() {
                                                             );
                                                         }}
                                                         className="rounded text-teal-600 focus:ring-teal-500"
+                                                    />
+                                                    <img
+                                                        src={st.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(st.name)}&background=14b8a6&color=fff&size=100`}
+                                                        alt={st.name}
+                                                        className="w-6 h-6 rounded-full object-cover shrink-0"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(st.name)}&background=14b8a6&color=fff&size=100`;
+                                                        }}
                                                     />
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-semibold truncate">{st.name}</div>

@@ -13,13 +13,14 @@ interface UserLayoutProps {
 export default function UserLayout({ currentPage, children }: PropsWithChildren<UserLayoutProps>) {
     const { auth } = usePage().props as any;
     const userRole = auth?.user?.role || 'user';
+    const avatarUrl = auth?.user?.avatar_url || null;
 
     return (
         <div className="min-h-screen bg-gray-50">
             <FlashToast />
             <HolidayAnnouncementModal />
             <HolidayAnnouncementBadge />
-            <UserNavbar userName={auth?.user?.name || 'User'} userRole={userRole} />
+            <UserNavbar userName={auth?.user?.name || 'User'} userRole={userRole} avatarUrl={avatarUrl} />
             <main className="pb-20 md:pb-8">
                 {children}
             </main>

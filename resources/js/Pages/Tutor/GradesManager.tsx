@@ -48,6 +48,8 @@ interface StudentInfo {
     id: number;
     name: string;
     email: string;
+    avatar?: string | null;
+    avatar_url?: string;
     classroom?: { id: number; name: string } | null;
     school?: { id: number; name: string } | null;
 }
@@ -496,9 +498,14 @@ export default function GradesManager() {
                 {/* Hero / Student Banner */}
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center font-bold text-xl shadow-sm shrink-0">
-                            {student.name.charAt(0).toUpperCase()}
-                        </div>
+                        <img
+                            src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                            alt={student.name}
+                            className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                            }}
+                        />
                         <div>
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{student.name}</h1>

@@ -149,6 +149,8 @@ class ProfileController extends Controller
                 'studentStats' => [
                     'name' => $user->name,
                     'email' => $user->email,
+                    'avatar' => $user->avatar,
+                    'avatar_url' => $user->avatar_url,
                     'class' => $user->class,
                     'level' => null,
                     'completedSessions' => $completedSessions,
@@ -187,23 +189,38 @@ class ProfileController extends Controller
         $validated = $request->validated();
         $user = $request->user();
 
+        // Handle avatar removal
+        if ($request->boolean('remove_avatar') && !$request->hasFile('avatar')) {
+            if ($user->avatar && !str_starts_with($user->avatar, 'http') && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $validated['avatar'] = null;
+            $user->avatar = null;
+        }
+
         // Handle avatar upload
         if ($request->hasFile('avatar')) {
             $avatar = $request->file('avatar');
             
             // Additional runtime validation
-            if (!$avatar->isValid() || !in_array($avatar->getMimeType(), ['image/jpeg', 'image/png', 'image/gif'])) {
-                return Redirect::route('profile.edit')->with('error', 'File gambar tidak valid.');
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!$avatar->isValid() || !in_array($avatar->getMimeType(), $allowedMimes)) {
+                return Redirect::route('profile.edit')->with('error', 'File gambar tidak valid. Format yang didukung: JPG, PNG, GIF, WEBP.');
             }
             
             // Delete old avatar if exists
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            if ($user->avatar && !str_starts_with($user->avatar, 'http') && Storage::disk('public')->exists($user->avatar)) {
                 Storage::disk('public')->delete($user->avatar);
             }
 
             // Store new avatar
             $path = $avatar->store('avatars', 'public');
             $validated['avatar'] = $path;
+        }
+
+        // Siswa (role 'user') tidak diizinkan mengubah nama akun
+        if ($user->role === 'user') {
+            unset($validated['name']);
         }
 
         $user->fill($validated);

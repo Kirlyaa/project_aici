@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -127,5 +129,177 @@ class ProfileTest extends TestCase
         $pdfPage = $pdfResponse->viewData('page');
         $this->assertSame('Pertemuan 1 - 4', $pdfPage['props']['filterInfo']['activeLabel']);
         $this->assertSame(4, $pdfPage['props']['filterInfo']['meetingCount']);
+    }
+
+    public function test_user_can_update_avatar_without_name_or_email(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Original Name',
+            'email' => 'student@example.com',
+            'avatar' => null,
+        ]);
+
+        $file = UploadedFile::fake()->image('profile.jpg', 400, 400)->size(500);
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profil', [
+                '_method' => 'PATCH',
+                'avatar' => $file,
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profil');
+
+        $user->refresh();
+        $this->assertSame('Original Name', $user->name);
+        $this->assertNotNull($user->avatar);
+        $this->assertStringStartsWith('avatars/', $user->avatar);
+    }
+
+    public function test_student_cannot_change_name(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'user',
+            'name' => 'Student Original Name',
+            'email' => 'student@example.com',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profil', [
+                '_method' => 'PATCH',
+                'name' => 'Attempted Changed Name',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profil');
+
+        $user->refresh();
+        $this->assertSame('Student Original Name', $user->name);
+    }
+
+    public function test_user_can_upload_profile_avatar(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'name' => 'Student User',
+            'avatar' => null,
+        ]);
+
+        $file = UploadedFile::fake()->image('profile.jpg', 400, 400)->size(500);
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profil', [
+                'name' => 'Student User',
+                'avatar' => $file,
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profil');
+
+        $user->refresh();
+        $this->assertNotNull($user->avatar);
+        $this->assertStringStartsWith('avatars/', $user->avatar);
+        Storage::disk('public')->assertExists($user->avatar);
+        $this->assertNotEmpty($user->avatar_url);
+    }
+
+    public function test_old_avatar_is_deleted_when_new_avatar_uploaded(): void
+    {
+        Storage::fake('public');
+
+        // Put an initial file
+        $oldFilePath = 'avatars/old_avatar.jpg';
+        Storage::disk('public')->put($oldFilePath, 'dummy-content');
+
+        $user = User::factory()->create([
+            'avatar' => $oldFilePath,
+        ]);
+
+        $newFile = UploadedFile::fake()->image('new_profile.png', 300, 300)->size(400);
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profil', [
+                'name' => $user->name,
+                'avatar' => $newFile,
+            ]);
+
+        $response->assertSessionHasNoErrors()->assertRedirect('/profil');
+
+        $user->refresh();
+        $this->assertNotSame($oldFilePath, $user->avatar);
+        Storage::disk('public')->assertMissing($oldFilePath);
+        Storage::disk('public')->assertExists($user->avatar);
+    }
+
+    public function test_user_can_remove_avatar(): void
+    {
+        Storage::fake('public');
+
+        $oldFilePath = 'avatars/avatar_to_remove.jpg';
+        Storage::disk('public')->put($oldFilePath, 'dummy-content');
+
+        $user = User::factory()->create([
+            'avatar' => $oldFilePath,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profil', [
+                'name' => $user->name,
+                'remove_avatar' => '1',
+            ]);
+
+        $response->assertSessionHasNoErrors()->assertRedirect('/profil');
+
+        $user->refresh();
+        $this->assertNull($user->avatar);
+        $this->assertStringContainsString('ui-avatars.com', $user->avatar_url);
+        Storage::disk('public')->assertMissing($oldFilePath);
+    }
+
+    public function test_avatar_validation_rejects_invalid_file_type(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $invalidFile = UploadedFile::fake()->create('document.pdf', 500, 'application/pdf');
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profil', [
+                'name' => $user->name,
+                'avatar' => $invalidFile,
+            ]);
+
+        $response->assertSessionHasErrors('avatar');
+    }
+
+    public function test_avatar_validation_rejects_file_larger_than_2mb(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        // 3000 KB > 2048 KB
+        $oversizedFile = UploadedFile::fake()->image('large.jpg')->size(3000);
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profil', [
+                'name' => $user->name,
+                'avatar' => $oversizedFile,
+            ]);
+
+        $response->assertSessionHasErrors('avatar');
     }
 }

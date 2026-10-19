@@ -21,6 +21,8 @@ interface Tutor {
     id: number;
     name: string;
     email: string;
+    avatar?: string | null;
+    avatar_url?: string;
     peran: string;
     status: string;
     terdaftar: string;
@@ -320,8 +322,20 @@ export default function TutorManagement() {
                                     users.data.map(tutor => (
                                         <tr key={tutor.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             <td className="px-4 py-4">
-                                                <p className="font-semibold text-gray-900">{tutor.name}</p>
-                                                <p className="text-xs text-gray-500">{tutor.email}</p>
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={tutor.avatar_url || tutor.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=0B6282&color=fff&size=200`}
+                                                        alt={tutor.name}
+                                                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=0B6282&color=fff&size=200`;
+                                                        }}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-gray-900 truncate">{tutor.name}</p>
+                                                        <p className="text-xs text-gray-500 truncate">{tutor.email}</p>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4">
                                                 {tutor.classrooms && tutor.classrooms.length > 0 ? (

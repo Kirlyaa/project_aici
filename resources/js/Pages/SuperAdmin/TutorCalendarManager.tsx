@@ -19,18 +19,23 @@ interface SessionData {
     student_id: number;
     student_name: string;
     student_email?: string;
+    student_avatar?: string;
 }
 
 interface TutorOption {
     id: number;
     name: string;
     email: string;
+    avatar?: string | null;
+    avatar_url?: string;
 }
 
 interface StudentOption {
     id: number;
     name: string;
     email: string;
+    avatar?: string | null;
+    avatar_url?: string;
     class?: string | null;
     classroom_id?: number | null;
 }
@@ -475,19 +480,29 @@ export default function SuperAdminTutorCalendarManager({
                 {/* Banner Info Tutor */}
                 {tutor ? (
                     <div className="bg-gradient-to-r from-teal-800 to-teal-900 text-white rounded-2xl p-6 sm:p-7 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-600 text-teal-100 border border-teal-500">
-                                    Kalender Mengajar Tutor
-                                </span>
-                                <span className="text-teal-200 text-xs">• SuperAdmin Access</span>
+                        <div className="flex items-center gap-4">
+                            <img
+                                src={tutor.avatar_url || tutor.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=0B6282&color=fff&size=200`}
+                                alt={tutor.name}
+                                className="w-16 h-16 rounded-2xl object-cover border-2 border-teal-400/50 shadow-md shrink-0"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=0B6282&color=fff&size=200`;
+                                }}
+                            />
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-600 text-teal-100 border border-teal-500">
+                                        Kalender Mengajar Tutor
+                                    </span>
+                                    <span className="text-teal-200 text-xs">• SuperAdmin Access</span>
+                                </div>
+                                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                                    {tutor.name}
+                                </h1>
+                                <p className="text-teal-100 text-sm mt-1">
+                                    {tutor.email} — Mengelola seluruh jadwal sesi pembelajaran dan agenda pengajaran tutor ini.
+                                </p>
                             </div>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                                {tutor.name}
-                            </h1>
-                            <p className="text-teal-100 text-sm mt-1">
-                                {tutor.email} — Mengelola seluruh jadwal sesi pembelajaran dan agenda pengajaran tutor ini.
-                            </p>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -730,18 +745,28 @@ export default function SuperAdminTutorCalendarManager({
                                                 className="p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-300 transition-all shadow-sm space-y-2.5"
                                             >
                                                 <div className="flex items-start justify-between gap-2">
-                                                    <div>
-                                                        <span className="text-xs font-semibold text-teal-700 block">
-                                                            {session.student_name}
-                                                        </span>
-                                                        <h4 className="font-bold text-gray-900 text-sm leading-snug">
-                                                            {session.title}
-                                                        </h4>
-                                                        {session.classroom_name && (
-                                                            <span className="text-[11px] text-gray-500">
-                                                                Kelas: {session.classroom_name}
+                                                    <div className="flex items-center gap-2.5">
+                                                        <img
+                                                            src={session.student_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.student_name)}&background=14b8a6&color=fff&size=100`}
+                                                            alt={session.student_name}
+                                                            className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(session.student_name)}&background=14b8a6&color=fff&size=100`;
+                                                            }}
+                                                        />
+                                                        <div>
+                                                            <span className="text-xs font-semibold text-teal-700 block">
+                                                                {session.student_name}
                                                             </span>
-                                                        )}
+                                                            <h4 className="font-bold text-gray-900 text-sm leading-snug">
+                                                                {session.title}
+                                                            </h4>
+                                                            {session.classroom_name && (
+                                                                <span className="text-[11px] text-gray-500">
+                                                                    Kelas: {session.classroom_name}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
 
                                                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${color.badge}`}>

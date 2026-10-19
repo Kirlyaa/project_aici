@@ -14,6 +14,8 @@ interface StudentDetailProps {
         id: number;
         name: string;
         email: string;
+        avatar?: string | null;
+        avatar_url?: string;
         status: string;
         class: string | null;
         classroomName: string | null;
@@ -139,9 +141,14 @@ export default function StudentDetail({
                 <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-slate-800 text-white rounded-2xl p-6 sm:p-8 shadow-md relative overflow-hidden">
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                         <div className="flex items-start gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-3xl font-bold text-white flex-shrink-0">
-                                {student.name.charAt(0).toUpperCase()}
-                            </div>
+                            <img
+                                src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                                alt={student.name}
+                                className="w-16 h-16 rounded-2xl object-cover border-2 border-white/30 shadow-md shrink-0 bg-white/10"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                                }}
+                            />
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h1 className="text-2xl sm:text-3xl font-bold">{student.name}</h1>

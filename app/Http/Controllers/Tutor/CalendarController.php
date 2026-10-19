@@ -63,6 +63,7 @@ class CalendarController extends Controller
                 'student_id' => $s->user_id,
                 'student_name' => $s->student?->name ?? 'Murid Tidak Ditemukan',
                 'student_email' => $s->student?->email,
+                'student_avatar' => $s->student?->avatar_url,
             ];
         });
 
@@ -73,11 +74,15 @@ class CalendarController extends Controller
                 'id' => $tutor->id,
                 'name' => $tutor->name,
                 'email' => $tutor->email,
+                'avatar' => $tutor->avatar,
+                'avatar_url' => $tutor->avatar_url,
             ],
             'sessions' => $sessions,
             'students' => $students->map(fn($s) => [
                 'id' => $s->id,
                 'name' => $s->name,
+                'avatar' => $s->avatar,
+                'avatar_url' => $s->avatar_url,
                 'class' => $s->classroom?->name ?? ($s->class ?? 'Tanpa Kelas'),
                 'classroom_id' => $s->classroom_id,
             ]),
@@ -164,6 +169,8 @@ class CalendarController extends Controller
                 'id' => $student->id,
                 'name' => $student->name,
                 'email' => $student->email,
+                'avatar' => $student->avatar,
+                'avatar_url' => $student->avatar_url,
                 'class' => $student->classroom?->name ?? ($student->class ?? 'Tanpa Kelas'),
                 'classroom_id' => $student->classroom_id,
                 'tutor' => $student->tutor?->name ?? 'Belum ada tutor',
@@ -171,6 +178,8 @@ class CalendarController extends Controller
             'students' => $students->map(fn($s) => [
                 'id' => $s->id,
                 'name' => $s->name,
+                'avatar' => $s->avatar,
+                'avatar_url' => $s->avatar_url,
                 'class' => $s->classroom?->name ?? ($s->class ?? 'Tanpa Kelas'),
             ]),
             'sessions' => $sessions,

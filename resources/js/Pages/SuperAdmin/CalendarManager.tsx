@@ -21,6 +21,8 @@ interface Student {
     id: number;
     name: string;
     email: string;
+    avatar?: string | null;
+    avatar_url?: string;
     class?: string | null;
 }
 
@@ -518,15 +520,29 @@ export default function SuperAdminCalendarManager({ studentId, student, sessions
 
                     <div className="space-y-6">
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <i className="bi bi-person-circle text-teal-600 text-xl" />
+                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <i className="bi bi-person-badge text-teal-600 text-xl" />
                                 Informasi Murid
                             </h3>
                             {student ? (
-                                <div className="space-y-2 text-sm">
-                                    <p><span className="text-gray-600">Nama:</span> <span className="font-medium text-gray-900">{student.name}</span></p>
-                                    <p><span className="text-gray-600">Email:</span> <span className="font-medium text-gray-900">{student.email}</span></p>
-                                    <p><span className="text-gray-600">Kelas:</span> <span className="font-medium text-teal-700">{student.class || 'Tanpa Kelas'}</span></p>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                                        <img
+                                            src={student.avatar_url || (student as any).avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                                            alt={student.name}
+                                            className="w-12 h-12 rounded-xl object-cover border border-gray-200 shadow-xs shrink-0"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                                            }}
+                                        />
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-gray-900 truncate">{student.name}</p>
+                                            <p className="text-xs text-gray-500 truncate">{student.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 text-sm">
+                                        <p><span className="text-gray-600">Kelas:</span> <span className="font-semibold text-teal-700">{student.class || 'Tanpa Kelas'}</span></p>
+                                    </div>
                                 </div>
                             ) : (
                                 <p className="text-sm text-gray-500 italic">Belum ada murid yang dipilih.</p>

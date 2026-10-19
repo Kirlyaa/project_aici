@@ -27,12 +27,12 @@ class CalendarController extends Controller
             ->whereIn('status', ['aktif', 'pending'])
             ->with('classroom:id,name')
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'class', 'classroom_id']);
+            ->get(['id', 'name', 'email', 'avatar', 'class', 'classroom_id']);
 
         $tutors = User::where('role', 'tutor')
             ->whereIn('status', ['aktif', 'pending'])
             ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'name', 'email', 'avatar']);
 
         if (!$studentId) {
             $firstStudent = $students->first();
@@ -88,6 +88,8 @@ class CalendarController extends Controller
                 'id' => $student->id,
                 'name' => $student->name,
                 'email' => $student->email,
+                'avatar' => $student->avatar,
+                'avatar_url' => $student->avatar_url,
                 'class' => $student->classroom?->name ?? ($student->class ?? 'Tanpa Kelas'),
                 'classroom_id' => $student->classroom_id,
             ],
@@ -107,13 +109,13 @@ class CalendarController extends Controller
         $tutors = User::where('role', 'tutor')
             ->whereIn('status', ['aktif', 'pending'])
             ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'name', 'email', 'avatar']);
 
         $students = User::where('role', 'user')
             ->whereIn('status', ['aktif', 'pending'])
             ->with('classroom:id,name')
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'class', 'classroom_id']);
+            ->get(['id', 'name', 'email', 'avatar', 'class', 'classroom_id']);
 
         if (!$tutorId) {
             $firstTutor = $tutors->first();
@@ -141,7 +143,7 @@ class CalendarController extends Controller
                     ->orWhereHas('classroom', fn($c) => $c->where('tutor_id', $tutor->id))
                     ->orWhereHas('student', fn($s) => $s->where('tutor_id', $tutor->id));
             })
-            ->with(['modules', 'classroom', 'student:id,name,email,classroom_id'])
+            ->with(['modules', 'classroom', 'student:id,name,email,avatar,classroom_id'])
             ->orderBy('date')
             ->get()
             ->map(function (LearningSession $s) {
@@ -161,6 +163,7 @@ class CalendarController extends Controller
                     'student_id' => $s->user_id,
                     'student_name' => $s->student?->name ?? 'Murid Tidak Ditemukan',
                     'student_email' => $s->student?->email,
+                    'student_avatar' => $s->student?->avatar_url,
                 ];
             });
 
@@ -172,6 +175,8 @@ class CalendarController extends Controller
                 'id' => $tutor->id,
                 'name' => $tutor->name,
                 'email' => $tutor->email,
+                'avatar' => $tutor->avatar,
+                'avatar_url' => $tutor->avatar_url,
             ],
             'sessions' => $sessions,
             'modules' => $modules,

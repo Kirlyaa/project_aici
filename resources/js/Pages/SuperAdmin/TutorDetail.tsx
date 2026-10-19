@@ -146,9 +146,12 @@ export default function TutorDetail({
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                         <div className="flex items-start gap-4">
                             <img
-                                src={tutor.avatar}
+                                src={tutor.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=0B6282&color=fff&size=200`}
                                 alt={tutor.name}
                                 className="w-16 h-16 rounded-2xl object-cover border-2 border-white/30 shadow"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=0B6282&color=fff&size=200`;
+                                }}
                             />
                             <div>
                                 <div className="flex items-center gap-2.5 flex-wrap">
@@ -278,9 +281,12 @@ export default function TutorDetail({
                                             <td className="px-4 py-3.5">
                                                 <div className="flex items-center gap-3">
                                                     <img
-                                                        src={student.avatar}
+                                                        src={student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
                                                         alt={student.name}
                                                         className="w-9 h-9 rounded-full object-cover border border-gray-200"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                                                        }}
                                                     />
                                                     <div>
                                                         <Link

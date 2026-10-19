@@ -134,6 +134,8 @@ class StudentGradeReportController extends Controller
                 'id' => $student->id,
                 'name' => $student->name,
                 'email' => $student->email,
+                'avatar' => $student->avatar,
+                'avatar_url' => $student->avatar_url,
             ],
         ]);
     }

@@ -37,7 +37,7 @@ interface Template {
 
 interface Props {
     studentId: number;
-    student: { id: number; name: string; email: string };
+    student: { id: number; name: string; email: string; avatar?: string | null; avatar_url?: string };
     comments: Comment[];
     gradeEntries?: GradeEntryItem[];
     templates: Template[];
@@ -233,7 +233,15 @@ export default function CommentsManager() {
                                 alt="AICI Logo"
                                 className="h-8 w-auto object-contain"
                             />
-                            <div className="border-l border-gray-300 pl-3">
+                            <div className="border-l border-gray-300 pl-3 flex items-center gap-2">
+                                <img
+                                    src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                                    alt={student.name}
+                                    className="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                                    }}
+                                />
                                 <p className="text-xs font-semibold text-gray-600">Kelola Komentar: {student.name} {isSuperAdmin ? '(Mode SuperAdmin)' : ''}</p>
                             </div>
                         </div>
@@ -259,9 +267,19 @@ export default function CommentsManager() {
 
             <div className="max-w-4xl mx-auto px-4 py-8">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Kelola Komentar Murid</h1>
-                    <p className="text-gray-600">Komentar personal terstruktur (Analisis Umum, Kelebihan, Catatan) untuk {student.name}</p>
+                <div className="mb-8 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex items-center gap-4">
+                    <img
+                        src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                        alt={student.name}
+                        className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                        }}
+                    />
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Kelola Komentar Murid</h1>
+                        <p className="text-gray-600 text-sm mt-0.5">Komentar personal terstruktur (Analisis Umum, Kelebihan, Catatan) untuk <span className="font-semibold text-gray-800">{student.name}</span></p>
+                    </div>
                 </div>
 
                 <StudentLockBanner lock={lock} studentName={student.name} />

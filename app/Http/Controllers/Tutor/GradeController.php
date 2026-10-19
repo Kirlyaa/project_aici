@@ -92,7 +92,14 @@ class GradeController extends Controller
 
         return Inertia::render('Tutor/GradesManager', [
             'studentId' => (int) $studentId,
-            'student' => ['id' => $student->id, 'name' => $student->name, 'email' => $student->email],
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
+                'avatar' => $student->avatar,
+                'avatar_url' => $student->avatar_url,
+                'classroom' => $student->classroom ? ['id' => $student->classroom->id, 'name' => $student->classroom->name] : null,
+            ],
             'gradeEntries' => $gradeEntries,
             'modules' => $modules,
             'averages' => $averages,

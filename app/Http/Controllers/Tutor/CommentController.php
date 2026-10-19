@@ -80,7 +80,13 @@ class CommentController extends Controller
 
         return Inertia::render('Tutor/CommentsManager', [
             'studentId' => (int) $studentId,
-            'student' => ['id' => $student->id, 'name' => $student->name, 'email' => $student->email],
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
+                'avatar' => $student->avatar,
+                'avatar_url' => $student->avatar_url,
+            ],
             'comments' => $comments,
             'gradeEntries' => $gradeEntries,
             'templates' => $templates,

@@ -317,8 +317,20 @@ export default function ClassAttendanceModal({
                                                         {idx + 1}
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <div className="font-semibold text-gray-900">{student.name}</div>
-                                                        <div className="text-xs text-gray-500">{student.email}</div>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <img
+                                                                src={student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=100`}
+                                                                alt={student.name}
+                                                                className="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=100`;
+                                                                }}
+                                                            />
+                                                            <div>
+                                                                <div className="font-semibold text-gray-900">{student.name}</div>
+                                                                <div className="text-xs text-gray-500">{student.email}</div>
+                                                            </div>
+                                                        </div>
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <div className="flex items-center justify-center gap-2">

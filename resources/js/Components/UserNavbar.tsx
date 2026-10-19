@@ -4,9 +4,10 @@ import { useState } from 'react';
 interface UserNavbarProps {
     userName: string;
     userRole?: string;
+    avatarUrl?: string | null;
 }
 
-export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarProps) {
+export default function UserNavbar({ userName, userRole = 'user', avatarUrl = null }: UserNavbarProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const isSuperAdmin = userRole === 'superadmin';
     const isTutor = userRole === 'tutor';
@@ -42,7 +43,11 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                         href={isSuperAdmin ? '/superadmin/students' : isTutor ? '/tutor' : '/profil'}
                         className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center overflow-hidden"
                     >
-                        <i className="bi bi-person-fill text-white text-base" />
+                        {avatarUrl ? (
+                            <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+                        ) : (
+                            <i className="bi bi-person-fill text-white text-base" />
+                        )}
                     </Link>
                 </div>
             </div>
@@ -50,10 +55,20 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
             {/* Mobile Slide-down Drawer Menu */}
             {mobileMenuOpen && (
                 <div className="md:hidden bg-[#08455c] border-t border-[#0B6282] text-white px-4 pt-2 pb-4 space-y-2 sticky top-14 z-40 shadow-lg animate-fadeIn">
-                    <div className="pb-2 border-b border-[#0B6282] text-xs text-cyan-200">
-                        Selamat datang, <span className="font-semibold text-white">{userName}</span>
-                        {isSuperAdmin && <span className="ml-2 px-1.5 py-0.5 bg-[#E62C29] rounded text-[10px] text-white">Super Admin</span>}
-                        {isTutor && <span className="ml-2 px-1.5 py-0.5 bg-[#046BD2] rounded text-[10px] text-white">Tutor</span>}
+                    <div className="pb-3 border-b border-[#0B6282] flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+                            ) : (
+                                <i className="bi bi-person-fill text-white text-base" />
+                            )}
+                        </div>
+                        <div className="text-xs text-cyan-200 min-w-0">
+                            <span className="opacity-80">Selamat datang,</span>
+                            <div className="font-semibold text-white truncate text-sm">{userName}</div>
+                            {isSuperAdmin && <span className="inline-block mt-0.5 px-1.5 py-0.5 bg-[#E62C29] rounded text-[10px] text-white">Super Admin</span>}
+                            {isTutor && <span className="inline-block mt-0.5 px-1.5 py-0.5 bg-[#046BD2] rounded text-[10px] text-white">Tutor</span>}
+                        </div>
                     </div>
 
                     {isSuperAdmin ? (
@@ -221,10 +236,19 @@ export default function UserNavbar({ userName, userRole = 'user' }: UserNavbarPr
                         <div className="flex items-center gap-3">
                             <span className="text-sm text-gray-600 hidden sm:block">Selamat datang</span>
                             <div className="flex items-center gap-2">
-                                <span className="font-medium">{userName}</span>
-                                <div className="w-10 h-10 bg-[#0B6282] rounded-full flex items-center justify-center">
-                                    <i className="bi bi-person-fill text-white text-lg" />
-                                </div>
+                                <Link
+                                    href={isSuperAdmin ? '/superadmin/students' : isTutor ? '/tutor' : '/profil'}
+                                    className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+                                >
+                                    <span className="font-medium text-gray-800">{userName}</span>
+                                    <div className="w-10 h-10 bg-[#0B6282] rounded-full flex items-center justify-center overflow-hidden border border-gray-200 shadow-xs">
+                                        {avatarUrl ? (
+                                            <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <i className="bi bi-person-fill text-white text-lg" />
+                                        )}
+                                    </div>
+                                </Link>
                                 <button
                                     type="button"
                                     onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}

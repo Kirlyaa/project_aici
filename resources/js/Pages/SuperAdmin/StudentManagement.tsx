@@ -6,6 +6,8 @@ interface Student {
     id: number;
     name: string;
     email: string;
+    avatar?: string | null;
+    avatar_url?: string;
     role: string;
     status: string;
     createdAt: string;
@@ -299,9 +301,21 @@ export default function StudentManagement() {
                                     students.data.map(student => (
                                         <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             <td className="px-4 py-4">
-                                                <p className="font-semibold text-gray-900">{student.name}</p>
-                                                <p className="text-xs text-gray-500">{student.email}</p>
-                                                <p className="text-xs text-gray-400">{student.createdAt}</p>
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                                                        alt={student.name}
+                                                        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                                                        }}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-gray-900 truncate">{student.name}</p>
+                                                        <p className="text-xs text-gray-500 truncate">{student.email}</p>
+                                                        <p className="text-xs text-gray-400">{student.createdAt}</p>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="px-4 py-4">
                                                 {student.class ? (

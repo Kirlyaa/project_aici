@@ -49,6 +49,8 @@ class DashboardController extends Controller
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
+                    'avatar' => $u->avatar,
+                    'avatar_url' => $u->avatar_url,
                     'tutor' => $u->tutor?->name ?? '-',
                     'avgGrade' => round($avgGrade, 2),
                     'status' => $u->status ?? 'aktif',
@@ -65,6 +67,8 @@ class DashboardController extends Controller
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
+                    'avatar' => $u->avatar,
+                    'avatar_url' => $u->avatar_url,
                     'status' => $u->status ?? 'aktif',
                 ];
             });
@@ -147,7 +151,7 @@ class DashboardController extends Controller
         // All active tutors for chat widget
         $tutorsList = User::where('role', 'tutor')
             ->orderBy('name')
-            ->select('id', 'name', 'email')
+            ->select('id', 'name', 'email', 'avatar')
             ->get();
 
         return Inertia::render('SuperAdmin/Dashboard', [

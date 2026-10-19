@@ -17,8 +17,9 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => [
+                'sometimes',
                 'required',
                 'string',
                 'lowercase',
@@ -29,9 +30,29 @@ class ProfileUpdateRequest extends FormRequest
             'avatar' => [
                 'nullable',
                 'image',
-                'mimes:jpeg,png,jpg,gif',
+                'mimes:jpeg,png,jpg,gif,webp',
                 'max:2048', // 2MB max
             ],
+            'remove_avatar' => ['nullable'],
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'name.max' => 'Nama tidak boleh lebih dari 255 karakter.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan oleh akun lain.',
+            'avatar.image' => 'File harus berupa gambar.',
+            'avatar.mimes' => 'Format foto harus berupa JPG, PNG, GIF, atau WEBP.',
+            'avatar.max' => 'Ukuran file foto maksimal 2MB.',
         ];
     }
 }

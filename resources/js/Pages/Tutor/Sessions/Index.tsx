@@ -12,6 +12,7 @@ interface SessionItem {
     tools: string[];
     studentId: number;
     studentName: string;
+    studentAvatar?: string;
     classroomId?: number | null;
     classroomName?: string;
     modules: Array<{ id: number; name: string }>;
@@ -173,9 +174,14 @@ export default function TutorSessions() {
                 </div>
                 <div className="flex items-center gap-4">
                     <Link href="/tutor/sessions" className="text-sm text-white font-medium border-b border-white pb-0.5">Sesi</Link>
-                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                        <i className="bi bi-person-fill" />
-                    </div>
+                    <img
+                        src={(usePage().props as any).auth?.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent((usePage().props as any).auth?.user?.name || 'Tutor')}&background=0B6282&color=fff&size=100`}
+                        alt="Tutor"
+                        className="w-8 h-8 rounded-full object-cover border border-teal-300 shrink-0"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent((usePage().props as any).auth?.user?.name || 'Tutor')}&background=0B6282&color=fff&size=100`;
+                        }}
+                    />
                 </div>
             </nav>
 
@@ -262,7 +268,19 @@ export default function TutorSessions() {
                                     <tr key={session.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                         <td className="px-5 py-3 text-gray-400">{idx + 1}</td>
                                         <td className="px-5 py-3 font-medium text-gray-900">{session.title}</td>
-                                        <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{session.studentName}</td>
+                                        <td className="px-5 py-3 text-gray-600 hidden md:table-cell">
+                                            <div className="flex items-center gap-2">
+                                                <img
+                                                    src={session.studentAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.studentName)}&background=14b8a6&color=fff&size=100`}
+                                                    alt={session.studentName}
+                                                    className="w-6 h-6 rounded-full object-cover border border-slate-200 shrink-0"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(session.studentName)}&background=14b8a6&color=fff&size=100`;
+                                                    }}
+                                                />
+                                                <span className="truncate">{session.studentName}</span>
+                                            </div>
+                                        </td>
                                         <td className="px-5 py-3 text-gray-600 hidden sm:table-cell">
                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <i className="bi bi-door-open text-[11px]" />
