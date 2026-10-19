@@ -240,7 +240,12 @@ class StudentBulkImportService
                 ];
 
                 /** @var User|null $student */
-                $student = User::withTrashed()->where('email', $item['email'])->first();
+                $student = User::withTrashed()
+                    ->where(function ($q) use ($item) {
+                        $q->where('email', $item['email'])
+                          ->orWhere('email', 'like', $item['email'] . '.deleted.%');
+                    })
+                    ->first();
                 $isNewStudent = false;
 
                 if ($student?->role === 'user') {

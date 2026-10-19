@@ -17,6 +17,22 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if (! $user->isForceDeleting() && ! str_contains($user->email, '.deleted.')) {
+                $user->email = $user->email . '.deleted.' . time();
+                $user->saveQuietly();
+            }
+        });
+
+        static::restoring(function (User $user) {
+            if (str_contains($user->email, '.deleted.')) {
+                $user->email = preg_replace('/\.deleted\.\d+$/', '', $user->email);
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

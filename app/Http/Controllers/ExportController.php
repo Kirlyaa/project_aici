@@ -257,7 +257,7 @@ class ExportController extends Controller
 
         $student = User::findOrFail($studentId);
         $grades = GradeEntry::where('student_id', $studentId)
-            ->with(['module', 'learningSession'])
+            ->with(['module.parent', 'book', 'learningSession'])
             ->orderBy('meeting_date', 'desc')
             ->get();
 
@@ -280,7 +280,8 @@ class ExportController extends Controller
 
             self::putCsv($file, [
                 'Pertemuan',
-                'Modul',
+                'Modul / Buku',
+                'Sub Modul',
                 'Tanggal',
                 'Fokus',
                 'Robot Building',
@@ -292,9 +293,16 @@ class ExportController extends Controller
             ]);
 
             foreach ($grades as $grade) {
+                $module = $grade->module;
+                $book = $grade->book ?? ($module?->parent_id ? $module->parent : null);
+                $isSubModule = $module && $module->parent_id !== null;
+                $bookName = $book?->name ?? (!$isSubModule ? ($module?->name ?? 'General') : '-');
+                $subModuleName = $isSubModule ? $module->name : '-';
+
                 self::putCsv($file, [
                     $grade->meeting_number,
-                    $grade->module?->name ?? 'General',
+                    $bookName,
+                    $subModuleName,
                     $grade->meeting_date?->toDateString() ?? '-',
                     $grade->fokus,
                     $grade->robot_building ?? '-',

@@ -69,16 +69,41 @@ const STATUS_COLOR: Record<SessionStatus, { badge: string; dot: string; text: st
 };
 
 export default function TeachingCalendarManager({ tutor, sessions, students, modules }: Props) {
-    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const today = new Date();
+    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>('all');
     const [updatingSessionId, setUpdatingSessionId] = useState<number | null>(null);
 
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
+    const year = currentYear;
+    const month = currentMonth;
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    const startDay = firstDay;
+
+    const availableYears = useMemo(() => {
+        const yearsSet = new Set<number>();
+        const curY = today.getFullYear();
+
+        for (let y = curY - 5; y <= curY + 5; y++) {
+            yearsSet.add(y);
+        }
+
+        sessions.forEach(s => {
+            if (s.date) {
+                const y = parseInt(s.date.substring(0, 4), 10);
+                if (!isNaN(y)) {
+                    yearsSet.add(y);
+                }
+            }
+        });
+
+        yearsSet.add(currentYear);
+
+        return Array.from(yearsSet).sort((a, b) => a - b);
+    }, [sessions, currentYear]);
 
     // Filter sessions by student if requested
     const filteredSessions = useMemo(() => {
@@ -108,8 +133,23 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
         return map;
     }, [filteredSessions]);
 
-    const prevMonth = () => setCurrentMonth(new Date(year, month - 1));
-    const nextMonth = () => setCurrentMonth(new Date(year, month + 1));
+    const prevMonth = () => {
+        if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(prev => prev - 1);
+        } else {
+            setCurrentMonth(prev => prev - 1);
+        }
+    };
+
+    const nextMonth = () => {
+        if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(prev => prev + 1);
+        } else {
+            setCurrentMonth(prev => prev + 1);
+        }
+    };
 
     const selectedIsoDate = selectedDate !== null ? toIsoDate(year, month, selectedDate) : null;
     const selectedDateSessions = selectedIsoDate ? (sessionsByDate.get(selectedIsoDate) || []) : [];
@@ -124,15 +164,16 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
         });
     };
 
-    const calendarDays: (number | null)[] = [];
-    for (let i = daysInPrevMonth - firstDay + 1; i <= daysInPrevMonth; i++) {
-        calendarDays.push(null);
+    const calendarDays: { day: number; isPrevMonth?: boolean; isNextMonth?: boolean }[] = [];
+    for (let i = startDay - 1; i >= 0; i--) {
+        calendarDays.push({ day: prevMonthDays - i, isPrevMonth: true });
     }
     for (let i = 1; i <= daysInMonth; i++) {
-        calendarDays.push(i);
+        calendarDays.push({ day: i, isPrevMonth: false });
     }
-    for (let i = 1; calendarDays.length < 42; i++) {
-        calendarDays.push(null);
+    const remainingDays = 42 - calendarDays.length;
+    for (let i = 1; i <= remainingDays; i++) {
+        calendarDays.push({ day: i, isNextMonth: true });
     }
 
     const statusCounts = {
@@ -256,28 +297,44 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
                     <div className="lg:col-span-8 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                         {/* Navigasi Bulan */}
                         <div className="flex items-center justify-between mb-6">
-                            <button
-                                onClick={prevMonth}
-                                className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-600"
-                                title="Bulan Sebelumnya"
-                            >
-                                <i className="bi bi-chevron-left text-lg" />
-                            </button>
-                            <div className="text-center">
-                                <h2 className="text-xl font-bold text-gray-900">
-                                    {months[month]} {year}
-                                </h2>
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                    {monthSessions.length} agenda sesi di bulan ini
-                                </p>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={prevMonth}
+                                    className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-600"
+                                    title="Bulan Sebelumnya"
+                                >
+                                    <i className="bi bi-chevron-left text-lg" />
+                                </button>
+                                <div className="text-center min-w-36">
+                                    <h2 className="text-xl font-bold text-gray-900">
+                                        {months[month]}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        {monthSessions.length} agenda sesi di bulan ini
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={nextMonth}
+                                    className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-600"
+                                    title="Bulan Berikutnya"
+                                >
+                                    <i className="bi bi-chevron-right text-lg" />
+                                </button>
                             </div>
-                            <button
-                                onClick={nextMonth}
-                                className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-600"
-                                title="Bulan Berikutnya"
+
+                            <select
+                                value={year}
+                                onChange={e => setCurrentYear(Number(e.target.value))}
+                                className="text-sm font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
                             >
-                                <i className="bi bi-chevron-right text-lg" />
-                            </button>
+                                {availableYears.map(y => (
+                                    <option key={y} value={y}>
+                                        {y}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         {/* Nama Hari */}
@@ -291,23 +348,32 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
 
                         {/* Kotak Tanggal */}
                         <div className="grid grid-cols-7 gap-2">
-                            {calendarDays.map((date, idx) => {
-                                if (date === null) {
-                                    return <div key={`empty-${idx}`} className="min-h-[82px] rounded-xl bg-gray-50/50" />;
+                            {calendarDays.map((item, idx) => {
+                                const { day, isPrevMonth, isNextMonth } = item;
+                                if (isPrevMonth || isNextMonth) {
+                                    return (
+                                        <div
+                                            key={`other-${idx}`}
+                                            className="min-h-[82px] p-2 rounded-xl border border-gray-100 bg-gray-50/50 flex flex-col justify-between opacity-40 select-none cursor-default"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full text-gray-400">
+                                                    {day}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
                                 }
 
-                                const iso = toIsoDate(year, month, date);
+                                const iso = toIsoDate(year, month, day);
                                 const daySessions = sessionsByDate.get(iso) || [];
-                                const isSelected = selectedDate === date;
-                                const isToday = (() => {
-                                    const now = new Date();
-                                    return now.getFullYear() === year && now.getMonth() === month && now.getDate() === date;
-                                })();
+                                const isSelected = selectedDate === day;
+                                const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
                                 return (
                                     <div
-                                        key={`date-${date}`}
-                                        onClick={() => setSelectedDate(date)}
+                                        key={`date-${year}-${month}-${day}`}
+                                        onClick={() => setSelectedDate(day)}
                                         className={`min-h-[82px] p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                                             isSelected
                                                 ? 'border-teal-500 ring-2 ring-teal-400/40 bg-teal-50/40 shadow-sm'
@@ -328,7 +394,7 @@ export default function TeachingCalendarManager({ tutor, sessions, students, mod
                                                         : 'text-gray-700'
                                                 }`}
                                             >
-                                                {date}
+                                                {day}
                                             </span>
 
                                             {daySessions.length > 0 && (

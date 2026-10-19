@@ -20,16 +20,19 @@ class StoreUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $userId = $this->route('student') ?? $this->route('tutor') ?? $this->route('user');
+        $userModel = $this->route('student') ?? $this->route('tutor') ?? $this->route('user');
+        $userId = is_object($userModel) ? $userModel->id : $userModel;
         $isUpdate = ! empty($userId);
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)->whereNull('deleted_at')],
             'password' => [$isUpdate ? 'nullable' : 'required', 'confirmed', Password::defaults()],
             'status' => ['nullable', Rule::in(['aktif', 'nonaktif', 'pending'])],
             'tutor_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', 'tutor')],
             'classroom_id' => ['nullable', 'integer', Rule::exists('classrooms', 'id')],
+            'classroom_ids' => ['nullable', 'array'],
+            'classroom_ids.*' => ['integer', Rule::exists('classrooms', 'id')],
             'class' => ['nullable', 'string', 'max:255'],
         ];
     }

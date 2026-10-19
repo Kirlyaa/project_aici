@@ -79,8 +79,8 @@ class TutorBulkImportService
         $tutorsToInsert = [];
         $seenEmails = [];
 
-        // Preload existing user emails for fast O(1) in-memory collision check
-        $existingEmails = User::withTrashed()->pluck('email')->map(fn($e) => strtolower(trim((string) $e)))->filter()->flip()->toArray();
+        // Preload active user emails for fast O(1) in-memory collision check
+        $existingEmails = User::whereNull('deleted_at')->pluck('email')->map(fn($e) => strtolower(trim((string) $e)))->filter()->flip()->toArray();
 
         $rowNumber = 0;
         while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {

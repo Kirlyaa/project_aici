@@ -157,4 +157,131 @@ class TutorSessionIntegrationTest extends TestCase
         $this->assertEquals($newTutor->id, $student->fresh()->tutor_id);
         $this->assertEquals($newTutor->id, $session->fresh()->tutor_id);
     }
+
+    public function test_superadmin_can_update_tutor_basic_info(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'superadmin']);
+        $tutor = User::factory()->create(['role' => 'tutor', 'status' => 'aktif', 'email' => 'yoel@aici.com']);
+
+        $response = $this->actingAs($superAdmin)->put(route('superadmin.tutors.update', $tutor), [
+            'name' => 'Yoel Updated',
+            'email' => 'yoel@aici.id',
+            'status' => 'aktif',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals('Yoel Updated', $tutor->fresh()->name);
+        $this->assertEquals('yoel@aici.id', $tutor->fresh()->email);
+    }
+
+    public function test_soft_deleting_user_frees_email_for_another_user(): void
+    {
+        $oldUser = User::factory()->create([
+            'email' => 'kak.yoel@aici.id',
+            'role' => 'tutor',
+        ]);
+        $oldUser->delete();
+
+        $this->assertStringContainsString('.deleted.', $oldUser->fresh()->email);
+
+        $superAdmin = User::factory()->create(['role' => 'superadmin']);
+        $newTutor = User::factory()->create([
+            'email' => 'yoel.temp@aici.com',
+            'role' => 'tutor',
+        ]);
+
+        $response = $this->actingAs($superAdmin)->put(route('superadmin.tutors.update', $newTutor), [
+            'name' => 'Yoel',
+            'email' => 'kak.yoel@aici.id',
+            'status' => 'aktif',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals('kak.yoel@aici.id', $newTutor->fresh()->email);
+    }
+
+    public function test_superadmin_can_update_tutor_password(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'superadmin']);
+        $tutor = User::factory()->create(['role' => 'tutor', 'status' => 'aktif']);
+
+        $response = $this->actingAs($superAdmin)->put(route('superadmin.tutors.update', $tutor), [
+            'name' => $tutor->name,
+            'email' => $tutor->email,
+            'status' => 'aktif',
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newpassword123', $tutor->fresh()->password));
+    }
+
+    public function test_superadmin_can_assign_and_sync_classrooms_when_updating_tutor(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'superadmin']);
+        $tutor = User::factory()->create(['role' => 'tutor', 'status' => 'aktif']);
+
+        $classroomA = Classroom::create(['name' => 'Kelas Alpha', 'tutor_id' => null]);
+        $classroomB = Classroom::create(['name' => 'Kelas Beta', 'tutor_id' => null]);
+
+        $studentA = User::factory()->create(['role' => 'user', 'classroom_id' => $classroomA->id, 'tutor_id' => null]);
+        $sessionA = LearningSession::create([
+            'user_id' => $studentA->id,
+            'classroom_id' => $classroomA->id,
+            'tutor_id' => null,
+            'title' => 'Sesi Alpha',
+            'date_string' => '2026-10-25',
+            'date' => '2026-10-25',
+            'status' => 'akan-datang',
+        ]);
+
+        // Assign classroomA to tutor
+        $response = $this->actingAs($superAdmin)->put(route('superadmin.tutors.update', $tutor), [
+            'name' => $tutor->name,
+            'email' => $tutor->email,
+            'status' => 'aktif',
+            'classroom_ids' => [$classroomA->id],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals($tutor->id, $classroomA->fresh()->tutor_id);
+        $this->assertEquals($tutor->id, $studentA->fresh()->tutor_id);
+        $this->assertEquals($tutor->id, $sessionA->fresh()->tutor_id);
+
+        // Now update: swap classroomA for classroomB
+        $response2 = $this->actingAs($superAdmin)->put(route('superadmin.tutors.update', $tutor), [
+            'name' => $tutor->name,
+            'email' => $tutor->email,
+            'status' => 'aktif',
+            'classroom_ids' => [$classroomB->id],
+        ]);
+
+        $response2->assertSessionHasNoErrors();
+        $this->assertNull($classroomA->fresh()->tutor_id);
+        $this->assertNull($studentA->fresh()->tutor_id);
+        $this->assertNull($sessionA->fresh()->tutor_id);
+        $this->assertEquals($tutor->id, $classroomB->fresh()->tutor_id);
+    }
+
+    public function test_superadmin_can_store_tutor_with_assigned_classrooms(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'superadmin']);
+        $classroom = Classroom::create(['name' => 'Kelas Baru', 'tutor_id' => null]);
+        $student = User::factory()->create(['role' => 'user', 'classroom_id' => $classroom->id, 'tutor_id' => null]);
+
+        $response = $this->actingAs($superAdmin)->post(route('superadmin.tutors.store'), [
+            'name' => 'Tutor Baru',
+            'email' => 'tutor.baru@aici.id',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'status' => 'aktif',
+            'classroom_ids' => [$classroom->id],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $newTutor = User::where('email', 'tutor.baru@aici.id')->firstOrFail();
+        $this->assertEquals($newTutor->id, $classroom->fresh()->tutor_id);
+        $this->assertEquals($newTutor->id, $student->fresh()->tutor_id);
+    }
 }

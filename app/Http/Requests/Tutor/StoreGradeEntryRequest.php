@@ -28,6 +28,8 @@ class StoreGradeEntryRequest extends FormRequest
         return [
             'student_id' => ['required', 'integer', 'exists:users,id'],
             'module_id' => ['nullable', 'integer', 'exists:modules,id'],
+            'book_id' => ['nullable', 'integer', 'exists:modules,id'],
+            'sub_module_id' => ['nullable', 'integer', 'exists:modules,id'],
             'learning_session_id' => ['nullable', 'integer', 'exists:learning_sessions,id'],
             'meeting_number' => ['required', 'integer', 'min:1', 'max:50'],
             'module_type' => ['required', Rule::in(['robot', 'coding', 'general'])],

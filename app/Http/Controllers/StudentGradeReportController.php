@@ -53,15 +53,26 @@ class StudentGradeReportController extends Controller
 
         // Get all grade entries for this student
         $gradeEntries = GradeEntry::where('student_id', $student->id)
-            ->with(['module', 'learningSession'])
+            ->with(['module.parent', 'book', 'learningSession'])
             ->orderBy('meeting_date', 'desc')
             ->orderBy('meeting_number', 'desc')
             ->get()
             ->map(function (GradeEntry $g) {
+                $module = $g->module;
+                $book = $g->book ?? ($module?->parent_id ? $module->parent : null);
+                $isSubModule = $module && $module->parent_id !== null;
+                $subModuleName = $isSubModule ? $module->name : null;
+                $bookName = $book?->name ?? (!$isSubModule ? $module?->name : null);
+                $moduleDisplay = $subModuleName
+                    ? ($bookName ? "{$bookName} - {$subModuleName}" : $subModuleName)
+                    : ($module?->name ?? 'General');
+
                 return [
                     'id' => $g->id,
                     'meetingNumber' => $g->meeting_number,
-                    'moduleName' => $g->module?->name ?? 'General',
+                    'moduleName' => $moduleDisplay,
+                    'bookName' => $bookName,
+                    'subModuleName' => $subModuleName,
                     'moduleType' => $g->module_type,
                     'grades' => [
                         'fokus' => (float) $g->fokus,

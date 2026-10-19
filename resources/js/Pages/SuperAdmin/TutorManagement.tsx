@@ -1,3 +1,4 @@
+import FlashToast from '@/Components/FlashToast';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
@@ -6,6 +7,14 @@ interface ClassroomItem {
     name: string;
     students_count: number;
     meetings_count: number;
+}
+
+interface ClassroomOption {
+    id: number;
+    name: string;
+    tutor_id: number | null;
+    tutor_name?: string | null;
+    students_count: number;
 }
 
 interface Tutor {
@@ -28,13 +37,14 @@ interface Paginated<T> {
 
 interface Props {
     users: Paginated<Tutor>;
+    classrooms?: ClassroomOption[];
     search: string;
     filterStatus: string;
     import_errors?: string[];
 }
 
 export default function TutorManagement() {
-    const { users, search, filterStatus: initialFilterStatus } = usePage().props as unknown as Props;
+    const { users, classrooms = [], search, filterStatus: initialFilterStatus } = usePage().props as unknown as Props;
     const pageProps = usePage().props as unknown as Props;
     const importErrors = pageProps.import_errors || [];
 
@@ -50,7 +60,10 @@ export default function TutorManagement() {
         email: '',
         password: '',
         status: 'aktif',
+        classroom_ids: [] as number[],
     });
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchTerm, setSearchTerm] = useState(search);
     const [filterStatus, setFilterStatus] = useState(initialFilterStatus);
 
@@ -59,39 +72,81 @@ export default function TutorManagement() {
     };
 
     const openModal = (tutor?: Tutor) => {
+        setFormErrors({});
         if (tutor) {
             setEditingId(tutor.id);
-            setFormData({ name: tutor.name, email: tutor.email, password: '', status: tutor.status });
+            setFormData({
+                name: tutor.name,
+                email: tutor.email,
+                password: '',
+                status: tutor.status,
+                classroom_ids: tutor.classrooms ? tutor.classrooms.map(c => c.id) : [],
+            });
         } else {
             setEditingId(null);
-            setFormData({ name: '', email: '', password: '', status: 'aktif' });
+            setFormData({
+                name: '',
+                email: '',
+                password: '',
+                status: 'aktif',
+                classroom_ids: [],
+            });
         }
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
-        setFormData({ name: '', email: '', password: '', status: 'aktif' });
+        setFormErrors({});
+        setFormData({
+            name: '',
+            email: '',
+            password: '',
+            status: 'aktif',
+            classroom_ids: [],
+        });
+    };
+
+    const toggleClassroomSelection = (classId: number) => {
+        setFormData(prev => {
+            const exists = prev.classroom_ids.includes(classId);
+            return {
+                ...prev,
+                classroom_ids: exists
+                    ? prev.classroom_ids.filter(id => id !== classId)
+                    : [...prev.classroom_ids, classId],
+            };
+        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setFormErrors({});
 
-        const payload = {
+        const payload: Record<string, any> = {
             name: formData.name,
             email: formData.email,
-            password: formData.password || undefined,
-            password_confirmation: formData.password || undefined,
             status: formData.status,
+            classroom_ids: formData.classroom_ids,
         };
+
+        if (formData.password) {
+            payload.password = formData.password;
+            payload.password_confirmation = formData.password;
+        }
 
         if (editingId) {
             router.put(`/superadmin/tutors/${editingId}`, payload, {
                 onSuccess: () => closeModal(),
+                onError: (errs) => setFormErrors(errs),
+                onFinish: () => setIsSubmitting(false),
             });
         } else {
             router.post('/superadmin/tutors', payload, {
                 onSuccess: () => closeModal(),
+                onError: (errs) => setFormErrors(errs),
+                onFinish: () => setIsSubmitting(false),
             });
         }
     };
@@ -132,6 +187,7 @@ export default function TutorManagement() {
     return (
         <div className="min-h-screen bg-gray-50">
             <Head title="Kelola Tutor" />
+            <FlashToast />
 
             {/* Navbar */}
             <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -387,39 +443,69 @@ export default function TutorManagement() {
             {/* Add/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
-                        <h3 className="text-lg font-bold text-gray-900 mb-6">
-                            {editingId ? 'Edit Tutor' : 'Tambah Tutor Baru'}
-                        </h3>
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] flex flex-col">
+                        <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">
+                                    {editingId ? 'Edit Akun & Penugasan Tutor' : 'Tambah Tutor Baru'}
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {editingId ? 'Perbarui data akun dan penugasan kelas diampu' : 'Daftarkan akun tutor baru beserta kelas binaannya'}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeModal}
+                                className="text-gray-400 hover:text-gray-600 transition"
+                            >
+                                <i className="bi bi-x-lg text-lg" />
+                            </button>
+                        </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-4 pt-4 overflow-y-auto pr-1 flex-1">
                             {/* Name */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Nama Lengkap <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="Contoh: Aiya Putri"
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                                        formErrors.name ? 'border-red-400 bg-red-50/30' : 'border-gray-200'
+                                    }`}
+                                    required
                                 />
+                                {formErrors.name && (
+                                    <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>
+                                )}
                             </div>
 
                             {/* Email */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Email <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="email"
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                     placeholder="Contoh: aiya@aici.id"
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                                        formErrors.email ? 'border-red-400 bg-red-50/30' : 'border-gray-200'
+                                    }`}
+                                    required
                                 />
+                                {formErrors.email && (
+                                    <p className="text-xs text-red-500 mt-1">{formErrors.email}</p>
+                                )}
                             </div>
 
                             {/* Status */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Status Akun</label>
                                 <select
                                     value={formData.status}
                                     onChange={e => setFormData({ ...formData, status: e.target.value })}
@@ -429,40 +515,142 @@ export default function TutorManagement() {
                                     <option value="nonaktif">Nonaktif</option>
                                     <option value="pending">Pending</option>
                                 </select>
+                                {formErrors.status && (
+                                    <p className="text-xs text-red-500 mt-1">{formErrors.status}</p>
+                                )}
                             </div>
 
-                            {/* Password (only for new tutor) */}
-                            {!editingId && (
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                                    <input
-                                        type="password"
-                                        value={formData.password}
-                                        onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                        placeholder="Masukkan password"
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                    />
-                                    <p className="text-xs text-gray-600 mt-1">
-                                        <i className="bi bi-info-circle mr-1" />
-                                        Password minimal 8 karakter
-                                    </p>
+                            {/* Password Field */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    {editingId ? 'Ganti Password (Opsional)' : 'Password'} {!editingId && <span className="text-red-500">*</span>}
+                                </label>
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                    placeholder={editingId ? 'Kosongkan jika tidak ingin mengubah password' : 'Masukkan password (min. 8 karakter)'}
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                                        formErrors.password ? 'border-red-400 bg-red-50/30' : 'border-gray-200'
+                                    }`}
+                                    required={!editingId}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    <i className="bi bi-info-circle mr-1" />
+                                    {editingId
+                                        ? 'Isi hanya jika ingin mengganti password login tutor (minimal 8 karakter).'
+                                        : 'Password minimal 8 karakter untuk login ke portal Tutor.'}
+                                </p>
+                                {formErrors.password && (
+                                    <p className="text-xs text-red-500 mt-1">{formErrors.password}</p>
+                                )}
+                            </div>
+
+                            {/* Kelas Diampu (Terintegrasi Pengelola Kelas) */}
+                            <div className="pt-2 border-t border-gray-100">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-sm font-semibold text-gray-800">
+                                        Kelas Diampu <span className="text-xs font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">Terintegrasi</span>
+                                    </label>
+                                    {classrooms.length > 0 && (
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, classroom_ids: classrooms.map(c => c.id) })}
+                                                className="text-teal-600 hover:text-teal-800 font-medium"
+                                            >
+                                                Pilih Semua
+                                            </button>
+                                            <span className="text-gray-300">|</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, classroom_ids: [] })}
+                                                className="text-gray-500 hover:text-gray-700 font-medium"
+                                            >
+                                                Kosongkan
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                                <p className="text-xs text-gray-500 mb-2.5">
+                                    Pilih kelas yang diajar oleh tutor ini. Data murid dan sesi di kelas akan disinkronkan secara otomatis.
+                                </p>
+
+                                {classrooms.length === 0 ? (
+                                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-500 text-center">
+                                        Belum ada kelas yang terdaftar di sistem. Anda dapat membuat kelas di menu Pengelola Kelas.
+                                    </div>
+                                ) : (
+                                    <div className="border border-gray-200 rounded-lg p-2 max-h-48 overflow-y-auto space-y-1.5 bg-gray-50/50">
+                                        {classrooms.map((cls) => {
+                                            const isSelected = formData.classroom_ids.includes(cls.id);
+                                            const isAssignedOther = cls.tutor_id && cls.tutor_id !== editingId;
+
+                                            return (
+                                                <label
+                                                    key={cls.id}
+                                                    className={`flex items-start gap-2.5 p-2 rounded-lg cursor-pointer transition border text-xs ${
+                                                        isSelected
+                                                            ? 'bg-teal-50/60 border-teal-300 text-teal-950 font-medium'
+                                                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleClassroomSelection(cls.id)}
+                                                        className="mt-0.5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between gap-1">
+                                                            <span className="font-semibold text-gray-900 truncate">
+                                                                {cls.name}
+                                                            </span>
+                                                            <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded shrink-0">
+                                                                {cls.students_count} murid
+                                                            </span>
+                                                        </div>
+                                                        {isAssignedOther && (
+                                                            <p className="text-[10px] text-amber-700 mt-0.5 flex items-center gap-1">
+                                                                <i className="bi bi-arrow-repeat text-amber-600" />
+                                                                Saat ini diampu: <strong>{cls.tutor_name || 'Tutor Lain'}</strong>
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between text-xs text-gray-500 mt-1.5 px-0.5">
+                                    <span>Terpilih: <strong>{formData.classroom_ids.length}</strong> kelas</span>
+                                    {formErrors.classroom_ids && (
+                                        <span className="text-red-500">{formErrors.classroom_ids}</span>
+                                    )}
+                                </div>
+                            </div>
 
                             {/* Buttons */}
-                            <div className="flex gap-3 pt-6">
+                            <div className="flex gap-3 pt-4 border-t border-gray-100">
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
-                                    {editingId ? 'Update' : 'Tambah'} Tutor
+                                    {isSubmitting && <i className="bi bi-arrow-repeat animate-spin" />}
+                                    {isSubmitting
+                                        ? 'Menyimpan...'
+                                        : editingId
+                                        ? 'Simpan Perubahan'
+                                        : 'Tambah Tutor'}
                                 </button>
                             </div>
                         </form>

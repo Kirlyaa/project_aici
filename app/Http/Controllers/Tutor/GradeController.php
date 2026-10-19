@@ -24,17 +24,27 @@ class GradeController extends Controller
         $student = User::findOrFail($studentId);
 
         $gradeEntries = GradeEntry::where('student_id', $studentId)
-            ->with(['module'])
+            ->with(['module.parent', 'book'])
             ->orderBy('meeting_date', 'desc')
             ->orderBy('meeting_number', 'desc')
             ->get()
             ->map(function (GradeEntry $g) {
+                $module = $g->module;
+                $book = $g->book ?? ($module?->parent_id ? $module->parent : null);
+
+                $isSubModule = $module && $module->parent_id !== null;
+                $subModuleName = $isSubModule ? $module->name : null;
+                $bookName = $book?->name ?? (!$isSubModule ? $module?->name : null);
+
                 return [
                     'id' => $g->id,
                     'meetingNumber' => $g->meeting_number,
-                    'moduleName' => $g->module?->name ?? 'Umum',
+                    'moduleName' => $module?->name ?? 'Umum',
+                    'bookName' => $bookName,
+                    'subModuleName' => $subModuleName,
                     'moduleType' => $g->module_type,
                     'moduleId' => $g->module_id,
+                    'bookId' => $g->book_id ?? ($module?->parent_id ?? $g->module_id),
                     'grades' => [
                         'fokus' => (float) $g->fokus,
                         'robot-building' => $g->robot_building !== null ? (float) $g->robot_building : null,
@@ -48,7 +58,30 @@ class GradeController extends Controller
                 ];
             });
 
-        $modules = Module::orderBy('name')->get(['id', 'name', 'module_type']);
+        $modules = Module::whereNull('parent_id')
+            ->with(['subModules' => function ($query) {
+                $query->orderBy('order_index')->orderBy('name');
+            }])
+            ->orderBy('order_index')
+            ->orderBy('name')
+            ->get(['id', 'name', 'module_type'])
+            ->map(function (Module $m) {
+                return [
+                    'id' => $m->id,
+                    'name' => $m->name,
+                    'module_type' => $m->module_type,
+                    'sub_modules' => $m->subModules->map(function (Module $sm) {
+                        return [
+                            'id' => $sm->id,
+                            'name' => $sm->name,
+                            'order_index' => $sm->order_index,
+                            'module_type' => $sm->module_type,
+                        ];
+                    })->values()->all(),
+                ];
+            })
+            ->values()
+            ->all();
 
         $averages = (object) [
             'overall' => round((float) $gradeEntries->avg('average') ?? 0, 2),
@@ -72,11 +105,15 @@ class GradeController extends Controller
         abort_if(!$request->user()->managesStudent($validated['student_id']), 403);
         StudentLock::assertWritable((int) $validated['student_id'], $request->user());
 
+        $subModuleId = !empty($validated['sub_module_id']) ? (int) $validated['sub_module_id'] : null;
+        $finalModuleId = $subModuleId ?: ($validated['module_id'] ?? null);
+        $finalBookId = !empty($validated['book_id']) ? (int) $validated['book_id'] : Module::resolveBookId($finalModuleId);
+
         GradeEntry::create([
             'student_id' => $validated['student_id'],
             'tutor_id' => $request->user()->role === 'tutor' ? $request->user()->id : null,
-            'module_id' => $validated['module_id'] ?? null,
-            'book_id' => Module::resolveBookId($validated['module_id'] ?? null),
+            'module_id' => $finalModuleId,
+            'book_id' => $finalBookId,
             'learning_session_id' => $validated['learning_session_id'] ?? null,
             'meeting_number' => $validated['meeting_number'],
             'module_type' => $validated['module_type'],
@@ -98,10 +135,14 @@ class GradeController extends Controller
         StudentLock::assertWritable((int) $gradeEntry->student_id, $request->user());
         $validated = $request->validated();
 
+        $subModuleId = !empty($validated['sub_module_id']) ? (int) $validated['sub_module_id'] : null;
+        $finalModuleId = $subModuleId ?: ($validated['module_id'] ?? $gradeEntry->module_id);
+        $finalBookId = !empty($validated['book_id']) ? (int) $validated['book_id'] : (Module::resolveBookId($finalModuleId) ?? $gradeEntry->book_id);
+
         $gradeEntry->update([
-            'module_id' => $validated['module_id'] ?? null,
-            'book_id' => Module::resolveBookId($validated['module_id'] ?? null),
-            'learning_session_id' => $validated['learning_session_id'] ?? null,
+            'module_id' => $finalModuleId,
+            'book_id' => $finalBookId,
+            'learning_session_id' => $validated['learning_session_id'] ?? $gradeEntry->learning_session_id,
             'meeting_number' => $validated['meeting_number'],
             'module_type' => $validated['module_type'],
             'meeting_date' => $validated['meeting_date'] ?? null,

@@ -69,17 +69,42 @@ export default function CalendarManager({ studentId, student, students = [], ses
     const { lock } = useStudentLock({ studentId, page: 'calendar' });
     const isReadOnly = readOnly || lock?.locked === true;
 
-    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const today = new Date();
+    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+    const [currentYear, setCurrentYear] = useState(today.getFullYear());
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [selectedSession, setSelectedSession] = useState<SessionData | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
+    const year = currentYear;
+    const month = currentMonth;
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    const startDay = firstDay;
+
+    const availableYears = useMemo(() => {
+        const yearsSet = new Set<number>();
+        const curY = today.getFullYear();
+
+        for (let y = curY - 5; y <= curY + 5; y++) {
+            yearsSet.add(y);
+        }
+
+        sessions.forEach(s => {
+            if (s.date) {
+                const y = parseInt(s.date.substring(0, 4), 10);
+                if (!isNaN(y)) {
+                    yearsSet.add(y);
+                }
+            }
+        });
+
+        yearsSet.add(currentYear);
+
+        return Array.from(yearsSet).sort((a, b) => a - b);
+    }, [sessions, currentYear]);
 
     const monthSessions = useMemo(
         () => sessions.filter(s => {
@@ -89,8 +114,23 @@ export default function CalendarManager({ studentId, student, students = [], ses
         [sessions, year, month],
     );
 
-    const prevMonth = () => setCurrentMonth(new Date(year, month - 1));
-    const nextMonth = () => setCurrentMonth(new Date(year, month + 1));
+    const prevMonth = () => {
+        if (currentMonth === 0) {
+            setCurrentMonth(11);
+            setCurrentYear(prev => prev - 1);
+        } else {
+            setCurrentMonth(prev => prev - 1);
+        }
+    };
+
+    const nextMonth = () => {
+        if (currentMonth === 11) {
+            setCurrentMonth(0);
+            setCurrentYear(prev => prev + 1);
+        } else {
+            setCurrentMonth(prev => prev + 1);
+        }
+    };
 
     const updateAttendanceQuick = (session: SessionData, newStatus: SessionStatus) => {
         if (isReadOnly || saving) return;
@@ -120,15 +160,16 @@ export default function CalendarManager({ studentId, student, students = [], ses
         setShowDetailModal(true);
     };
 
-    const calendarDays: (number | null)[] = [];
-    for (let i = daysInPrevMonth - firstDay + 1; i <= daysInPrevMonth; i++) {
-        calendarDays.push(null);
+    const calendarDays: { day: number; isPrevMonth?: boolean; isNextMonth?: boolean }[] = [];
+    for (let i = startDay - 1; i >= 0; i--) {
+        calendarDays.push({ day: prevMonthDays - i, isPrevMonth: true });
     }
     for (let i = 1; i <= daysInMonth; i++) {
-        calendarDays.push(i);
+        calendarDays.push({ day: i, isPrevMonth: false });
     }
-    for (let i = 1; calendarDays.length < 42; i++) {
-        calendarDays.push(null);
+    const remainingDays = 42 - calendarDays.length;
+    for (let i = 1; i <= remainingDays; i++) {
+        calendarDays.push({ day: i, isNextMonth: true });
     }
 
     const statusCounts = {
@@ -201,21 +242,39 @@ export default function CalendarManager({ studentId, student, students = [], ses
                 <div className="grid lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <button
-                                onClick={prevMonth}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={prevMonth}
+                                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
+                                    title="Bulan sebelumnya"
+                                >
+                                    <i className="bi bi-chevron-left" />
+                                </button>
+                                <h2 className="text-xl font-bold text-gray-900 min-w-36 text-center">
+                                    {months[month]}
+                                </h2>
+                                <button
+                                    type="button"
+                                    onClick={nextMonth}
+                                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
+                                    title="Bulan berikutnya"
+                                >
+                                    <i className="bi bi-chevron-right" />
+                                </button>
+                            </div>
+
+                            <select
+                                value={year}
+                                onChange={e => setCurrentYear(Number(e.target.value))}
+                                className="text-sm font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
                             >
-                                <i className="bi bi-chevron-left" />
-                            </button>
-                            <h2 className="text-xl font-bold text-gray-900">
-                                {months[month]} {year}
-                            </h2>
-                            <button
-                                onClick={nextMonth}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                <i className="bi bi-chevron-right" />
-                            </button>
+                                {availableYears.map(y => (
+                                    <option key={y} value={y}>
+                                        {y}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="grid grid-cols-7 gap-2 mb-2">
@@ -227,19 +286,28 @@ export default function CalendarManager({ studentId, student, students = [], ses
                         </div>
 
                         <div className="grid grid-cols-7 gap-2">
-                            {calendarDays.map((date, idx) => {
-                                if (date === null) {
-                                    return <div key={idx} className="aspect-square" />;
+                            {calendarDays.map((item, idx) => {
+                                const { day, isPrevMonth, isNextMonth } = item;
+                                if (isPrevMonth || isNextMonth) {
+                                    return (
+                                        <div
+                                            key={`other-${idx}`}
+                                            className="aspect-square rounded-lg flex items-center justify-center font-medium text-sm bg-gray-50 text-gray-300 opacity-40 select-none cursor-default"
+                                        >
+                                            {day}
+                                        </div>
+                                    );
                                 }
-                                const session = getSessionForDate(sessions, year, month, date);
-                                const colorClass = session ? STATUS_BG[session.status] : 'bg-gray-50 text-gray-400 cursor-default';
+                                const session = getSessionForDate(sessions, year, month, day);
+                                const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                                const colorClass = session ? STATUS_BG[session.status] : isToday ? 'bg-teal-50 text-teal-700 font-bold border border-teal-500' : 'bg-gray-50 text-gray-400 cursor-default';
                                 return (
                                     <button
-                                        key={date}
+                                        key={`day-${year}-${month}-${day}`}
                                         type="button"
                                         onClick={() => {
                                             if (session) {
-                                                openSessionDetail(session, date);
+                                                openSessionDetail(session, day);
                                             }
                                         }}
                                         disabled={!session}
@@ -248,7 +316,7 @@ export default function CalendarManager({ studentId, student, students = [], ses
                                             session ? 'hover:opacity-90 cursor-pointer shadow-xs' : 'opacity-70'
                                         }`}
                                     >
-                                        <span className={`text-xs ${session ? 'font-bold' : 'font-normal text-gray-500'}`}>{date}</span>
+                                        <span className={`text-xs ${session ? 'font-bold' : 'font-normal text-gray-500'}`}>{day}</span>
                                         {session && (
                                             <span className="text-[10px] leading-tight truncate max-w-full text-center opacity-90 hidden sm:block">
                                                 {session.status}

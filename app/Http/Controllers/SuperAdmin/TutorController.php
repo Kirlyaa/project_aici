@@ -94,8 +94,22 @@ class TutorController extends Controller
             ];
         });
 
+        // Ambil daftar seluruh kelas terdaftar untuk penugasan kelas diampu tutor
+        $allClassrooms = Classroom::withCount('students')
+            ->with(['tutor:id,name'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'tutor_id'])
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'tutor_id' => $c->tutor_id,
+                'tutor_name' => $c->tutor?->name,
+                'students_count' => $c->students_count,
+            ]);
+
         return Inertia::render('SuperAdmin/TutorManagement', [
             'users' => $tutors,
+            'classrooms' => $allClassrooms,
             'search' => $search,
             'filterStatus' => $status,
         ]);
@@ -104,29 +118,120 @@ class TutorController extends Controller
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'tutor',
-            'status' => $validated['status'] ?? 'aktif',
-        ]);
-        return back()->with('success', 'Tutor berhasil ditambahkan.');
+
+        return DB::transaction(function () use ($validated) {
+            $tutor = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'tutor',
+                'status' => $validated['status'] ?? 'aktif',
+            ]);
+
+            $classroomIds = collect($validated['classroom_ids'] ?? [])
+                ->filter()
+                ->map(fn($id) => (int) $id)
+                ->values()
+                ->all();
+
+            if (! empty($classroomIds)) {
+                Classroom::whereIn('id', $classroomIds)->update(['tutor_id' => $tutor->id]);
+
+                // Sinkronkan murid di kelas-kelas terpilih ke tutor baru
+                $studentIds = User::whereIn('classroom_id', $classroomIds)
+                    ->orWhereHas('classrooms', fn($q) => $q->whereIn('classrooms.id', $classroomIds))
+                    ->pluck('id')
+                    ->unique();
+
+                if ($studentIds->isNotEmpty()) {
+                    User::whereIn('id', $studentIds)
+                        ->where('role', 'user')
+                        ->update(['tutor_id' => $tutor->id]);
+
+                    LearningSession::where(function ($q) use ($classroomIds, $studentIds) {
+                        $q->whereIn('classroom_id', $classroomIds)
+                          ->orWhereIn('user_id', $studentIds);
+                    })->update(['tutor_id' => $tutor->id]);
+                }
+            }
+
+            return back()->with('success', 'Tutor berhasil ditambahkan.');
+        });
     }
 
     public function update(StoreUserRequest $request, User $tutor): RedirectResponse
     {
         $validated = $request->validated();
-        $tutor->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => 'tutor',
-            'status' => $validated['status'] ?? $tutor->status,
-        ]);
-        if (! empty($validated['password'])) {
-            $tutor->update(['password' => Hash::make($validated['password'])]);
-        }
-        return back()->with('success', 'Tutor berhasil diperbarui.');
+
+        return DB::transaction(function () use ($validated, $tutor) {
+            $updateData = [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'role' => 'tutor',
+                'status' => $validated['status'] ?? $tutor->status,
+            ];
+
+            if (! empty($validated['password'])) {
+                $updateData['password'] = Hash::make($validated['password']);
+            }
+
+            $tutor->update($updateData);
+
+            if (array_key_exists('classroom_ids', $validated)) {
+                $newClassroomIds = collect($validated['classroom_ids'])
+                    ->filter()
+                    ->map(fn($id) => (int) $id)
+                    ->values()
+                    ->all();
+
+                $oldClassroomIds = Classroom::where('tutor_id', $tutor->id)->pluck('id')->all();
+
+                $removedIds = array_values(array_diff($oldClassroomIds, $newClassroomIds));
+                $addedIds = array_values(array_diff($newClassroomIds, $oldClassroomIds));
+
+                // 1. Lepas kelas yang tidak lagi diampu oleh tutor ini
+                if (! empty($removedIds)) {
+                    Classroom::whereIn('id', $removedIds)
+                        ->where('tutor_id', $tutor->id)
+                        ->update(['tutor_id' => null]);
+
+                    // Lepas tutor_id murid di kelas yang dilepas (hanya murid yang tutornya masih tutor ini)
+                    User::whereIn('classroom_id', $removedIds)
+                        ->where('tutor_id', $tutor->id)
+                        ->where('role', 'user')
+                        ->update(['tutor_id' => null]);
+
+                    // Lepas tutor_id pada sesi di kelas yang dilepas
+                    LearningSession::whereIn('classroom_id', $removedIds)
+                        ->where('tutor_id', $tutor->id)
+                        ->update(['tutor_id' => null]);
+                }
+
+                // 2. Hubungkan kelas-kelas baru yang diampu ke tutor ini
+                if (! empty($newClassroomIds)) {
+                    Classroom::whereIn('id', $newClassroomIds)->update(['tutor_id' => $tutor->id]);
+
+                    // Sinkronkan seluruh murid di kelas yang diampu
+                    $studentIds = User::whereIn('classroom_id', $newClassroomIds)
+                        ->orWhereHas('classrooms', fn($q) => $q->whereIn('classrooms.id', $newClassroomIds))
+                        ->pluck('id')
+                        ->unique();
+
+                    if ($studentIds->isNotEmpty()) {
+                        User::whereIn('id', $studentIds)
+                            ->where('role', 'user')
+                            ->update(['tutor_id' => $tutor->id]);
+
+                        LearningSession::where(function ($q) use ($newClassroomIds, $studentIds) {
+                            $q->whereIn('classroom_id', $newClassroomIds)
+                              ->orWhereIn('user_id', $studentIds);
+                        })->update(['tutor_id' => $tutor->id]);
+                    }
+                }
+            }
+
+            return back()->with('success', 'Tutor berhasil diperbarui.');
+        });
     }
 
     public function destroy(User $tutor): RedirectResponse
