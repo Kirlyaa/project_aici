@@ -45,6 +45,74 @@ interface Props {
 
 const GRADE_RANGES = ['<4', '4-4.99', '5'] as const;
 
+const MEETING_COMMENT_PRESETS = [
+    {
+        id: 'late',
+        label: 'Sering terlambat',
+        sentence: 'Pada pertemuan ini, Ananda masih perlu membiasakan diri hadir tepat waktu agar dapat mengikuti kegiatan belajar secara utuh. Dengan dukungan yang konsisten, kebiasaan baik ini diharapkan semakin terbentuk.',
+        combinedClause: 'membiasakan diri hadir tepat waktu agar dapat mengikuti kegiatan belajar secara utuh',
+        legacyDescription: 'membiasakan diri hadir tepat waktu',
+    },
+    {
+        id: 'noisy',
+        label: 'Gaduh dengan teman',
+        sentence: 'Ananda menunjukkan semangat berinteraksi dengan teman. Ke depannya, Ananda diharapkan dapat mengatur waktu berbincang agar tetap fokus dan turut menjaga suasana belajar yang kondusif.',
+        combinedClause: 'mengatur waktu berbincang agar tetap fokus dan turut menjaga suasana belajar yang kondusif',
+        legacyDescription: 'menjaga ketenangan selama pembelajaran',
+    },
+    {
+        id: 'passive',
+        label: 'Pasif di kelas',
+        sentence: 'Ananda masih cenderung menunggu arahan dan belum berinisiatif untuk mulai merakit modul. Ke depannya, Ananda diharapkan lebih aktif mengambil bagian dalam proses perakitan.',
+        combinedClause: 'lebih aktif mengambil inisiatif dan terlibat dalam proses merakit modul',
+        legacyDescription: 'meningkatkan partisipasi aktif dalam kegiatan pembelajaran',
+    },
+    {
+        id: 'disruptive',
+        label: 'Sering membuat konflik',
+        sentence: 'Ananda perlu terus didampingi untuk menyampaikan pendapat dan menyelesaikan perbedaan dengan teman secara tenang serta saling menghargai. Dengan demikian, suasana belajar yang nyaman bagi semua dapat terjaga.',
+        combinedClause: 'menyampaikan pendapat dan menyelesaikan perbedaan dengan teman secara tenang serta saling menghargai',
+        legacyDescription: 'mengelola perilaku dan berinteraksi secara positif dengan teman',
+    },
+] as const;
+
+type MeetingCommentPresetId = (typeof MEETING_COMMENT_PRESETS)[number]['id'];
+
+const buildMeetingPresetNote = (selectedPresets: MeetingCommentPresetId[]): string => {
+    const presets = MEETING_COMMENT_PRESETS.filter(preset => selectedPresets.includes(preset.id));
+
+    if (presets.length === 0) return '';
+    if (presets.length === 1) return presets[0].sentence;
+
+    const clauses = presets.map(preset => preset.combinedClause);
+    const combinedClauses = `${clauses.slice(0, -1).join(', ')}, serta ${clauses[clauses.length - 1]}`;
+
+    return `Pada pertemuan ini, Ananda masih dapat mengembangkan beberapa kebiasaan belajar, antara lain ${combinedClauses}. Dengan pendampingan yang konsisten, Ananda diharapkan semakin percaya diri dan nyaman dalam mengikuti kegiatan belajar.`;
+};
+
+const buildLegacyMeetingPresetNote = (selectedPresets: MeetingCommentPresetId[]): string => {
+    const descriptions = MEETING_COMMENT_PRESETS
+        .filter(preset => selectedPresets.includes(preset.id))
+        .map(preset => preset.legacyDescription);
+
+    if (descriptions.length === 0) return '';
+
+    const combinedDescriptions = descriptions.length === 1
+        ? descriptions[0]
+        : `${descriptions.slice(0, -1).join(', ')}, serta ${descriptions[descriptions.length - 1]}`;
+
+    return `Pada pertemuan ini, murid perlu ${combinedDescriptions}. Tutor akan memberikan pendampingan agar perkembangan belajar murid semakin optimal.`;
+};
+
+const getInitialMeetingPresets = (notes: string): MeetingCommentPresetId[] =>
+    MEETING_COMMENT_PRESETS
+        .filter(preset =>
+            notes.includes(preset.sentence)
+            || notes.includes(preset.combinedClause)
+            || notes.includes(preset.legacyDescription)
+        )
+        .map(preset => preset.id);
+
 const emptyTemplateForm = {
     grade_range: '<4' as (typeof GRADE_RANGES)[number],
     template: '',
@@ -110,6 +178,42 @@ export default function CommentsManager() {
         });
         return initial;
     });
+
+    const [meetingPresetSelections, setMeetingPresetSelections] = useState<Record<number, MeetingCommentPresetId[]>>(() => {
+        const initial: Record<number, MeetingCommentPresetId[]> = {};
+        gradeEntries.forEach(g => {
+            initial[g.id] = getInitialMeetingPresets(g.notes || '');
+        });
+        return initial;
+    });
+
+    const toggleMeetingPreset = (gradeEntryId: number, presetId: MeetingCommentPresetId) => {
+        const currentSelections = meetingPresetSelections[gradeEntryId] ?? [];
+        const previousGeneratedNote = buildMeetingPresetNote(currentSelections);
+        const nextSelections = currentSelections.includes(presetId)
+            ? currentSelections.filter(id => id !== presetId)
+            : [...currentSelections, presetId];
+        const nextGeneratedNote = buildMeetingPresetNote(nextSelections);
+        const currentNote = meetingNotes[gradeEntryId] ?? '';
+        const previousGeneratedNotes = [
+            previousGeneratedNote,
+            buildLegacyMeetingPresetNote(currentSelections),
+        ];
+        const generatedNote = previousGeneratedNotes.find(note => note && currentNote.includes(note));
+        const generatedNoteIndex = generatedNote ? currentNote.indexOf(generatedNote) : -1;
+        const manualNote = generatedNote
+            ? `${currentNote.slice(0, generatedNoteIndex)}${currentNote.slice(generatedNoteIndex + generatedNote.length)}`.trim()
+            : currentNote;
+
+        setMeetingPresetSelections({
+            ...meetingPresetSelections,
+            [gradeEntryId]: nextSelections,
+        });
+        setMeetingNotes({
+            ...meetingNotes,
+            [gradeEntryId]: [nextGeneratedNote, manualNote].filter(Boolean).join('\n\n'),
+        });
+    };
 
     const [isSavingAll, setIsSavingAll] = useState(false);
 
@@ -466,10 +570,33 @@ export default function CommentsManager() {
                                                     </span>
                                                 )}
                                             </div>
+                                            <div>
+                                                <p className="text-[11px] font-semibold text-gray-600 mb-1.5">
+                                                    Preset evaluasi (boleh pilih lebih dari satu):
+                                                </p>
+                                                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                                    {MEETING_COMMENT_PRESETS.map(preset => (
+                                                        <label
+                                                            key={preset.id}
+                                                            className="inline-flex items-center gap-1.5 text-[11px] text-gray-700"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(meetingPresetSelections[g.id] ?? []).includes(preset.id)}
+                                                                onChange={() => toggleMeetingPreset(g.id, preset.id)}
+                                                                disabled={isReadOnly}
+                                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                                                            />
+                                                            {preset.label}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
                                             <textarea
                                                 value={meetingNotes[g.id] ?? ''}
                                                 onChange={e => setMeetingNotes({ ...meetingNotes, [g.id]: e.target.value })}
                                                 placeholder={`Catatan tutor untuk Pertemuan ${g.meetingNumber} (${g.moduleName})...`}
+                                                disabled={isReadOnly}
                                                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-16 bg-white"
                                             />
                                         </div>

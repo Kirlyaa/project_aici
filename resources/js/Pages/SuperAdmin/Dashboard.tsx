@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import FlashToast from '@/Components/FlashToast';
 import AdminTutorChatWidget from '@/Components/AdminTutorChatWidget';
 
@@ -66,43 +66,6 @@ export default function SuperAdminDashboard() {
         <div className="min-h-screen bg-gray-50">
             <FlashToast />
             <Head title="Super Admin Dashboard" />
-
-            {/* Navbar */}
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center gap-3">
-                            <img
-                                src="/images/logo-aici.png"
-                                alt="AICI Logo"
-                                className="h-10 w-auto object-contain"
-                            />
-                            <div className="border-l border-gray-300 pl-3">
-                                <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-medium">Super Admin</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-600">Selamat datang, {auth?.user?.name || 'Super Admin'}</span>
-                            <img
-                                src={auth?.user?.avatar_url || (auth?.user as any)?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'Super Admin')}&background=0B6282&color=fff&size=200`}
-                                alt={auth?.user?.name || 'Super Admin'}
-                                className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'Super Admin')}&background=0B6282&color=fff&size=200`;
-                                }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => router.post('/logout', {}, { onSuccess: () => window.location.reload() })}
-                                className="w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:text-[#E62C29] hover:bg-red-50 flex items-center justify-center transition-colors"
-                                title="Logout"
-                            >
-                                <i className="bi bi-box-arrow-right text-lg" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Real-time Tutor Chat Widget */}
