@@ -1,0 +1,39 @@
+graph TB
+    %% Entitas Luar
+    Tutor[Tutor]
+    SuperAdmin[Super Admin]
+
+    %% Proses Induk (dari L1): P4 Penjadwalan Sesi
+    %% Dekomposisi menjadi sub-proses
+    P41[[4.1 Validasi Slot Waktu]]
+    P42[[4.2 Simpan Update Sesi]]
+    P43[[4.3 Catat Kehadiran]]
+    P44[[4.4 Jadwalkan Reminder H-1]]
+
+    %% Data Stores (sama dengan L1)
+    D2[(D2 Learning Sessions)]
+    D3[(D3 Modules)]
+    D6[(D6 Notifications)]
+
+    %% Proses tetangga (ref dari L1)
+    P7[[7 Notifikasi dan Chat]]
+
+    %% === Alur 4.1: Validasi ===
+    Tutor -->|usulan jadwal sesi| P41
+    SuperAdmin -->|import massal jadwal| P41
+    P41 -->|query bentrokan slot| D2
+    P41 -->|slot konflik| Tutor
+    P41 -->|slot tersedia| P42
+
+    %% === Alur 4.2: Penyimpanan ===
+    P42 -->|record sesi baru| D2
+    P42 -->|relasi modul sesi| D3
+    P42 -->|perintah reminder| P44
+
+    %% === Alur 4.3: Kehadiran ===
+    Tutor -->|absensi hadir absen libur| P43
+    P43 -->|update status kehadiran| D2
+
+    %% === Alur 4.4: Reminder ===
+    P44 -->|notifikasi terjadwal| D6
+    P44 -->|pemicu kirim| P7

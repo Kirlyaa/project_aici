@@ -1,0 +1,15 @@
+graph LR
+    Siswa[Siswa]
+    Tutor[Tutor]
+    SuperAdmin[Super Admin]
+    EmailService[Email Service]
+
+    System((Sistem AICI))
+
+    Siswa -->|data login dan permintaan rapor| System
+    Tutor -->|data nilai jadwal dan komentar| System
+    SuperAdmin -->|data master pengguna modul sekolah| System
+    System -->|jadwal rapor dan notifikasi| Siswa
+    System -->|dashboard murid dan reminder| Tutor
+    System -->|laporan global dan log aktivitas| SuperAdmin
+    System -->|email verifikasi reset reminder| EmailService

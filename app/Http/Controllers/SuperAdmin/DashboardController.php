@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Classroom;
 use App\Models\GradeEntry;
 use App\Models\LearningSession;
 use App\Models\User;
@@ -18,6 +19,16 @@ class DashboardController extends Controller
         $totalUsers = User::count();
         $totalStudents = User::where('role', 'user')->count();
         $totalTutors = User::where('role', 'tutor')->count();
+        $totalClassrooms = Classroom::count();
+        $unassignedStudents = User::where('role', 'user')->whereNull('classroom_id')->count();
+        $classrooms = Classroom::withCount('students')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Classroom $classroom) => [
+                'id' => $classroom->id,
+                'name' => $classroom->name,
+                'studentsCount' => $classroom->students_count,
+            ]);
 
         // Status breakdown
         $activeStudents = User::where('role', 'user')->where('status', 'aktif')->count();
@@ -159,6 +170,8 @@ class DashboardController extends Controller
                 'totalUsers' => $totalUsers,
                 'totalStudents' => $totalStudents,
                 'totalTutors' => $totalTutors,
+                'totalClassrooms' => $totalClassrooms,
+                'unassignedStudents' => $unassignedStudents,
                 'activeStudents' => $activeStudents,
                 'pendingStudents' => $pendingStudents,
                 'activeTutors' => $activeTutors,
@@ -176,6 +189,7 @@ class DashboardController extends Controller
             'recentStudents' => $recentStudents,
             'recentTutors' => $recentTutors,
             'recentModules' => $recentModules,
+            'classrooms' => $classrooms,
             'tutorsList' => $tutorsList,
         ]);
     }

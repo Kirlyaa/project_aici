@@ -50,6 +50,16 @@ export default function ClassroomManagement() {
     const [searchTerm, setSearchTerm] = useState(initialSearch || '');
     const [selectedClass, setSelectedClass] = useState<Classroom | null>(classrooms[0] || null);
 
+    // Pagination Daftar Kelas
+    const CLASSES_PER_PAGE = 6;
+    const [classPage, setClassPage] = useState(1);
+    const totalPages = Math.max(1, Math.ceil(classrooms.length / CLASSES_PER_PAGE));
+    const safePage = Math.min(Math.max(1, classPage), totalPages);
+    const paginatedClassrooms = classrooms.slice(
+        (safePage - 1) * CLASSES_PER_PAGE,
+        safePage * CLASSES_PER_PAGE,
+    );
+
     // Modal Create / Edit Kelas
     const [showClassModal, setShowClassModal] = useState(false);
     const [editingClass, setEditingClass] = useState<Classroom | null>(null);
@@ -88,6 +98,7 @@ export default function ClassroomManagement() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        setClassPage(1);
         router.get('/superadmin/classes', { search: searchTerm }, { preserveState: true });
     };
 
@@ -382,7 +393,7 @@ export default function ClassroomManagement() {
                         </form>
 
                         <div className="space-y-3">
-                            {classrooms.map(cls => {
+                            {paginatedClassrooms.map(cls => {
                                 const isSelected = selectedClass?.id === cls.id;
                                 return (
                                     <div
@@ -449,6 +460,45 @@ export default function ClassroomManagement() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Kontrol Pagination Daftar Kelas */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setClassPage(p => Math.max(1, p - 1))}
+                                    disabled={safePage === 1}
+                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <i className="bi bi-chevron-left" /> Prev
+                                </button>
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                                        <button
+                                            key={pageNum}
+                                            type="button"
+                                            onClick={() => setClassPage(pageNum)}
+                                            className={`w-8 h-8 text-xs font-bold rounded-lg border transition-colors ${
+                                                pageNum === safePage
+                                                    ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setClassPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={safePage === totalPages}
+                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next <i className="bi bi-chevron-right" />
+                                </button>
+                            </div>
+                        )}
+                        </div>
                     </div>
 
                     {/* Right Column: Detail Kelas Terpilih & Murid di Dalamnya */}
@@ -494,6 +544,13 @@ export default function ClassroomManagement() {
                                         </div>
 
                                         <div className="flex gap-2">
+                                            <Link
+                                                href={`/superadmin/classes/${selectedClass.id}/reports`}
+                                                className="px-3.5 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                                                title="Lihat & Download Semua Rapor Siswa di Kelas Ini"
+                                            >
+                                                <i className="bi bi-file-earmark-pdf-fill" /> Rapor Kelas
+                                            </Link>
                                             <button
                                                 onClick={openScheduleModal}
                                                 className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"

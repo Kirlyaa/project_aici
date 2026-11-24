@@ -82,7 +82,7 @@ export default function HolidayAnnouncementManagement({ announcement }: Props) {
                             Kelola Surat Pemberitahuan Libur
                         </h1>
                         <p className="text-sm text-gray-600 mt-1">
-                            Surat libur ini akan tampil sebagai <b>Pop-up Amplop 3D (ala Mobile Legends)</b> saat Siswa dan/atau Tutor login.
+                            Surat libur ini akan tampil sebagai <b>Pop-up Amplop 3D</b> saat Siswa dan/atau Tutor login.
                         </p>
                     </div>
 

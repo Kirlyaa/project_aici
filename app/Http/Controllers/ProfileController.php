@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\GradeEntry;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -454,6 +455,128 @@ class ProfileController extends Controller
                     'system' => $activeComment?->system_comment,
                     'notes'  => $activeComment?->notes,
                 ],
+            ],
+            'filterInfo' => [
+                'selectedRange' => $selectedRangeKey,
+                'activeLabel' => $activeRangeLabel,
+                'meetingCount' => $gradeEntries->count(),
+                'availableRanges' => $ranges,
+            ],
+        ]);
+    }
+
+    /**
+     * Return rapor data as JSON for bulk PDF generation (SuperAdmin only).
+     */
+    public function pdfData(Request $request, \App\Models\User $student): JsonResponse
+    {
+        abort_if($request->user()->role !== 'superadmin', 403);
+        abort_if($student->role !== 'user', 404);
+
+        $allMeetingNumbers = \App\Models\GradeEntry::where('student_id', $student->id)
+            ->whereNotNull('meeting_number')
+            ->pluck('meeting_number')->unique()->sort()->values();
+
+        $maxMeeting = $allMeetingNumbers->max() ?? 0;
+
+        $customPeriods = \App\Models\ReportPeriod::where('is_active', true)
+            ->orderBy('order_index')->orderBy('start_meeting')->get();
+
+        $ranges = [];
+        if ($customPeriods->isNotEmpty()) {
+            foreach ($customPeriods as $period) {
+                $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $period->start_meeting && $m <= $period->end_meeting);
+                if ($hasData) {
+                    $ranges[] = ['key' => "{$period->start_meeting}-{$period->end_meeting}", 'label' => $period->display_name, 'start' => $period->start_meeting, 'end' => $period->end_meeting];
+                }
+            }
+        } else {
+            for ($start = 1; $start <= $maxMeeting; $start += 4) {
+                $end = min($start + 3, $maxMeeting);
+                $hasData = $allMeetingNumbers->contains(fn($m) => $m >= $start && $m <= $end);
+                if ($hasData) {
+                    $ranges[] = ['key' => "{$start}-{$end}", 'label' => "Pertemuan {$start} - {$end}", 'start' => $start, 'end' => $end];
+                }
+            }
+        }
+        if ($maxMeeting > 0) {
+            $ranges[] = ['key' => 'all', 'label' => "Semua Pertemuan (1 - {$maxMeeting})", 'start' => 1, 'end' => $maxMeeting];
+        }
+
+        $reqFrom = $request->query('from');
+        $reqTo = $request->query('to');
+        if ($reqFrom !== null && $reqTo !== null && is_numeric($reqFrom) && is_numeric($reqTo)) {
+            $selectedRangeKey = max(1, (int)$reqFrom) . '-' . max(max(1,(int)$reqFrom), (int)$reqTo);
+        } else {
+            $defaultRangeKey = !empty($ranges) ? $ranges[0]['key'] : 'all';
+            $selectedRangeKey = $request->query('range', $defaultRangeKey);
+        }
+
+        $query = \App\Models\GradeEntry::where('student_id', $student->id);
+        $activeRangeLabel = 'Pertemuan 1 - 4';
+
+        if ($selectedRangeKey !== 'all' && preg_match('/^(\d+)-(\d+)$/', $selectedRangeKey, $matches)) {
+            $from = (int)$matches[1]; $to = (int)$matches[2];
+            $query->whereBetween('meeting_number', [$from, $to]);
+            $matchingPeriod = !empty($customPeriods) ? $customPeriods->first(fn($p) => $p->start_meeting === $from && $p->end_meeting === $to) : null;
+            $activeRangeLabel = $matchingPeriod ? $matchingPeriod->display_name : "Pertemuan {$from} - {$to}";
+        } elseif ($selectedRangeKey === 'all' && $maxMeeting > 0) {
+            $activeRangeLabel = "Semua Pertemuan (1 - {$maxMeeting})";
+        }
+
+        $gradeEntries = $query->orderBy('meeting_number', 'asc')->get();
+
+        $meetingReports = $gradeEntries->map(function ($entry) {
+            return [
+                'id' => $entry->id,
+                'meetingNumber' => $entry->meeting_number,
+                'moduleName' => $entry->module?->name ?? ($entry->module_type === 'coding' ? 'Modul Coding' : 'Modul Robotika'),
+                'moduleType' => $entry->module_type,
+                'date' => $entry->meeting_date ? $entry->meeting_date->format('d M Y') : null,
+                'scores' => [
+                    'interaction' => round((float)($entry->interaksi ?? 0), 1),
+                    'focus' => round((float)($entry->fokus ?? 0), 1),
+                    'robotBuilding' => $entry->robot_building !== null ? round((float)$entry->robot_building, 1) : null,
+                    'tools' => round((float)($entry->tools_management ?? 0), 1),
+                    'coding' => round((float)($entry->coding ?? 0), 1),
+                ],
+                'average' => round((float)($entry->average ?? 0), 2),
+                'tutorNotes' => $entry->notes,
+            ];
+        })->values()->toArray();
+
+        $scores = [
+            'interaction' => round((float)($gradeEntries->avg('interaksi') ?? 0), 2),
+            'focus' => round((float)($gradeEntries->avg('fokus') ?? 0), 2),
+            'robotBuilding' => round((float)($gradeEntries->filter(fn($g) => $g->robot_building !== null)->avg('robot_building') ?? 0), 2),
+            'tools' => round((float)($gradeEntries->avg('tools_management') ?? 0), 2),
+            'coding' => round((float)($gradeEntries->avg('coding') ?? 0), 2),
+        ];
+
+        $overallAvg = round((float)($gradeEntries->avg('average') ?? 0), 2);
+        $overallPct = $overallAvg > 0 ? min(100, round(($overallAvg / \App\Models\GradeEntry::MAX_SCORE) * 100, 1)) : 0;
+
+        $sessions = $student->learningSessions()->get(['status']);
+        $hadir = $sessions->where('status', 'hadir')->count();
+        $absen = $sessions->where('status', 'absen')->count();
+        $attendancePct = $sessions->count() > 0 ? round(($hadir / $sessions->count()) * 100, 1) : 0;
+
+        $activeComment = \App\Models\StudentComment::where('student_id', $student->id)
+            ->where('meeting_range', $selectedRangeKey)->latest()->first()
+            ?? \App\Models\StudentComment::where('student_id', $student->id)->latest()->first();
+
+        return response()->json([
+            'studentStats' => [
+                'name' => $student->name,
+                'class' => $student->class,
+                'level' => null,
+                'totalSessions' => $sessions->count(),
+                'attendance' => ['hadir' => $hadir, 'absen' => $absen, 'percentage' => $attendancePct],
+                'scores' => $scores,
+                'overallAvg' => $overallAvg,
+                'averagePercentage' => $overallPct,
+                'meetings' => $meetingReports,
+                'comment' => ['system' => $activeComment?->system_comment, 'notes' => $activeComment?->notes],
             ],
             'filterInfo' => [
                 'selectedRange' => $selectedRangeKey,

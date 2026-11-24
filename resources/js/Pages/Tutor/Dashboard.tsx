@@ -92,6 +92,8 @@ export default function TutorDashboard() {
     // R4: dua level — pilih kelas dulu, lalu murid (dengan auto-restore pilihan murid/kelas)
     const [selectedClass, setSelectedClass] = useState<string | null>(initial.class);
     const [selectedStudent, setSelectedStudent] = useState<number | null>(initial.student);
+    const [studentPage, setStudentPage] = useState(1);
+    const studentsPerPage = 5;
 
     // State untuk Modal Presensi Pertemuan Kelas
     const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState<boolean>(false);
@@ -102,6 +104,11 @@ export default function TutorDashboard() {
         : students;
 
     const currentStudent = studentsInClass.find(s => s.id === selectedStudent) || null;
+    const studentPageCount = Math.ceil(studentsInClass.length / studentsPerPage);
+    const paginatedStudents = studentsInClass.slice(
+        (studentPage - 1) * studentsPerPage,
+        studentPage * studentsPerPage,
+    );
 
     // Pertemuan kelas untuk kelas yang sedang dipilih
     const meetingsForSelectedClass = selectedClass
@@ -136,6 +143,8 @@ export default function TutorDashboard() {
             if (found) {
                 setSelectedClass(found.class);
                 setSelectedStudent(found.id);
+                const indexInClass = students.filter(s => s.class === found.class).findIndex(s => s.id === found.id);
+                setStudentPage(Math.floor(indexInClass / studentsPerPage) + 1);
             }
         }
     }, [propStudentId, students]);
@@ -246,7 +255,7 @@ export default function TutorDashboard() {
                                         {classes.map(cls => (
                                             <button
                                                 key={cls.name}
-                                                onClick={() => { setSelectedClass(cls.name); setSelectedStudent(null); }}
+                                                onClick={() => { setSelectedClass(cls.name); setSelectedStudent(null); setStudentPage(1); }}
                                                 className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-[#EDF2F7] hover:border-[#0B6282]/30 border border-transparent transition-colors"
                                             >
                                                 <p className="font-medium text-sm text-gray-900">{cls.name}</p>
@@ -260,7 +269,7 @@ export default function TutorDashboard() {
                                 <>
                                     <div className="flex items-center justify-between mb-3">
                                         <button
-                                            onClick={() => { setSelectedClass(null); setSelectedStudent(null); }}
+                                            onClick={() => { setSelectedClass(null); setSelectedStudent(null); setStudentPage(1); }}
                                             className="flex items-center gap-1 text-xs text-[#0B6282] hover:text-[#08455c] font-medium"
                                         >
                                             <i className="bi bi-arrow-left" /> Kembali
@@ -289,37 +298,62 @@ export default function TutorDashboard() {
                                     {studentsInClass.length === 0 ? (
                                         <p className="text-sm text-gray-500 italic">Tidak ada murid di kelas ini.</p>
                                     ) : (
-                                        <div className="space-y-2">
-                                            {studentsInClass.map(student => (
-                                                <button
-                                                    key={student.id}
-                                                    onClick={() => setSelectedStudent(student.id)}
-                                                    className={`w-full text-left p-2.5 rounded-lg transition-colors flex items-center gap-3 ${
-                                                        currentStudent?.id === student.id
-                                                            ? 'bg-[#0B6282] text-white'
-                                                            : 'bg-gray-50 text-gray-900 hover:bg-gray-100'
-                                                    }`}
-                                                >
-                                                    <img
-                                                        src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
-                                                        alt={student.name}
-                                                        className={`w-9 h-9 rounded-full object-cover shrink-0 ${
-                                                            currentStudent?.id === student.id ? 'border border-white/40' : 'border border-gray-200'
+                                        <div>
+                                            <div className="space-y-2">
+                                                {paginatedStudents.map(student => (
+                                                    <button
+                                                        key={student.id}
+                                                        onClick={() => setSelectedStudent(student.id)}
+                                                        className={`w-full text-left p-2.5 rounded-lg transition-colors flex items-center gap-3 ${
+                                                            currentStudent?.id === student.id
+                                                                ? 'bg-[#0B6282] text-white'
+                                                                : 'bg-gray-50 text-gray-900 hover:bg-gray-100'
                                                         }`}
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
-                                                        }}
-                                                    />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="font-medium text-sm truncate">{student.name}</p>
-                                                        <p className={`text-xs mt-0.5 truncate ${
-                                                            currentStudent?.id === student.id ? 'text-blue-100' : 'text-gray-600'
-                                                        }`}>
-                                                            {student.level}
-                                                        </p>
-                                                    </div>
-                                                </button>
-                                            ))}
+                                                    >
+                                                        <img
+                                                            src={student.avatar_url || student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`}
+                                                            alt={student.name}
+                                                            className={`w-9 h-9 rounded-full object-cover shrink-0 ${
+                                                                currentStudent?.id === student.id ? 'border border-white/40' : 'border border-gray-200'
+                                                            }`}
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=14b8a6&color=fff&size=200`;
+                                                            }}
+                                                        />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-medium text-sm truncate">{student.name}</p>
+                                                            <p className={`text-xs mt-0.5 truncate ${
+                                                                currentStudent?.id === student.id ? 'text-blue-100' : 'text-gray-600'
+                                                            }`}>
+                                                                {student.level}
+                                                            </p>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {studentPageCount > 1 && (
+                                                <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setStudentPage(page => Math.max(1, page - 1))}
+                                                        disabled={studentPage === 1}
+                                                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#0B6282] hover:bg-[#EDF2F7] disabled:cursor-not-allowed disabled:opacity-40"
+                                                    >
+                                                        <i className="bi bi-chevron-left" /> Sebelumnya
+                                                    </button>
+                                                    <span className="text-xs text-gray-500">
+                                                        {studentPage} / {studentPageCount}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setStudentPage(page => Math.min(studentPageCount, page + 1))}
+                                                        disabled={studentPage === studentPageCount}
+                                                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#0B6282] hover:bg-[#EDF2F7] disabled:cursor-not-allowed disabled:opacity-40"
+                                                    >
+                                                        Berikutnya <i className="bi bi-chevron-right" />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </>

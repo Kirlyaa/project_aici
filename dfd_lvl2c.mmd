@@ -1,0 +1,39 @@
+﻿graph TB
+    %% Entitas Luar
+    SuperAdmin[Super Admin]
+    EmailService[Email Service]
+
+    %% Proses Induk (dari L1): P2 Manajemen Pengguna
+    %% Dekomposisi sub-proses
+    P21[[2.1 Registrasi Pengguna]]
+    P22[[2.2 Tetapkan Role dan Afiliasi]]
+    P23[[2.3 Proses Impor Massal]]
+    P24[[2.4 Ubah Status Aktif Pending]]
+
+    %% Data Stores
+    D1[(D1 Users)]
+    D8[(D8 Classrooms)]
+    D9[(D9 Schools)]
+
+    %% === Alur 2.1 ===
+    SuperAdmin -->|form data pengguna baru| P21
+    P21 -->|cek duplikasi email| D1
+    P21 -->|kata sandi sementara| P22
+
+    %% === Alur 2.2 ===
+    P22 -->|penetapan role tutor user superadmin| P22
+    P22 -->|afiliasi sekolah| D9
+    P22 -->|keanggotaan kelas| D8
+    P22 -->|record user tersimpan| D1
+    P22 -->|kirim kredensial selamat datang| EmailService
+
+    %% === Alur 2.3 ===
+    SuperAdmin -->|berkas excel csv| P23
+    P23 -->|baris hasil parsing| P23
+    P23 -->|batch insert update| D1
+    P23 -->|ringkasan sukses gagal| SuperAdmin
+
+    %% === Alur 2.4 ===
+    SuperAdmin -->|perintah ubah status| P24
+    P24 -->|field status diperbarui| D1
+    P24 -->|cabut token sesi aktif| D1

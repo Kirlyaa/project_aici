@@ -1,0 +1,37 @@
+﻿graph TB
+    %% Entitas Luar
+    Tutor[Tutor]
+
+    %% Proses Induk (dari L1): P5 Asesmen Nilai
+    %% Dekomposisi sub-proses
+    P51[[5.1 Ambil Konteks Modul]]
+    P52[[5.2 Terima Skor Kategori]]
+    P53[[5.3 Hitung Rata-Rata]]
+    P54[[5.4 Simpan dan Audit]]
+
+    %% Data Stores
+    D3[(D3 Modules)]
+    D4[(D4 Grade Entries)]
+    D12[(D12 Activity Logs)]
+
+    %% Proses tetangga
+    P6[[6 Komentar Akademik]]
+
+    %% === Alur 5.1 ===
+    Tutor -->|permintaan form nilai| P51
+    P51 -->|query tipe modul| D3
+    P51 -->|skema kriteria penilaian| Tutor
+
+    %% === Alur 5.2 ===
+    Tutor -->|skor fokus coding tools interaksi robot| P52
+    P52 -->|rentang valid 0 sampai 5| P53
+
+    %% === Alur 5.3 ===
+    P53 -->|nilai rata-rata tersimpan| D4
+    P53 -->|data agregat rata-rata| P6
+
+    %% === Alur 5.4 ===
+    P53 -->|objek grade entry final| P54
+    P54 -->|persist record nilai| D4
+    P54 -->|catatan perubahan| D12
+    P54 -->|konfirmasi penyimpanan| Tutor

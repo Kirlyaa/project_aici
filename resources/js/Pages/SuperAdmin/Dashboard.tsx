@@ -23,6 +23,8 @@ interface Props {
         totalUsers: number;
         totalStudents: number;
         totalTutors: number;
+        totalClassrooms: number;
+        unassignedStudents: number;
         totalModules: number;
         activeStudents: number;
         pendingStudents: number;
@@ -57,10 +59,15 @@ interface Props {
         image: string | null;
         subModulesCount?: number;
     }>;
+    classrooms: Array<{
+        id: number;
+        name: string;
+        studentsCount: number;
+    }>;
 }
 
 export default function SuperAdminDashboard() {
-    const { stats, recentStudents, recentTutors, recentModules, tutorsList = [], auth } = usePage().props as unknown as Props;
+    const { stats, recentStudents, recentTutors, recentModules, classrooms, tutorsList = [], auth } = usePage().props as unknown as Props;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -121,9 +128,9 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-2 xl:grid-cols-3 items-stretch gap-8">
                     {/* User & Role Management */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                         <div className="bg-gradient-to-r from-[#0B6282] to-[#08455c] px-6 py-4">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <i className="bi bi-person-check-fill" />
@@ -132,7 +139,7 @@ export default function SuperAdminDashboard() {
                             <p className="text-blue-100 text-sm mt-1">Kelola akun Tutor dan akses Super Admin.</p>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 flex flex-1 flex-col">
                             {/* Quick Stats */}
                             <div className="grid grid-cols-2 gap-3 mb-6">
                                 <div className="bg-green-50 rounded-lg p-3 text-center">
@@ -149,7 +156,7 @@ export default function SuperAdminDashboard() {
                             <div className="border-t pt-4">
                                 <h3 className="font-semibold text-gray-900 mb-3 text-sm">Daftar Tutor Terbaru</h3>
                                 <div className="space-y-2">
-                                    {recentTutors.map(t => (
+                                    {recentTutors.slice(0, 2).map(t => (
                                         <div key={t.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <img
@@ -179,7 +186,7 @@ export default function SuperAdminDashboard() {
                             {/* Action Button */}
                             <Link
                                 href="/superadmin/tutors"
-                                className="block text-center mt-6 px-4 py-2.5 bg-[#0B6282] text-white rounded-lg font-medium hover:bg-[#08455c] transition-colors shadow-sm"
+                                className="mt-6 flex h-11 w-full items-center justify-center px-4 bg-[#0B6282] text-white rounded-lg font-medium hover:bg-[#08455c] transition-colors shadow-sm"
                             >
                                 <i className="bi bi-arrow-right mr-2" /> Kelola Akun Tutor
                             </Link>
@@ -187,7 +194,7 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     {/* Student Management */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <i className="bi bi-people-fill" />
@@ -196,7 +203,7 @@ export default function SuperAdminDashboard() {
                             <p className="text-blue-100 text-sm mt-1">Kelola akun Murid AICI.</p>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 flex flex-1 flex-col">
                             {/* Quick Stats */}
                             <div className="grid grid-cols-2 gap-3 mb-6">
                                 <div className="bg-blue-50 rounded-lg p-3 text-center">
@@ -243,7 +250,7 @@ export default function SuperAdminDashboard() {
                             {/* Action Button */}
                             <Link
                                 href="/superadmin/students"
-                                className="block text-center mt-6 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                                className="mt-6 flex h-11 w-full items-center justify-center px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                             >
                                 <i className="bi bi-arrow-right mr-2" /> Kelola Akun Murid
                             </Link>
@@ -251,7 +258,7 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     {/* Classroom Management */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 <i className="bi bi-building-fill" />
@@ -260,7 +267,18 @@ export default function SuperAdminDashboard() {
                             <p className="text-indigo-100 text-sm mt-1">Atur nama kelas, foto, dan distribusi murid.</p>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 flex flex-1 flex-col">
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-indigo-600 font-semibold">Total Kelas</p>
+                                    <p className="text-2xl font-bold text-indigo-900">{stats.totalClassrooms}</p>
+                                </div>
+                                <div className="bg-purple-50 rounded-lg p-3 text-center">
+                                    <p className="text-xs text-purple-600 font-semibold">Belum Ada Kelas</p>
+                                    <p className="text-2xl font-bold text-purple-900">{stats.unassignedStudents}</p>
+                                </div>
+                            </div>
+
                             <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
                                 <p className="text-sm font-semibold text-indigo-900">Manajemen Kelas Terpadu</p>
                                 <p className="text-xs text-indigo-700 mt-1">
@@ -282,9 +300,28 @@ export default function SuperAdminDashboard() {
                                 </ul>
                             </div>
 
+                            <div className="border-t pt-4">
+                                <h3 className="mb-2 text-sm font-semibold text-gray-900">Daftar Kelas</h3>
+                                {classrooms.length > 0 ? (
+                                    <ul className="max-h-36 space-y-1.5 overflow-y-auto pr-1">
+                                        {classrooms.map(classroom => (
+                                            <li key={classroom.id} className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 text-sm">
+                                                <span className="flex min-w-0 items-center gap-2 font-medium text-gray-800">
+                                                    <i className="bi bi-building text-indigo-600" />
+                                                    <span className="truncate">{classroom.name}</span>
+                                                </span>
+                                                <span className="shrink-0 text-xs text-gray-500">{classroom.studentsCount} siswa</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-sm text-gray-500">Belum ada kelas.</p>
+                                )}
+                            </div>
+
                             <Link
                                 href="/superadmin/classes"
-                                className="block text-center mt-6 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                                className="mt-6 flex h-11 w-full items-center justify-center px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
                             >
                                 <i className="bi bi-arrow-right mr-2" /> Buka Manajemen Kelas
                             </Link>
@@ -304,7 +341,7 @@ export default function SuperAdminDashboard() {
                         <div className="p-6 space-y-4">
                             {/* Module List */}
                             <div className="space-y-2">
-                                {recentModules.map(m => (
+                                {recentModules.slice(0, 4).map(m => (
                                     <div key={m.id} className="flex items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
                                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mr-3 ${m.type === 'robot' ? 'bg-blue-100' : 'bg-purple-100'}`}>
                                             <span className={`text-xs font-bold ${m.type === 'robot' ? 'text-blue-600' : 'text-purple-600'}`}>

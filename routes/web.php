@@ -18,6 +18,7 @@ use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardCo
 use App\Http\Controllers\SuperAdmin\TutorController;
 use App\Http\Controllers\SuperAdmin\StudentController;
 use App\Http\Controllers\SuperAdmin\ClassroomController;
+use App\Http\Controllers\SuperAdmin\ClassroomReportController;
 use App\Http\Controllers\SuperAdmin\CalendarController as SuperAdminCalendarController;
 use App\Http\Controllers\SuperAdmin\ModuleController as SuperAdminModuleController;
 use App\Http\Controllers\SuperAdmin\ReportPeriodController as SuperAdminReportPeriodController;
@@ -198,6 +199,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('/students/{student}/toggle-status', [StudentController::class, 'toggleStatus'])->name('students.toggle-status');
         Route::get('/students/{student}/report', [StudentGradeReportController::class, 'show'])->name('students.report');
         Route::get('/students/{student}/pdf', [ProfileController::class, 'pdf'])->name('students.pdf');
+        Route::get('/students/{student}/pdf-data', [ProfileController::class, 'pdfData'])->name('students.pdf-data');
 
         // Classroom Management
         Route::get('/classes', [ClassroomController::class, 'index'])->name('classes');
@@ -208,6 +210,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/classes/transfer', [ClassroomController::class, 'transferStudent'])->name('classes.transfer');
         Route::delete('/classes/students/{student}/remove', [ClassroomController::class, 'removeStudent'])->name('classes.remove-student');
         Route::post('/classes/{classroom}/schedule-session', [ClassroomController::class, 'scheduleBatchSessions'])->name('classes.schedule-session');
+        Route::get('/classes/{classroom}/reports', [ClassroomReportController::class, 'index'])->name('classes.reports');
 
         // R5 & R10: Calendar Management (SuperAdmin)
         Route::get('/calendar/template', [SuperAdminCalendarController::class, 'downloadTemplate'])->name('calendar.template');

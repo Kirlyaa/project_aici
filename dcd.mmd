@@ -1,0 +1,214 @@
+erDiagram
+    USER ||--o{ LEARNING_SESSION : "has"
+    USER ||--o{ GRADE_ENTRY : "receives"
+    USER ||--o{ STUDENT_COMMENT : "has"
+    USER ||--o{ NOTIFICATION : "receives"
+    USER ||--o{ CLASSROOM_USER : "belongs to"
+
+    TUTOR ||--o{ LEARNING_SESSION : "conducts"
+    TUTOR ||--o{ GRADE_ENTRY : "inputs"
+    TUTOR ||--o{ STUDENT_COMMENT : "writes"
+    TUTOR ||--o{ COMMENT_TEMPLATE : "owns"
+    TUTOR ||--o{ CLASSROOM : "manages"
+
+    SUPERADMIN ||--o{ MODULE : "creates/manages"
+    SUPERADMIN ||--o{ SCHOOL : "registers"
+    SUPERADMIN ||--o{ REPORT_PERIOD : "defines"
+
+    MODULE ||--o{ LEARNING_SESSION_MODULE : "included in"
+    LEARNING_SESSION ||--o{ LEARNING_SESSION_MODULE : "includes"
+    MODULE ||--o{ GRADE_ENTRY : "assessed by"
+
+    CLASSROOM ||--o{ CLASSROOM_USER : "contains"
+    CLASSROOM ||--o{ LEARNING_SESSION : "hosts"
+
+    SCHOOL ||--o{ USER : "affiliates with"
+
+    LEARNING_SESSION ||--o{ NOTIFICATION : "triggers"
+    LEARNING_SESSION ||--o{ TUTOR_CHAT : "discussed in"
+
+    USER {
+        int id PK
+        string name
+        string email UK
+        string password
+        enum role "user, tutor, superadmin"
+        string status
+        int tutor_id FK
+        int school_id FK
+        int classroom_id FK
+        string avatar
+        string class
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    LEARNING_SESSION {
+        int id PK
+        int user_id FK
+        int tutor_id FK
+        int classroom_id FK
+        string title
+        date date
+        enum status "akan-datang, hadir, absen, libur"
+        string description
+        json tools
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    MODULE {
+        int id PK
+        int parent_id FK
+        string name
+        string book_title
+        int order_index
+        enum format
+        enum size
+        string description
+        string image
+        json tools
+        enum module_type "robot, coding, general"
+        int created_by FK
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    GRADE_ENTRY {
+        int id PK
+        int student_id FK
+        int tutor_id FK
+        int module_id FK
+        int learning_session_id FK
+        int meeting_number
+        enum module_type
+        date meeting_date
+        decimal fokus
+        decimal robot_building
+        decimal tools_management
+        decimal interaksi
+        decimal coding
+        decimal average
+        string notes
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    STUDENT_COMMENT {
+        int id PK
+        int student_id FK
+        int tutor_id FK
+        string semester
+        string meeting_range
+        string academic_year
+        text system_comment
+        text tutor_comment
+        text strengths
+        text notes
+        text admin_note
+        decimal average_grade
+        json module_names
+        boolean is_system_generated
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    CLASSROOM {
+        int id PK
+        string name
+        string photo
+        int tutor_id FK
+        string description
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    NOTIFICATION {
+        int id PK
+        int user_id FK
+        int learning_session_id FK
+        string type
+        string title
+        text message
+        json data
+        boolean is_read
+        datetime read_at
+        datetime sent_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    TUTOR_CHAT {
+        int id PK
+        int sender_id FK
+        int receiver_id FK
+        int learning_session_id FK
+        text message
+        boolean is_read
+        datetime read_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    COMMENT_TEMPLATE {
+        int id PK
+        int created_by FK
+        string grade_range
+        string category
+        text template
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SCHOOL {
+        int id PK
+        string name
+        string email
+        string phone
+        string address
+        string city
+        string province
+        string postal_code
+        string contact_person
+        string contact_phone
+        enum status
+        string notes
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    REPORT_PERIOD {
+        int id PK
+        string name
+        int start_meeting
+        int end_meeting
+        int order_index
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    LEARNING_SESSION_MODULE {
+        int id PK
+        int learning_session_id FK
+        int module_id FK
+        int book_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CLASSROOM_USER {
+        int id PK
+        int classroom_id FK
+        int user_id FK
+        timestamp created_at
+        timestamp updated_at
+    }

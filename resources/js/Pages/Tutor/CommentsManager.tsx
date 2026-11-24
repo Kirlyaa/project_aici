@@ -475,50 +475,7 @@ export default function CommentsManager() {
 
                 {/* Form Input Komentar Komprehensif: 3 Level */}
                 <form onSubmit={saveAllComments} className="space-y-6 mb-8">
-                    {/* Level 1 & 3: Komentar Siklus / Evaluasi Umum & Catatan Admin */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-                            <h2 className="font-bold text-gray-900 flex items-center gap-2 text-base">
-                                <i className="bi bi-card-checklist text-teal-600 text-lg" />
-                                Evaluasi Siklus ({selectedRange})
-                            </h2>
-                            <span className="text-xs text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full font-medium">
-                                Tampil di Rapor PDF & Profil
-                            </span>
-                        </div>
-
-                        <div className="space-y-4">
-                            {/* Catatan Evaluasi Umum */}
-                            <div>
-                                <label className="block text-xs font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
-                                    <i className="bi bi-chat-quote-fill text-amber-600" />
-                                    Catatan Umum & Rekomendasi (Terlihat oleh Murid & Ortu di Rapor)
-                                </label>
-                                <textarea
-                                    value={commentForm.notes}
-                                    onChange={e => setCommentForm({ ...commentForm, notes: e.target.value })}
-                                    placeholder="Tuliskan evaluasi perkembangan belajar, kelebihan, dan hal yang perlu ditingkatkan murid pada siklus ini..."
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none h-24"
-                                />
-                            </div>
-
-                            {/* Catatan ke Admin */}
-                            <div>
-                                <label className="block text-xs font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
-                                    <i className="bi bi-shield-lock-fill text-indigo-600" />
-                                    Catatan Khusus ke Admin
-                                    <span className="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[10px] font-semibold">Tutor & Admin Only</span>
-                                </label>
-                                <textarea
-                                    value={commentForm.admin_note}
-                                    onChange={e => setCommentForm({ ...commentForm, admin_note: e.target.value })}
-                                    placeholder="Catatan internal yang hanya dapat dilihat oleh sesama tutor dan admin..."
-                                    className="w-full border border-indigo-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-16 bg-indigo-50/20"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
+                
                     {/* Level 2: Komentar Per Pertemuan */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                         <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
